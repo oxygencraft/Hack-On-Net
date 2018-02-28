@@ -1,0 +1,7 @@
+*.cache
+*.dll
+*.pdb
+HackOnNet/obj/*
+.vs/*
+lib/*
+HackLinks Server/obj/*

@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2003
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HackOnNet", "HackOnNet\HackOnNet.csproj", "{244411E2-786C-4B04-8F1D-E8A1DEB4AD6B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HackLinks Server", "HackLinks Server\HackLinks Server.csproj", "{292E7114-1D19-472A-BE90-56A338294DF5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug2|Any CPU = Debug2|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{244411E2-786C-4B04-8F1D-E8A1DEB4AD6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{244411E2-786C-4B04-8F1D-E8A1DEB4AD6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{244411E2-786C-4B04-8F1D-E8A1DEB4AD6B}.Debug2|Any CPU.ActiveCfg = Debug2|Any CPU
+		{244411E2-786C-4B04-8F1D-E8A1DEB4AD6B}.Debug2|Any CPU.Build.0 = Debug2|Any CPU
+		{244411E2-786C-4B04-8F1D-E8A1DEB4AD6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{244411E2-786C-4B04-8F1D-E8A1DEB4AD6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{292E7114-1D19-472A-BE90-56A338294DF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{292E7114-1D19-472A-BE90-56A338294DF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{292E7114-1D19-472A-BE90-56A338294DF5}.Debug2|Any CPU.ActiveCfg = Debug2|Any CPU
+		{292E7114-1D19-472A-BE90-56A338294DF5}.Debug2|Any CPU.Build.0 = Debug2|Any CPU
+		{292E7114-1D19-472A-BE90-56A338294DF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{292E7114-1D19-472A-BE90-56A338294DF5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A43E39E6-0CFE-473F-A7EB-D8444D14AF05}
+	EndGlobalSection
+EndGlobal
