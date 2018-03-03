@@ -13,7 +13,7 @@ namespace HackLinks_Server
 {
     class Server
     {
-        private static Server instance;
+        public static readonly Server Instance = new Server();
 
         public List<GameClient> clients;
 
@@ -23,10 +23,10 @@ namespace HackLinks_Server
         private ComputerManager computerManager;
 
 
-        public Server()
+        private Server()
         {
+
             clients = new List<GameClient>();
-            instance = this;
             conn = new MySqlConnection();
             conn.ConnectionString =
             "Data Source=127.0.0.1;" +
@@ -41,13 +41,6 @@ namespace HackLinks_Server
             Console.WriteLine("Downloading Computer data...");
             computerManager.DownloadDatabase();
             Console.WriteLine("Computer data loaded");
-        }
-
-        public static Server GetInstance()
-        {
-            if (instance == null)
-                instance = new Server();
-            return instance;
         }
 
         public void AddClient(Socket client)

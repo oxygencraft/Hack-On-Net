@@ -23,8 +23,6 @@ namespace HackLinks_Server
 
         static void Main(string[] args)
         {
-            Server mainServer = new Server();
-
             IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
             IPAddress ipAddress = ipHostInfo.AddressList[0];
             IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 27015);
@@ -47,7 +45,7 @@ namespace HackLinks_Server
                             listener);
                         recieving = true;
                     }
-                    mainServer.MainLoop();
+                    Server.Instance.MainLoop();
                 }
 
             }
@@ -67,7 +65,7 @@ namespace HackLinks_Server
             Socket listener = (Socket)ar.AsyncState;
             Socket handler = listener.EndAccept(ar);
 
-            Server.GetInstance().AddClient(handler);
+            Server.Instance.AddClient(handler);
         }
 
         
