@@ -22,17 +22,22 @@ namespace HackLinks_Server
 
         private ComputerManager computerManager;
 
+        //Connection String args
+        private MySqlConnectionStringBuilder connectionStringBuilder = new MySqlConnectionStringBuilder();
+        public string MySQLServer { get => connectionStringBuilder.Server; internal set => connectionStringBuilder.Server = value; }
+        public string Database { get => connectionStringBuilder.Database; internal set => connectionStringBuilder.Database = value; }
+        public string UserID { get => connectionStringBuilder.UserID; internal set => connectionStringBuilder.UserID = value; }
+        public string Password { get => connectionStringBuilder.Password; internal set => connectionStringBuilder.Password = value; }
 
         private Server()
         {
-
             clients = new List<GameClient>();
-            conn = new MySqlConnection();
-            conn.ConnectionString =
-            "Data Source=127.0.0.1;" +
-            "Initial Catalog=hacklinks;" +
-            "User id=root;" + //"User id=hacklinksServer;" +
-            "Password="; //"Password=cx4IDcbAOUhY16Ab;";
+        }
+
+        public void StartServer()
+        {
+            conn = new MySqlConnection(GetConnectionString());
+
             Console.WriteLine("Opening SQL connection");
             conn.Open();
             Console.WriteLine("SQL Running");
@@ -62,10 +67,7 @@ namespace HackLinks_Server
 
         public string GetConnectionString()
         {
-            return "Data Source=127.0.0.1;" +
-            "Initial Catalog=hacklinks;" +
-            "User id=root;" + //"User id=hacklinksServer;" +
-            "Password="; //"Password=cx4IDcbAOUhY16Ab;";
+            return connectionStringBuilder.GetConnectionString(true);
         }
 
         public void TreatMessage(GameClient client, string message)
