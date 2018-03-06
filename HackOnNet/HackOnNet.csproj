@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigUtil.cs" />
     <Compile Include="Daemons\Daemon.cs" />
     <Compile Include="Daemons\IRCDaemon.cs" />
     <Compile Include="DotNetCompatibility\Extensions.cs" />

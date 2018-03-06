@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static HackOnNet.ConfigUtil;
 
 namespace HackOnNet.Net
 {
@@ -21,9 +22,8 @@ namespace HackOnNet.Net
             public StringBuilder sb = new StringBuilder();
         }
 
+        private const string configFile = "Mods/HNMP.conf";
         public Socket clientSocket;
-
-        private const int port = 27015;
 
         private static ManualResetEvent connectDone =
             new ManualResetEvent(false);
@@ -71,8 +71,19 @@ namespace HackOnNet.Net
             receiveDone.Reset();
             try
             {
-                var test = File.OpenText("Mods/HNMP.cfg");
-                IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(test.ReadLine()), port);
+
+                //Create config with defaults
+                ConfigData conf = new ConfigData();
+                conf.ServerIP = "127.0.0.1";
+                conf.Port = 27015;
+
+                //Populate config from file or create config file if it's not present
+                if(!ConfigUtil.LoadConfig(configFile, conf))
+                {
+                    ConfigUtil.SaveConfig(configFile, conf);
+                }
+
+                IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(conf.ServerIP), conf.Port);
 
                 clientSocket = new Socket(AddressFamily.InterNetwork,
                     SocketType.Stream, ProtocolType.Tcp);
