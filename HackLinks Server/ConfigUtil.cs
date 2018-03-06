@@ -41,6 +41,7 @@ namespace HackLinks_Server
             public string Database { get; set; }
             public string UserID { get; set; }
             public string Password { get; set; }
+            public int Port { get; set; }
         }
     }
 
