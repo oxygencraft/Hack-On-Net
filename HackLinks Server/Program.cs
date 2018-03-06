@@ -26,21 +26,52 @@ namespace HackLinks_Server
         {
 
             bool showHelp = false;
+            bool writeConfig = false;
+            bool overwriteConfig = false;
+            string writeConfigPath = null;
 
-            //Set Defaults
-            Server.Instance.MySQLServer = "127.0.0.1";
-            Server.Instance.Database = "hacklinks";
-            Server.Instance.UserID = "root";
-            Server.Instance.Password = "";
+            //Set Defaults and create config object
+            ConfigUtil.ConfigData configData = new ConfigUtil.ConfigData();
+            configData.MySQLServer = "127.0.0.1";
+            configData.Database = "hacklinks";
+            configData.UserID = "root";
+            configData.Password = "";
 
             bool passSet = true;
 
             //Handle Args
             OptionSet options = new OptionSet() {
-                { "s|server=", "the MySQL {SERVER} to use (default: \"127.0.0.1\").", v => Server.Instance.MySQLServer = v},
-                { "d|database=", "the {DATABASE} to use (default: \"hacklinks\").", v => Server.Instance.Database = v},
-                { "u|user=", "the {USERNAME} to connect with (default: \"root\").", v => Server.Instance.UserID = v},
-                { "p|password:", "set the {PASSWORD} to connect with (default: None) or prompt for a password.", v => {passSet = v != null; Server.Instance.Password = v;} },
+                { "s|server=", "the MySQL {SERVER} to use (default: \"127.0.0.1\").", v => configData.MySQLServer = v},
+                { "d|database=", "the {DATABASE} to use (default: \"hacklinks\").", v => configData.Database = v},
+                { "u|user=", "the {USERNAME} to connect with (default: \"root\").", v => configData.UserID = v},
+                { "p|password:", "set the {PASSWORD} to connect with (default: None) or prompt for a password.", v => {passSet = v != null;  configData.Password = v;} },
+                { "c|config:",
+                    "load settings from {CONFIG} file (default: No) or from default config file \"serverconfig.conf\".\n" +
+                    "If the file doesn't exist it will be created with the the final values when the server runs unless the {-o/--overwrite-config} flag specifies a file instead.",
+                    v =>
+                    {
+                        //Use given path, Existing path if it exists, or default if not.
+                        string readConfigPath = v ?? "serverconfig.conf";
+
+                        //If we aren't overwritting or if we are but the path is unset
+                        if(!overwriteConfig || overwriteConfig && writeConfigPath == null)
+                            writeConfigPath = readConfigPath;
+
+                        //Loadconfig returns true if the file was loaded. So we should write the config if it's not
+                        writeConfig = ! ConfigUtil.LoadConfig(readConfigPath, configData);
+                    }
+                },
+                { "o|overwrite-config:",
+                    "force the {CONFIG} file to be overwritten with the final values when the server runs.\n" +
+                    "You can optionally specify the config file to be written here.",
+                    v => 
+                    {
+                        //If config path is specified use that instead
+                        writeConfigPath = v ?? writeConfigPath ?? "serverconfig.conf";
+
+                        overwriteConfig = true;
+                    }
+                },
                 { "h|help",  "show this message and exit.", v => showHelp = v != null },
             };
 
@@ -61,10 +92,14 @@ namespace HackLinks_Server
                     return;
                 }
 
+                //We write our config here as we likely don't want to save the prompted password
+                if (overwriteConfig || writeConfig)
+                    ConfigUtil.SaveConfig(writeConfigPath, configData);
+
                 //Check if password is null and prompt if it is
                 //Done here to avoid asking for password when other options are going to fail anyway or help should be displayed.
                 if (!passSet)
-                    Server.Instance.Password = GetPassword();
+                    configData.Password = GetPassword();
 
             } catch(OptionException e)
             {
@@ -72,6 +107,12 @@ namespace HackLinks_Server
                 Console.WriteLine(e.Message);
                 return;
             }
+
+            //Apply Config to Server
+            Server.Instance.MySQLServer = configData.MySQLServer;
+            Server.Instance.Database = configData.Database;
+            Server.Instance.UserID = configData.UserID;
+            Server.Instance.Password = configData.Password;
 
             IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
             IPAddress ipAddress = ipHostInfo.AddressList[0];
