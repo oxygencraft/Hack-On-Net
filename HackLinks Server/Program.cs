@@ -33,6 +33,7 @@ namespace HackLinks_Server
             //Set Defaults and create config object
             ConfigUtil.ConfigData configData = new ConfigUtil.ConfigData();
             configData.MySQLServer = "127.0.0.1";
+            configData.Port = 27015;
             configData.Database = "hacklinks";
             configData.UserID = "root";
             configData.Password = "";
@@ -45,6 +46,21 @@ namespace HackLinks_Server
                 { "d|database=", "the {DATABASE} to use (default: \"hacklinks\").", v => configData.Database = v},
                 { "u|user=", "the {USERNAME} to connect with (default: \"root\").", v => configData.UserID = v},
                 { "p|password:", "set the {PASSWORD} to connect with (default: None) or prompt for a password.", v => {passSet = v != null;  configData.Password = v;} },
+                { "P|port=",
+                    "set the {PORT} to open the server on (default: 27015).",
+                    v =>
+                    {
+                        int result;
+                        if(int.TryParse(v, out result))
+                        {
+                            configData.Port = result;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid Port Specified: \"{0}\". Using Default Port.", v);
+                        }
+                    }
+                },
                 { "c|config:",
                     "load settings from {CONFIG} file (default: No) or from default config file \"serverconfig.conf\".\n" +
                     "If the file doesn't exist it will be created with the the final values when the server runs unless the {-o/--overwrite-config} flag specifies a file instead.",
@@ -116,7 +132,7 @@ namespace HackLinks_Server
 
             IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
             IPAddress ipAddress = ipHostInfo.AddressList[0];
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 27015);
+            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, configData.Port);
 
             Socket listener = new Socket(AddressFamily.InterNetwork,
                 SocketType.Stream, ProtocolType.Tcp);

@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace HackLinks_Server
+namespace HackOnNet
 {
     public static class ConfigUtil
     {
@@ -37,10 +37,7 @@ namespace HackLinks_Server
 
         public class ConfigData
         {
-            public string MySQLServer { get; set; }
-            public string Database { get; set; }
-            public string UserID { get; set; }
-            public string Password { get; set; }
+            public string ServerIP { get; set; }
             public int Port { get; set; }
         }
     }
