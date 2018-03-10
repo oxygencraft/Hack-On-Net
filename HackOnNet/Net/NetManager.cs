@@ -17,7 +17,7 @@ namespace HackOnNet.Net
     {
         public class StateObject
         {
-            public const int BufferSize = 512;
+            public const int BufferSize = 32000;
             public byte[] buffer = new byte[BufferSize];
             public StringBuilder sb = new StringBuilder();
         }
