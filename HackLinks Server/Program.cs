@@ -130,10 +130,8 @@ namespace HackLinks_Server
             Server.Instance.UserID = configData.UserID;
             Server.Instance.Password = configData.Password;
 
-            IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
-            IPAddress ipAddress = ipHostInfo.AddressList[0];
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, configData.Port);
-
+            IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, 27015);
+          
             Socket listener = new Socket(AddressFamily.InterNetwork,
                 SocketType.Stream, ProtocolType.Tcp);
 
