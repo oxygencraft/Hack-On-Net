@@ -13,20 +13,21 @@ namespace HackLinks_Server
     {
         public delegate bool Command(GameClient client, string[] command);
 
-        public static Dictionary<string, Command> commands = new Dictionary<string, Command>()
+        public static SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>()
         {
-            { "ping", Ping },
-            { "connect", Connect },
-            { "disconnect", Disconnect },
-            { "dc", Disconnect },
-            { "ls", Ls },
-            { "cd", ChangeDirectory },
-            { "touch", Touch },
-            { "mkdir", MkDir },
-            { "rm", Remove },
-            { "login", Login },
-            { "chmod", ChMod },
-            { "view", View }
+            { "ping", new Tuple<string, Command>("ping [ip]\n    Outputs success if there is system online at the given IP.", Ping) },
+            { "connect", new Tuple<string, Command>("connect [ip]\n    Connect to the system at the given IP.", Connect) },
+            { "disconnect", new Tuple<string, Command>("disconnect \n    Terminate the current connection.", Disconnect) },
+            { "dc", new Tuple<string, Command>("dc \n    Alias for disconnect.", Disconnect) },
+            { "ls", new Tuple<string, Command>("ls \n    Lists all files in current directory.", Ls) },
+            { "cd", new Tuple<string, Command>("cd [dir]\n    Moves current working directory to the specified directory.", ChangeDirectory) },
+            { "touch", new Tuple<string, Command>("touch [file]\n    Create the given file if it doesn't already exist.", Touch) },
+            { "mkdir", new Tuple<string, Command>("mkdir [dir]\n    Create the given directory if it doesn't already exist.", MkDir) },
+            { "rm", new Tuple<string, Command>("rm [file]\n    Remove the given file.", Remove) },
+            { "login", new Tuple<string, Command>("login [username] [password]\n    Login to the current connected system using the given username and password.", Login) },
+            { "chmod", new Tuple<string, Command>("chmod [file] [readLevel] [writeLevel]\n    Change the required user level for read and write operations on the given file.", ChMod) },
+            { "view", new Tuple<string, Command>("view [file]\n    Displays the given file.", View) },
+            { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
         };
 
         public static bool TreatCommand(string command, GameClient client)
@@ -44,7 +45,7 @@ namespace HackLinks_Server
         {
             bool result = false;
             if (commands.ContainsKey(command[0]))
-                result = commands[command[0]](client, command);
+                result = commands[command[0]].Item2(client, command);
             return result;
         }
 
@@ -57,6 +58,43 @@ namespace HackLinks_Server
 
         public static bool View(GameClient client, string[] command)
         {
+
+            return true;
+        }
+
+        public static bool Help(GameClient client, string[] command)
+        {
+            const int ITEMS_PER_PAGE = 10;
+            int totalPages = commands.Count / ITEMS_PER_PAGE + 1;
+
+            int pageNum = 0;
+
+            bool inputValid = command.Length == 1 || int.TryParse(command[1], out pageNum) && pageNum <= totalPages;
+
+            if (pageNum == 0 || !inputValid)
+                pageNum = 1;
+
+            string header = $"---------------------------------\nCommand List - Page {pageNum} of {totalPages}:\n";
+            string footer = "\n---------------------------------\n";
+
+            StringBuilder builder = new StringBuilder();
+
+            if(!inputValid)
+                builder.AppendLine("Invalid Page Number");
+
+            builder.AppendLine(header);
+
+            foreach (string key in commands.Keys.Skip((pageNum - 1) * 10).Take(10))
+            {
+                builder.AppendLine(commands[key].Item1);
+                builder.AppendLine();
+            }
+
+            builder.Append(commands["help"].Item1);
+
+            builder.Append(footer);
+
+            client.Send("MESSG:" + builder.ToString());
 
             return true;
         }
