@@ -248,7 +248,7 @@ namespace HackOnNet.Modules
                     }
                     else
                     {
-                        this.userScreen.Execute("cat " + activeFile.GetActualName());
+                        this.userScreen.Execute("view " + activeFile.GetActualName());
 
                     }
                 }
