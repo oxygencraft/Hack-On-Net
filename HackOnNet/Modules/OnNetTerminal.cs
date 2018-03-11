@@ -58,6 +58,7 @@ namespace HackOnNet.Modules
             this.currentLine = "";
             this.lastRunCommand = "";
             this.prompt = "{{blue}}"+userScreen.username+ "{{white}}$ ";
+            Hacknet.GuiData.getFilteredKeys();
         }
 
         public override void Update(float t)

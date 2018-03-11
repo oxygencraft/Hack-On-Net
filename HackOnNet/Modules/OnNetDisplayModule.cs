@@ -109,7 +109,15 @@ namespace HackOnNet.Modules
                 _empty.Y = this.y;
                 _empty.Width = this.bounds.Width - 2;
                 _empty.Height = 20;
-                this.spriteBatch.Draw(Utils.white, _empty, userScreen.highlightColor);
+                int priv = userScreen.activeSession.privilege;
+                Color accountColor = userScreen.guestAccountColor;
+                if (priv == 2)
+                    accountColor = userScreen.userAccountColor;
+                else if (priv == 1)
+                    accountColor = userScreen.adminAccountColor;
+                else if (priv == 0)
+                    accountColor = userScreen.kernelAccountColor;
+                this.spriteBatch.Draw(Utils.white, _empty, accountColor);
 
                 var _text = LocaleTerms.Loc("You are "+userScreen.activeSession.GetRankName()+" on this System");
                 Vector2 _vector = GuiData.UISmallfont.MeasureString(_text);
@@ -120,7 +128,7 @@ namespace HackOnNet.Modules
 
                 if (this.bounds.Height > 500)
                 {
-                    this.y += 40;
+                    this.y += 30;
                 }
                 else
                 {

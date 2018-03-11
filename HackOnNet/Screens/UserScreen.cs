@@ -53,6 +53,11 @@ namespace HackOnNet.Screens
         public Color darkBackgroundColor = new Color(8, 8, 8);
         public Color subtleTextColor = new Color(90, 90, 90);
 
+        public Color guestAccountColor = new Color(119,119,119);
+        public Color userAccountColor = new Color(0, 139, 199, 255);
+        public Color adminAccountColor = new Color(242, 160, 0);
+        public Color kernelAccountColor = new Color(255, 80, 80);
+
         public OnNetTerminal terminal;
         public OnNetworkMap netMap;
         public OnNetDisplayModule display;
