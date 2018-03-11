@@ -268,7 +268,7 @@ namespace HackLinks_Server
         public static bool Disconnect(GameClient client, string[] command)
         {
             client.Disconnect();
-            client.Send("KERNL:disconnect");
+
             return true;
         }
 
