@@ -45,9 +45,12 @@ namespace HackLinks_Server
 
         public void Disconnect()
         {
-            activeSession.DisconnectSession();
-            activeSession = null;
-            Send("KERNL:disconnect");
+            if(activeSession != null)
+            {
+                activeSession.DisconnectSession();
+                activeSession = null;
+                Send("KERNL:disconnect");
+            }
         }
 
         public void Start()
