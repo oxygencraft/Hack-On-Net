@@ -47,7 +47,7 @@ namespace HackOnNet.Modules
         public List<NodeCircle> nodeList = new List<NodeCircle>();
 
         public NodeCircle dragging;
-        public int drag;
+        public int drag = 60;
 
 
         public OnNetworkMap(Rectangle location, UserScreen screen) : base(location, screen)
@@ -135,7 +135,22 @@ namespace HackOnNet.Modules
         private Vector2 generatePos()
         {
             float num = (float)NetworkMap.NODE_SIZE;
-            return new Vector2((float)Utils.random.NextDouble(), (float)Utils.random.NextDouble());
+            var pos = new Vector2((float)Utils.random.NextDouble(), (float)Utils.random.NextDouble());
+            for (int i = 0; i < 5; i++)
+            {
+                if(collides(pos))
+                    pos = new Vector2((float)Utils.random.NextDouble(), (float)Utils.random.NextDouble());
+                if (collides(pos))
+                {
+                    pos.X += 0.1f;
+                }
+                if (collides(pos))
+                {
+                    pos.Y += 0.1f;
+                }
+                    
+            }
+            return pos;
         }
 
         public bool collides(Vector2 location, float minSeperation = -1f)
@@ -165,6 +180,14 @@ namespace HackOnNet.Modules
             int num = -1;
             Color color = this.userScreen.highlightColor;
 
+            if(dragging != null)
+            {
+                if (GuiData.getKeyboadState().IsKeyUp(Microsoft.Xna.Framework.Input.Keys.LeftControl))
+                    dragging = null;
+                else
+                    dragging.position = MousePosToNMap(GuiData.getMousePos());
+            }
+
             lock (this.nodeList)
             {
                 for (int i = 0; i < this.nodeList.Count; i++)
@@ -173,23 +196,27 @@ namespace HackOnNet.Modules
 
                     Vector2 nodeDrawPos2 = this.GetNodeDrawPosDebug(this.nodeList[i].position);
 
-                    if (userScreen.activeSession.ip == nodeList[i].ip)
+                    if (userScreen.activeSession != null && userScreen.activeSession.ip == nodeList[i].ip)
                         color = Color.White;
 
                     if (Hacknet.Gui.Button.doButton(2000 + i, this.bounds.X + (int)nodeDrawPos2.X, this.bounds.Y + (int)nodeDrawPos2.Y, NetworkMap.NODE_SIZE, NetworkMap.NODE_SIZE, "", new Color?(color), this.nodeCircle))
                     {
-                        //if (this.userScreen.inputEnabled)
-                        //{
-                            int nodeindex = i;
-
-                            this.userScreen.Execute("connect " + this.nodeList[nodeindex].ip);
-                        //}
+                        if (this.dragging == null)
+                        {
+                            if(GuiData.getKeyboadState().IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl))
+                            {
+                                dragging = nodeList[i];
+                            }
+                            else
+                            {
+                                this.userScreen.Execute("connect " + this.nodeList[i].ip);
+                            }
+                        }
                     }
                     if (GuiData.hot == 2000 + i)
                     {
                         num = i;
                     }
-                    
                 }
             }
 
@@ -215,6 +242,18 @@ namespace HackOnNet.Modules
                     DebugLog.add(ex.ToString());
                 }
             }
+        }
+
+        private Vector2 MousePosToNMap(Vector2 vector)
+        {
+            var nodeSize = NetworkMap.NODE_SIZE;
+
+            var vector2 = new Vector2(vector.X - this.bounds.X - nodeSize / 2, vector.Y - this.bounds.Y - nodeSize / 2);
+            var result = new Vector2(
+                ((vector2.X - nodeSize / 4f) / (this.bounds.Width - nodeSize - 6)) , 
+                ((vector2.Y - nodeSize / 4f) / (this.bounds.Height - nodeSize - 6)) 
+                );
+            return Utils.Clamp(result, 0f, 1f);
         }
 
         public Vector2 GetNodeDrawPosDebug(Vector2 nodeLocation)
