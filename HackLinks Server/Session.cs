@@ -63,9 +63,10 @@ namespace HackLinks_Server
                     }
                 }
             }
-            foreach(Daemon daemon in connectedNode.daemons)
-                if (daemon.HandleDaemonCommand(this, command))
-                    return true;
+
+            if (activeDaemon != null && activeDaemon.HandleDaemonCommand(this, command))
+                return true;
+
             return false;
         }
 
