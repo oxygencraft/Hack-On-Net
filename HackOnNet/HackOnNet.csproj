@@ -79,6 +79,7 @@
     <Compile Include="Sessions\States\Irc\IrcMessage.cs" />
     <Compile Include="Sessions\States\LsState.cs" />
     <Compile Include="Sessions\States\SessionState.cs" />
+    <Compile Include="Sessions\States\ViewState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

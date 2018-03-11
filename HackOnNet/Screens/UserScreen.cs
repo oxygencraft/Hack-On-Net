@@ -353,8 +353,10 @@ namespace HackOnNet.Screens
                 if(cmdArgs[1] == "view")
                 {
                     string fileName = cmdArgs[2];
-                    this.Write("received data from " + fileName + ", placeholder.");
+                    string fileContent = cmdArgs[3];
 
+                    activeSession.SetState(new ViewState(activeSession, fileName, fileContent));
+                    display.state = DisplayState.VIEW;
                 }
             }
         }

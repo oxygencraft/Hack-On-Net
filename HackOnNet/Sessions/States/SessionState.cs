@@ -14,6 +14,7 @@ namespace HackOnNet.Sessions.States
         {
             DEFAULT,
             LS,
+            VIEW,
             IRC
         };
 

@@ -17,15 +17,22 @@ namespace HackOnNet.Modules
         int x;
         int y;
 
+        private Hacknet.UIUtils.ScrollableTextRegion viewTextRegion;
+
+
         public OnNetDisplayModule(Rectangle location, UserScreen screen) : base(location, screen)
-        { }
+        {
+            this.viewTextRegion = new Hacknet.UIUtils.ScrollableTextRegion(GuiData.spriteBatch.GraphicsDevice);
+        }
+
+        
 
         public enum DisplayState
         {
             NONE,
             SSH_SESSION,
             LS,
-            CAT,
+            VIEW,
             IRC
         }
 
@@ -59,6 +66,8 @@ namespace HackOnNet.Modules
                 doLSModule();
             else if (state == DisplayState.IRC)
                 doIRCModule();
+            else if (state == DisplayState.VIEW)
+                doViewModule();
         }
 
         private void doEmptyModule()
@@ -246,6 +255,29 @@ namespace HackOnNet.Modules
             };
             //Hacknet.Gui.Button.DisableIfAnotherIsActive = true;
             //Hacknet.Gui.Button.DisableIfAnotherIsActive = false;
+        }
+
+        private void doViewModule()
+        {
+            if (Hacknet.Gui.Button.doButton(299999, this.bounds.X + (this.bounds.Width - 41), this.bounds.Y + 12, 27, 29, "<-", null))
+            {
+                this.userScreen.Execute("ls");
+            }
+            Rectangle rectangle = GuiData.tmpRect;
+            rectangle.Width = this.bounds.Width;
+            rectangle.X = this.bounds.X;
+            rectangle.Y = this.bounds.Y + 1;
+            rectangle.Height = this.bounds.Height - 2;
+
+            string filename = ((ViewState)userScreen.activeSession.currentState).name;
+
+            Hacknet.Gui.TextItem.doFontLabel(new Vector2((float)this.x, (float)(this.y + 3)), filename, GuiData.font, new Color?(Color.White), (float)(this.bounds.Width - 70), 3.40282347E+38f, false);
+            int num = 55;
+            Rectangle dest = new Rectangle(rectangle.X + 4, rectangle.Y + num, rectangle.Width - 6, rectangle.Height - num - 2);
+            string content = ((ViewState)userScreen.activeSession.currentState).content;
+            this.y += 70;
+            string text2 = Utils.SuperSmartTwimForWidth(content, this.bounds.Width - 40, GuiData.tinyfont);
+            this.viewTextRegion.Draw(dest, text2, this.spriteBatch);
         }
 
         private void doIRCModule()
