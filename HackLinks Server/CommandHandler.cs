@@ -22,11 +22,11 @@ namespace HackLinks_Server
             { "ls", new Tuple<string, Command>("ls \n    Lists all files in current directory.", Ls) },
             { "cd", new Tuple<string, Command>("cd [dir]\n    Moves current working directory to the specified directory.", ChangeDirectory) },
             { "touch", new Tuple<string, Command>("touch [file]\n    Create the given file if it doesn't already exist.", Touch) },
+            { "view", new Tuple<string, Command>("view [file]\n    Displays the given file on the Display Module.", View)},
             { "mkdir", new Tuple<string, Command>("mkdir [dir]\n    Create the given directory if it doesn't already exist.", MkDir) },
             { "rm", new Tuple<string, Command>("rm [file]\n    Remove the given file.", Remove) },
             { "login", new Tuple<string, Command>("login [username] [password]\n    Login to the current connected system using the given username and password.", Login) },
             { "chmod", new Tuple<string, Command>("chmod [file] [readLevel] [writeLevel]\n    Change the required user level for read and write operations on the given file.", ChMod) },
-            { "view", new Tuple<string, Command>("view [file]\n    Displays the given file.", View) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
         };
 
@@ -58,7 +58,40 @@ namespace HackLinks_Server
 
         public static bool View(GameClient client, string[] command)
         {
-
+            if (client.activeSession == null || client.activeSession.connectedNode == null)
+            {
+                client.Send("MESSG:You are not connected to a node.");
+                return true;
+            }
+            if (command.Length < 2)
+            {
+                client.Send("MESSG:Usage : view [file]");
+                return true;
+            }
+            var cmdArgs = command[1].Split(' ');
+            if (cmdArgs.Length != 1)
+            {
+                client.Send("MESSG:Usage : view [file]");
+                return true;
+            }
+            var activeDirectory = client.activeSession.activeDirectory;
+            var file = activeDirectory.GetFile(cmdArgs[0]);
+            if(file == null)
+            {
+                client.Send("MESSG:File " + cmdArgs[0] + " not found.");
+                return true;
+            }
+            if(file.IsFolder())
+            {
+                client.Send("MESSG:You cannot display a directory.");
+                return true;
+            }
+            if(!file.HasReadPermission(client.activeSession.privilege))
+            {
+                client.Send("MESSG:Permission denied.");
+                return true;
+            }
+            client.Send("KERNL:state;view;"+file.name+";"+file.content);
             return true;
         }
 

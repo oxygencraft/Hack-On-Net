@@ -350,6 +350,12 @@ namespace HackOnNet.Screens
                         
                     }
                 }
+                if(cmdArgs[1] == "view")
+                {
+                    string fileName = cmdArgs[2];
+                    this.Write("received data from " + fileName + ", placeholder.");
+
+                }
             }
         }
         

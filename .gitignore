@@ -8,6 +8,7 @@
 *.cache
 *.dll
 *.pdb
+*.exe
 
 [Dd]ebug/
 [Dd]ebugPublic/
