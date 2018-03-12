@@ -7,10 +7,13 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Daemons
 {
-    class Daemon
+    abstract class Daemon
     {
         protected Node node;
         protected List<Session> connectedSessions = new List<Session>();
+
+        //This should be created and populated by the implementing class
+        public abstract SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands { get; }
 
         public Daemon(Node node)
         {
@@ -33,7 +36,7 @@ namespace HackLinks_Server.Daemons
             return strType.ToLower() == "default";
         }
 
-        public virtual bool HandleDaemonCommand(Session session, string[] command)
+        public virtual bool HandleDaemonCommand(GameClient client, string[] command)
         {
             return false;
         }

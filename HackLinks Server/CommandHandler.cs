@@ -53,7 +53,7 @@ namespace HackLinks_Server
         {
             if (client.activeSession == null)
                 return false;
-            return client.activeSession.HandleSessionCommand(command);
+            return client.activeSession.HandleSessionCommand(client, command);
         }
 
         public static bool View(GameClient client, string[] command)
@@ -98,7 +98,13 @@ namespace HackLinks_Server
         public static bool Help(GameClient client, string[] command)
         {
             const int ITEMS_PER_PAGE = 10;
-            int totalPages = commands.Count / ITEMS_PER_PAGE + 1;
+            int totalKernelPages = commands.Count / ITEMS_PER_PAGE + 1;
+            int totalSessionPages = 0;
+
+            if(client.activeSession != null)
+                totalSessionPages = client.activeSession.Commands.Count / ITEMS_PER_PAGE + 1;
+
+            int totalPages = totalKernelPages + totalSessionPages;
 
             int pageNum = 0;
 
@@ -117,10 +123,23 @@ namespace HackLinks_Server
 
             builder.AppendLine(header);
 
-            foreach (string key in commands.Keys.Skip((pageNum - 1) * 10).Take(10))
+            if (pageNum <= totalKernelPages)
             {
-                builder.AppendLine(commands[key].Item1);
-                builder.AppendLine();
+                builder.AppendLine("------- Kernel Commands -------\n");
+                foreach (string key in commands.Keys.Skip((pageNum - 1) * 10).Take(10))
+                {
+                    builder.AppendLine(commands[key].Item1);
+                    builder.AppendLine();
+                }
+            }
+            else
+            {
+                builder.AppendLine("------- Session Commands -------\n");
+                foreach (string key in client.activeSession.Commands.Keys.Skip((pageNum - totalKernelPages - 1) * 10).Take(10))
+                {
+                    builder.AppendLine(client.activeSession.Commands[key].Item1);
+                    builder.AppendLine();
+                }
             }
 
             builder.Append(commands["help"].Item1);
