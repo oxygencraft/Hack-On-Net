@@ -11,6 +11,35 @@ namespace HackLinks_Server
 {
     class Session
     {
+
+        private SortedDictionary<string, Tuple<string, CommandHandler.Command>> sessionCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
+        {
+            { "daemon", new Tuple<string, CommandHandler.Command>("daemon [daemon name]\n    If it's available we'll launch the given daemon.", Daemon) },
+        };
+
+        public SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands
+        {
+            get
+            {
+                //If we've not got a active daemon then we don't need to do a merge
+                if (activeDaemon == null)
+                {
+                    return sessionCommands;
+                }
+                else
+                {
+                    //Commands from the daemon will override commands from the session if there's a conflict.
+                    Dictionary<string, Tuple<string, CommandHandler.Command>> newCommands = sessionCommands
+                        .Union(activeDaemon.Commands)
+                        .GroupBy(k => k.Key, v => v.Value)
+                        .ToDictionary(k => k.Key, v => v.Last());
+
+                    //finally create sorted dictionary from this
+                    return new SortedDictionary<string, Tuple<string, CommandHandler.Command>>(newCommands);
+                }
+            }
+        }
+
         public GameClient owner;
         public Node connectedNode;
         public Daemon activeDaemon;
@@ -43,31 +72,35 @@ namespace HackLinks_Server
             owner.Send("KERNL:login;" + privilege + ";" + username);
         }
 
-        public bool HandleSessionCommand(string[] command)
+        public bool HandleSessionCommand(GameClient client, string[] command)
         {
-            if(command[0] == "daemon")
+            if (Commands.ContainsKey(command[0]))
+                return Commands[command[0]].Item2(client, command);
+
+            return false;
+        }
+
+        private static bool Daemon(GameClient client, string[] command)
+        {
+            Session activeSession = client.activeSession;
+
+            if (command.Length != 2)
             {
-                if(command.Length != 2)
+                activeSession.owner.Send("MESSG:Usage : daemon [name of daemon]");
+                return true;
+            }
+            var target = command[1];
+            foreach (Daemon daemon in activeSession.connectedNode.daemons)
+            {
+                if (daemon.IsOfType(target))
                 {
-                    owner.Send("MESSG:Usage : daemon [name of daemon]");
+                    activeSession.activeDaemon = daemon;
+                    daemon.OnConnect(activeSession);
                     return true;
-                }
-                var target = command[1];
-                foreach(Daemon daemon in connectedNode.daemons)
-                {
-                    if(daemon.IsOfType(target))
-                    {
-                        activeDaemon = daemon;
-                        daemon.OnConnect(this);
-                        return true;
-                    }
                 }
             }
 
-            if (activeDaemon != null && activeDaemon.HandleDaemonCommand(this, command))
-                return true;
-
-            return false;
+            return true;
         }
 
         public void DisconnectSession()

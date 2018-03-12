@@ -12,6 +12,15 @@ namespace HackLinks_Server.Daemons.Types
     {
         public List<IrcMessage> messages = new List<IrcMessage>();
 
+        public SortedDictionary<string, Tuple<string, CommandHandler.Command>> daemonCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
+        {
+            { "irc", new Tuple<string, CommandHandler.Command>("irc send [text to send]\n    Send a message via the connected IRC daemon.", Irc) },
+        };
+
+        public override SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands
+        {
+            get => daemonCommands;
+        }
 
         public IrcDaemon(Node node) : base(node)
         {
@@ -58,17 +67,22 @@ namespace HackLinks_Server.Daemons.Types
             }
         }
 
-        public override bool HandleDaemonCommand(Session session, string[] command)
+        private static bool Irc(GameClient client, string[] command)
         {
+
+            Session session = client.activeSession;
+
+            IrcDaemon daemon = (IrcDaemon) client.activeSession.activeDaemon;
+
             if (command[0] == "irc")
             {
-                if(command.Length < 2)
+                if (command.Length < 2)
                 {
                     session.owner.Send("MESSG:Usage : irc [send]");
                     return true;
                 }
                 var cmdArgs = command[1].Split(' ');
-                if(cmdArgs.Length < 2)
+                if (cmdArgs.Length < 2)
                 {
                     session.owner.Send("MESSG:Usage : irc [send]");
                     return true;
@@ -78,12 +92,20 @@ namespace HackLinks_Server.Daemons.Types
                     var text = "";
                     for (int i = 1; i < cmdArgs.Length; i++)
                         text += cmdArgs[i] + (i != cmdArgs.Length ? " " : "");
-                    SendMessage(new IrcMessage(session.owner.username, text));
+                    daemon.SendMessage(new IrcMessage(session.owner.username, text));
                     return true;
                 }
                 session.owner.Send("MESSG:Usage : irc [send/logout]");
                 return true;
             }
+            return false;
+        }
+
+        public override bool HandleDaemonCommand(GameClient client, string[] command)
+        {
+            if (Commands.ContainsKey(command[0]))
+                return Commands[command[0]].Item2(client, command);
+
             return false;
         }
     }
