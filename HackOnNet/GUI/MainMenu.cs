@@ -40,7 +40,7 @@ namespace HackOnNet.GUI
         private static bool PreventAdvancing = false;
         public static Action RequestGoBack;
 
-        private static string username = "", password = "", loginMessage = "";
+        private static string loginMessage = "";
         private static Hacknet.MainMenu bMenu;
 
 
@@ -55,7 +55,7 @@ namespace HackOnNet.GUI
             {
                 if (r.JustReleased)
                 {
-                    MainMenu.StartGame();
+                    MainMenu.StartGame(Answers[Answers.Count - 2], Answers[Answers.Count - 1]);
                 }
             }
         };
@@ -136,10 +136,10 @@ namespace HackOnNet.GUI
                         }
                         else
                         {
-                            string username = Answers[0];
-                            string password = Answers[1];
+                            string username = Answers[Answers.Count - 2];
+                            string password = Answers[Answers.Count - 1];
                             Hacknet.Gui.TextBox.MaskingText = false;
-                            StartGame();
+                            StartGame(username, password);
                         }
                     }
                     else
@@ -199,7 +199,7 @@ namespace HackOnNet.GUI
 
         #region Functions
 
-        async private static void StartGame()
+        async private static void StartGame(string username, string password)
         {
             UserScreen screen = new UserScreen();
             NetManager netManager = new NetManager(screen);
@@ -249,6 +249,7 @@ namespace HackOnNet.GUI
             }
 
             loginState = LoginState.MENU;
+            ResetForLogin();
         }
 
         private static void ChangeState(MenuState state)
@@ -327,6 +328,7 @@ namespace HackOnNet.GUI
             History.Add("-- " + LocaleTerms.Loc("HackOnNet Login") + " --");
             currentPrompt = PromptSequence[promptIndex];
             IsLoginMode = true;
+            PreventAdvancing = false;
             terminalString = "";
             Hacknet.Gui.TextBox.cursorPosition = 0;
         }
