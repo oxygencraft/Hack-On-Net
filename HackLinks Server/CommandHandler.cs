@@ -27,6 +27,7 @@ namespace HackLinks_Server
             { "rm", new Tuple<string, Command>("rm [file]\n    Remove the given file.", Remove) },
             { "login", new Tuple<string, Command>("login [username] [password]\n    Login to the current connected system using the given username and password.", Login) },
             { "chmod", new Tuple<string, Command>("chmod [file] [readLevel] [writeLevel]\n    Change the required user level for read and write operations on the given file.", ChMod) },
+            { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
         };
 
@@ -54,6 +55,30 @@ namespace HackLinks_Server
             if (client.activeSession == null)
                 return false;
             return client.activeSession.HandleSessionCommand(client, command);
+        }
+
+        public static bool Fedit(GameClient client, string[] command)
+        {
+            if (client.activeSession == null || client.activeSession.connectedNode == null)
+            {
+                client.Send("MESSG:You are not connected to a node.");
+                return true;
+            }
+            if (command.Length < 2)
+            {
+                client.Send("MESSG:Usage : fedit [append/line/remove/insert/help]");
+                return true;
+            }
+            var cmdArgs = command[1].Split(' ');
+            if(cmdArgs[0] == "help")
+            {
+                client.Send("MESSG:fedit [append] [file] [text] - Appends 'text' in a new line, at the bottom of the file.\n" +
+                    "fedit [line] [file] [n] [text] - Changes content of line 'n' to 'text'.\n" +
+                    "fedit [remove] [file] [n] - Removes line 'n' of the file.\n" +
+                    "fedit [insert] [file] [n] [text] - Insert a new line containing 'text' in the 'n' line number.");
+                return true;
+            }
+            return true;
         }
 
         public static bool View(GameClient client, string[] command)
