@@ -237,6 +237,9 @@ namespace HackOnNet.GUI
                 screen.netManager = netManager;
                 screen.username = username;
                 GuiData.hot = -1;
+                InPasswordMode = false;
+                Hacknet.Gui.TextBox.MaskingText = false;
+                Hacknet.Gui.TextBox.cursorPosition = 0;
                 bMenu.ScreenManager.AddScreen(screen, new PlayerIndex?(bMenu.ScreenManager.controllingPlayer));
             }
             else if (loginState == LoginState.INVALID)
