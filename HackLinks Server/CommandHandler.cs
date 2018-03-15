@@ -78,6 +78,93 @@ namespace HackLinks_Server
                     "fedit [insert] [file] [n] [text] - Insert a new line containing 'text' in the 'n' line number.");
                 return true;
             }
+            if(cmdArgs[0] == "append")
+            {
+                if(cmdArgs.Length < 3)
+                {
+                    client.Send("MESSG:Missing arguments");
+                    return true;
+                }
+                var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
+                if (file == null)
+                {
+                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    return true;
+                }
+                if (!file.HasWritePermission(client.activeSession))
+                {
+                    client.Send("MESSG:Permission denied.");
+                    return true;
+                }
+
+                file.content += "\n" + cmdArgs.JoinWords(" ", 2);
+                client.Send("MESSG:Content appended.");
+                return true;
+            }
+            if (cmdArgs[0] == "line")
+            {
+                if (cmdArgs.Length < 3)
+                {
+                    client.Send("MESSG:Missing arguments");
+                    return true;
+                }
+                var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
+                if (file == null)
+                {
+                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    return true;
+                }
+                if (!file.HasWritePermission(client.activeSession))
+                {
+                    client.Send("MESSG:Permission denied.");
+                    return true;
+                }
+
+                return true;
+            }
+            if (cmdArgs[0] == "remove")
+            {
+                if (cmdArgs.Length < 3)
+                {
+                    client.Send("MESSG:Missing arguments");
+                    return true;
+                }
+                var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
+                if (file == null)
+                {
+                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    return true;
+                }
+                if (!file.HasWritePermission(client.activeSession))
+                {
+                    client.Send("MESSG:Permission denied.");
+                    return true;
+                }
+
+                return true;
+            }
+            if (cmdArgs[0] == "insert")
+            {
+                if (cmdArgs.Length < 3)
+                {
+                    client.Send("MESSG:Missing arguments");
+                    return true;
+                }
+                var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
+                if (file == null)
+                {
+                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    return true;
+                }
+                if (!file.HasWritePermission(client.activeSession))
+                {
+                    client.Send("MESSG:Permission denied.");
+                    return true;
+                }
+
+                return true;
+            }
+            client.Send("MESSG:Usage : fedit [append/line/remove/insert/help]");
             return true;
         }
 
@@ -331,7 +418,7 @@ namespace HackLinks_Server
                 {
                     if (command[1] == file.name)
                     {
-                        client.Send("MESSG:File " + file.name + " > Permissions " + file.readPriv + "" + file.writePriv);
+                        client.Send("MESSG:File " + file.name + " > Permissions | Read : " + file.readPriv + "; Write : " + file.writePriv);
                         return true;
                     }
                 }
