@@ -97,7 +97,7 @@ namespace HackLinks_Server
                     return true;
                 }
 
-                file.content += "\n" + cmdArgs.JoinWords(" ", 2);
+                file.content += '\n' + cmdArgs.JoinWords(" ", 2);
                 client.Send("MESSG:Content appended.");
                 return true;
             }
@@ -119,7 +119,16 @@ namespace HackLinks_Server
                     client.Send("MESSG:Permission denied.");
                     return true;
                 }
-
+                int n;
+                if(!int.TryParse(cmdArgs[2], out n))
+                {
+                    client.Send("MESSG:Wrong line number.");
+                    return true;
+                }
+                var nth = file.content.GetNthOccurence(n, '\n');
+                file.content = file.content.Remove(nth, file.content.GetNthOccurence(n + 1, '\n') - nth);
+                file.content = file.content.Insert(nth, '\n'+cmdArgs.JoinWords(" ", 3));
+                client.Send("MESSG:Line edited.");
                 return true;
             }
             if (cmdArgs[0] == "remove")
@@ -140,7 +149,15 @@ namespace HackLinks_Server
                     client.Send("MESSG:Permission denied.");
                     return true;
                 }
-
+                int n;
+                if (!int.TryParse(cmdArgs[2], out n))
+                {
+                    client.Send("MESSG:Wrong line number.");
+                    return true;
+                }
+                var nth = file.content.GetNthOccurence(n, '\n');
+                file.content = file.content.Remove(nth, file.content.GetNthOccurence(n+1, '\n')-nth);
+                client.Send("MESSG:Line removed");
                 return true;
             }
             if (cmdArgs[0] == "insert")
@@ -161,7 +178,14 @@ namespace HackLinks_Server
                     client.Send("MESSG:Permission denied.");
                     return true;
                 }
-
+                int n;
+                if (!int.TryParse(cmdArgs[2], out n))
+                {
+                    client.Send("MESSG:Wrong line number.");
+                    return true;
+                }
+                file.content = file.content.Insert(file.content.GetNthOccurence(n, '\n'), '\n' + cmdArgs.JoinWords(" ", 3));
+                client.Send("MESSG:Content inserted");
                 return true;
             }
             client.Send("MESSG:Usage : fedit [append/line/remove/insert/help]");

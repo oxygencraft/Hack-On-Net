@@ -28,5 +28,10 @@ namespace HackLinks_Server
             }
             return result;
         }
+
+        public static int GetNthOccurence(this string str, int n, char occ)
+        {
+            return str.TakeWhile(c => (n -= (c == occ ? 1 : 0)) > 0).Count();
+        }
     }
 }
