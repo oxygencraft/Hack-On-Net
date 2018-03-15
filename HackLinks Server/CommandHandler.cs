@@ -27,6 +27,7 @@ namespace HackLinks_Server
             { "rm", new Tuple<string, Command>("rm [file]\n    Remove the given file.", Remove) },
             { "login", new Tuple<string, Command>("login [username] [password]\n    Login to the current connected system using the given username and password.", Login) },
             { "chmod", new Tuple<string, Command>("chmod [file] [readLevel] [writeLevel]\n    Change the required user level for read and write operations on the given file.", ChMod) },
+            { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
         };
 
@@ -54,6 +55,141 @@ namespace HackLinks_Server
             if (client.activeSession == null)
                 return false;
             return client.activeSession.HandleSessionCommand(client, command);
+        }
+
+        public static bool Fedit(GameClient client, string[] command)
+        {
+            if (client.activeSession == null || client.activeSession.connectedNode == null)
+            {
+                client.Send("MESSG:You are not connected to a node.");
+                return true;
+            }
+            if (command.Length < 2)
+            {
+                client.Send("MESSG:Usage : fedit [append/line/remove/insert/help]");
+                return true;
+            }
+            var cmdArgs = command[1].Split(' ');
+            if(cmdArgs[0] == "help")
+            {
+                client.Send("MESSG:fedit [append] [file] [text] - Appends 'text' in a new line, at the bottom of the file.\n" +
+                    "fedit [line] [file] [n] [text] - Changes content of line 'n' to 'text'.\n" +
+                    "fedit [remove] [file] [n] - Removes line 'n' of the file.\n" +
+                    "fedit [insert] [file] [n] [text] - Insert a new line containing 'text' in the 'n' line number.");
+                return true;
+            }
+            if(cmdArgs[0] == "append")
+            {
+                if(cmdArgs.Length < 3)
+                {
+                    client.Send("MESSG:Missing arguments");
+                    return true;
+                }
+                var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
+                if (file == null)
+                {
+                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    return true;
+                }
+                if (!file.HasWritePermission(client.activeSession))
+                {
+                    client.Send("MESSG:Permission denied.");
+                    return true;
+                }
+
+                file.content += '\n' + cmdArgs.JoinWords(" ", 2);
+                client.Send("MESSG:Content appended.");
+                return true;
+            }
+            if (cmdArgs[0] == "line")
+            {
+                if (cmdArgs.Length < 3)
+                {
+                    client.Send("MESSG:Missing arguments");
+                    return true;
+                }
+                var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
+                if (file == null)
+                {
+                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    return true;
+                }
+                if (!file.HasWritePermission(client.activeSession))
+                {
+                    client.Send("MESSG:Permission denied.");
+                    return true;
+                }
+                int n;
+                if(!int.TryParse(cmdArgs[2], out n))
+                {
+                    client.Send("MESSG:Wrong line number.");
+                    return true;
+                }
+                var nth = file.content.GetNthOccurence(n, '\n');
+                file.content = file.content.Remove(nth, file.content.GetNthOccurence(n + 1, '\n') - nth);
+                file.content = file.content.Insert(nth, '\n'+cmdArgs.JoinWords(" ", 3));
+                client.Send("MESSG:Line edited.");
+                return true;
+            }
+            if (cmdArgs[0] == "remove")
+            {
+                if (cmdArgs.Length < 3)
+                {
+                    client.Send("MESSG:Missing arguments");
+                    return true;
+                }
+                var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
+                if (file == null)
+                {
+                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    return true;
+                }
+                if (!file.HasWritePermission(client.activeSession))
+                {
+                    client.Send("MESSG:Permission denied.");
+                    return true;
+                }
+                int n;
+                if (!int.TryParse(cmdArgs[2], out n))
+                {
+                    client.Send("MESSG:Wrong line number.");
+                    return true;
+                }
+                var nth = file.content.GetNthOccurence(n, '\n');
+                file.content = file.content.Remove(nth, file.content.GetNthOccurence(n+1, '\n')-nth);
+                client.Send("MESSG:Line removed");
+                return true;
+            }
+            if (cmdArgs[0] == "insert")
+            {
+                if (cmdArgs.Length < 3)
+                {
+                    client.Send("MESSG:Missing arguments");
+                    return true;
+                }
+                var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
+                if (file == null)
+                {
+                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    return true;
+                }
+                if (!file.HasWritePermission(client.activeSession))
+                {
+                    client.Send("MESSG:Permission denied.");
+                    return true;
+                }
+                int n;
+                if (!int.TryParse(cmdArgs[2], out n))
+                {
+                    client.Send("MESSG:Wrong line number.");
+                    return true;
+                }
+                file.content = file.content.Insert(file.content.GetNthOccurence(n, '\n'), '\n' + cmdArgs.JoinWords(" ", 3));
+                client.Send("MESSG:Content inserted");
+                return true;
+            }
+            client.Send("MESSG:Usage : fedit [append/line/remove/insert/help]");
+            return true;
         }
 
         public static bool View(GameClient client, string[] command)
@@ -306,7 +442,7 @@ namespace HackLinks_Server
                 {
                     if (command[1] == file.name)
                     {
-                        client.Send("MESSG:File " + file.name + " > Permissions " + file.readPriv + "" + file.writePriv);
+                        client.Send("MESSG:File " + file.name + " > Permissions | Read : " + file.readPriv + "; Write : " + file.writePriv);
                         return true;
                     }
                 }

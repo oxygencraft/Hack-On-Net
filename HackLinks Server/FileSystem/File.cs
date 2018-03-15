@@ -42,6 +42,11 @@ namespace HackLinks_Server.FileSystem
             }
         }
 
+        public bool HasWritePermission(Session session)
+        {
+            return HasWritePermission(session.privilege);
+        }
+
         public bool HasWritePermission(int priv)
         {
             return priv <= writePriv;
