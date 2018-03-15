@@ -27,6 +27,11 @@ namespace HackLinks_Server.Computers
                 var newDaemon = new IrcDaemon(this);
                 daemons.Add(newDaemon);
             }
+            else if(lines[0] == "DNS")
+            {
+                var newDaemon = new DNSDaemon(this);
+                daemons.Add(newDaemon);
+            }
         }
 
         public void Login(GameClient client, string username, string password)

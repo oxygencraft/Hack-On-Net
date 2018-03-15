@@ -23,7 +23,8 @@ namespace HackLinks_Server.Daemons
         public enum DaemonType
         {
             DEFAULT,
-            IRC
+            IRC,
+            DNS
         }
 
         public virtual DaemonType GetDaemonType()
