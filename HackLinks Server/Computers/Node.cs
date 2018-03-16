@@ -1,6 +1,7 @@
 ﻿using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
 using HackLinks_Server.FileSystem;
+using HackLinksCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,13 +35,13 @@ namespace HackLinks_Server.Computers
             var configFolder = (Folder)rootFolder.GetFile("cfg");
             if (configFolder == null)
             {
-                client.Send("MESSG:No config folder was found !");
+                client.Send(NetUtil.PacketType.MESSG, "No config folder was found !");
                 return;
             }
             var usersFile = configFolder.GetFile("users.cfg");
             if (usersFile == null)
             {
-                client.Send("MESSG:No config file was found !");
+                client.Send(NetUtil.PacketType.MESSG, "No config file was found !");
                 return;
             }
             var accounts = usersFile.content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -50,11 +51,11 @@ namespace HackLinks_Server.Computers
                 if (accountData[1] == username && accountData[2] == password)
                 {
                     client.activeSession.Login(accountData[0], username);
-                    client.Send("MESSG:Logged as : " + username);
+                    client.Send(NetUtil.PacketType.MESSG, "Logged as : " + username);
                     return;
                 }
             }
-            client.Send("MESSG:Wrong identificants.");
+            client.Send(NetUtil.PacketType.MESSG, "Wrong identificants.");
         }
 
         /*public Folder getFolderFromPath(string path, bool createFoldersThatDontExist = false)

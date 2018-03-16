@@ -84,5 +84,11 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HackLinksCommon\HackLinksCommon.csproj">
+      <Project>{15ba833d-405c-4997-88a5-286736e300be}</Project>
+      <Name>HackLinksCommon</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
