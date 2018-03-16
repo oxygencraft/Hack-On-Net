@@ -12,6 +12,8 @@ namespace HackLinks_Server.Daemons.Types
 {
     class DNSDaemon : Daemon
     {
+        public static string DEFAULT_CONFIG_PATH = "/daemons/dns/entries.db";
+
         public DNSDaemon(Node node) : base(node)
         {
 
@@ -113,7 +115,7 @@ namespace HackLinks_Server.Daemons.Types
         public void LoadEntries()
         {
             this.entries.Clear();
-            File entryFile = node.rootFolder.GetFileAtPath("/daemons/dns/entries.db");
+            File entryFile = node.rootFolder.GetFileAtPath(DEFAULT_CONFIG_PATH);
             if (entryFile == null)
                 return;
             foreach (string line in entryFile.content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
