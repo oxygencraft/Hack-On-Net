@@ -110,7 +110,7 @@ namespace HackLinks_Server.Computers
                 var autorunFile = daemonsFolder.GetFile("autorun");
                 if (autorunFile == null)
                     continue;
-                foreach(string line in autorunFile.content.Split('\n'))
+                foreach(string line in autorunFile.content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var daemonFile = daemonsFolder.GetFile(line);
                     if (daemonFile == null)

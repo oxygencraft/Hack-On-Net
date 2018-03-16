@@ -69,6 +69,7 @@
     <Compile Include="ConfigUtil.cs" />
     <Compile Include="Daemons\Daemon.cs" />
     <Compile Include="Daemons\Types\DNSDaemon.cs" />
+    <Compile Include="Daemons\Types\Dns\DNSEntry.cs" />
     <Compile Include="Daemons\Types\IrcDaemon.cs" />
     <Compile Include="Daemons\Types\Irc\IrcMessage.cs" />
     <Compile Include="Extensions.cs" />

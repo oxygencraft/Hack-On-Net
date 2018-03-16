@@ -18,6 +18,7 @@ namespace HackLinks_Server.Daemons
         public Daemon(Node node)
         {
             this.node = node;
+            OnStartUp();
         }
 
         public enum DaemonType

@@ -35,7 +35,7 @@ namespace HackLinks_Server.FileSystem
             for(int i = 0; i < pathSteps.Length-1; i++)
             {
                 var folder = activeFolder.GetFile(pathSteps[i]);
-                if (folder == null || folder.IsFolder())
+                if (folder == null || !folder.IsFolder())
                     return null;
                 activeFolder = (Folder)folder;
             }

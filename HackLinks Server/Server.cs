@@ -116,6 +116,7 @@ namespace HackLinks_Server
                             client.username = messages[1];
                             client.Send(PacketType.LOGRE, "0"); // Good account*/
                             var homeNode = computerManager.GetNodeById(homeId);
+                            client.homeComputer = homeNode;
                             var ip = "none";
                             if (homeNode != null)
                                 ip = homeNode.ip;
