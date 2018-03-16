@@ -1,4 +1,5 @@
-﻿using Hacknet;
+﻿using HackLinksCommon;
+using Hacknet;
 using HackOnNet.DotNetCompatibility;
 using HackOnNet.FileSystem;
 using HackOnNet.Modules;
@@ -116,10 +117,7 @@ namespace HackOnNet.Screens
 
         public override void Update(GameTime gameTime, bool otherScreenHasFocus, bool coveredByOtherScreen)
         {
-            
             base.Update(gameTime, otherScreenHasFocus, coveredByOtherScreen);
-            netManager.Receive();
-            
         }
 
         public override void Draw(GameTime gameTime)
@@ -370,7 +368,7 @@ namespace HackOnNet.Screens
         {
             try
             {
-                netManager.Send("COMND:"+command/*.EscapeChar()*/);
+                netManager.Send(NetUtil.PacketType.COMND, command);
             }
             catch(Exception ex)
             {

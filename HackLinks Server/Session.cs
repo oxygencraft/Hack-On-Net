@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
@@ -69,7 +70,7 @@ namespace HackLinks_Server
                 privilege = 3;
             currentUsername = username;
 
-            owner.Send("KERNL:login;" + privilege + ";" + username);
+            owner.Send(PacketType.KERNL, "login;" + privilege + ";" + username);
         }
 
         public bool HandleSessionCommand(GameClient client, string[] command)
@@ -86,7 +87,7 @@ namespace HackLinks_Server
 
             if (command.Length != 2)
             {
-                activeSession.owner.Send("MESSG:Usage : daemon [name of daemon]");
+                activeSession.owner.Send(PacketType.MESSG, "Usage : daemon [name of daemon]");
                 return true;
             }
             var target = command[1];

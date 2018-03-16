@@ -18,12 +18,12 @@ namespace HackOnNet.GUI
 {
     internal static class MainMenu
     {
-        public enum MenuState { MAIN_MENU, LOGIN }
+        public enum MenuState { OG_MENU, MAIN_MENU, LOGIN }
 
         public enum LoginState { MENU, LOGGED_IN, INVALID, UNAVAILABLE, LOGGED, LOGGING_IN }
 
         public static LoginState loginState = LoginState.MENU;
-        private static MenuState currentState = MenuState.MAIN_MENU;
+        private static MenuState currentState = MenuState.OG_MENU;
 
         private static Color CancelColor = new Color(125, 82, 82);
         private static string terminalString = "";
@@ -60,8 +60,11 @@ namespace HackOnNet.GUI
             }
         };
 
-        private static Button returnButton = new Button(180, 535, 300, 28, "Return to Bootloader", Color.Gray)
+        private static Button openHackOnNet = new Button(180, 655, 450, 50, "Open Multiplayer Mod", Color.AliceBlue)
         { DrawFinish = (r) => { if (r.JustReleased) ChangeState(MenuState.MAIN_MENU); } };
+
+        private static Button returnButton = new Button(180, 535, 300, 28, "Return to Bootloader", Color.Gray)
+        { DrawFinish = (r) => { if (r.JustReleased) ChangeState(MenuState.OG_MENU); } };
 
         #endregion Buttons
 
@@ -69,15 +72,18 @@ namespace HackOnNet.GUI
 
         public static void DrawMainMenu(DrawMainMenuEvent e)
         {
-            e.IsCancelled = true;
-
             if (bMenu == null)
                 bMenu = e.MainMenu;
-
+            if (currentState == MenuState.OG_MENU)
+            {
+                openHackOnNet.Draw();
+                return;
+            }
+            e.IsCancelled = true;
             if (currentState == MenuState.MAIN_MENU)
                 DrawMain(e);
             else if (currentState == MenuState.LOGIN)
-                DrawLogin(e);
+                DrawLogin(e);            
         }
 
         private static void DrawMain(DrawMainMenuEvent e)
@@ -97,11 +103,9 @@ namespace HackOnNet.GUI
                 e.MainMenu.ScreenManager.AddScreen(new OptionsMenu(), new PlayerIndex?(e.MainMenu.ScreenManager.controllingPlayer));
             }
 
-            if (Hacknet.Gui.Button.doButton(15, 180, 360, 450, 28, LocaleTerms.Loc("Exit"), Color.Gray))
+            if (Hacknet.Gui.Button.doButton(15, 180, 360, 450, 28, LocaleTerms.Loc("Back to Main Menu"), Color.Gray))
             {
-                MusicManager.stop();
-                Game1.threadsExiting = true;
-                Game1.getSingleton().Exit();
+                currentState = MenuState.OG_MENU;
             }
         }
 

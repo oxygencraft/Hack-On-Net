@@ -1,5 +1,6 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.FileSystem;
+using HackLinksCommon;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -38,7 +39,7 @@ namespace HackLinks_Server
             if (TreatSessionCommands(client, command.Split(new char[] { ' ' }, 2)))
                 return true;
 
-            client.Send("MESSG:Unknown command.");
+            client.Send(NetUtil.PacketType.MESSG, "Unknown command.");
             return false;
         }
 
@@ -61,18 +62,18 @@ namespace HackLinks_Server
         {
             if (client.activeSession == null || client.activeSession.connectedNode == null)
             {
-                client.Send("MESSG:You are not connected to a node.");
+                client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
             if (command.Length < 2)
             {
-                client.Send("MESSG:Usage : fedit [append/line/remove/insert/help]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : fedit [append/line/remove/insert/help]");
                 return true;
             }
             var cmdArgs = command[1].Split(' ');
             if(cmdArgs[0] == "help")
             {
-                client.Send("MESSG:fedit [append] [file] [text] - Appends 'text' in a new line, at the bottom of the file.\n" +
+                client.Send(NetUtil.PacketType.MESSG, "fedit [append] [file] [text] - Appends 'text' in a new line, at the bottom of the file.\n" +
                     "fedit [line] [file] [n] [text] - Changes content of line 'n' to 'text'.\n" +
                     "fedit [remove] [file] [n] - Removes line 'n' of the file.\n" +
                     "fedit [insert] [file] [n] [text] - Insert a new line containing 'text' in the 'n' line number.");
@@ -82,113 +83,113 @@ namespace HackLinks_Server
             {
                 if(cmdArgs.Length < 3)
                 {
-                    client.Send("MESSG:Missing arguments");
+                    client.Send(NetUtil.PacketType.MESSG, "Missing arguments");
                     return true;
                 }
                 var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
                 if (file == null)
                 {
-                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[1] + " not found.");
                     return true;
                 }
                 if (!file.HasWritePermission(client.activeSession))
                 {
-                    client.Send("MESSG:Permission denied.");
+                    client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                     return true;
                 }
 
                 file.content += '\n' + cmdArgs.JoinWords(" ", 2);
-                client.Send("MESSG:Content appended.");
+                client.Send(NetUtil.PacketType.MESSG, "Content appended.");
                 return true;
             }
             if (cmdArgs[0] == "line")
             {
                 if (cmdArgs.Length < 3)
                 {
-                    client.Send("MESSG:Missing arguments");
+                    client.Send(NetUtil.PacketType.MESSG, "Missing arguments");
                     return true;
                 }
                 var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
                 if (file == null)
                 {
-                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[1] + " not found.");
                     return true;
                 }
                 if (!file.HasWritePermission(client.activeSession))
                 {
-                    client.Send("MESSG:Permission denied.");
+                    client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                     return true;
                 }
                 int n;
                 if(!int.TryParse(cmdArgs[2], out n))
                 {
-                    client.Send("MESSG:Wrong line number.");
+                    client.Send(NetUtil.PacketType.MESSG, "Wrong line number.");
                     return true;
                 }
                 var nth = file.content.GetNthOccurence(n, '\n');
                 file.content = file.content.Remove(nth, file.content.GetNthOccurence(n + 1, '\n') - nth);
                 file.content = file.content.Insert(nth, '\n'+cmdArgs.JoinWords(" ", 3));
-                client.Send("MESSG:Line edited.");
+                client.Send(NetUtil.PacketType.MESSG, "Line edited.");
                 return true;
             }
             if (cmdArgs[0] == "remove")
             {
                 if (cmdArgs.Length < 3)
                 {
-                    client.Send("MESSG:Missing arguments");
+                    client.Send(NetUtil.PacketType.MESSG, "Missing arguments");
                     return true;
                 }
                 var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
                 if (file == null)
                 {
-                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[1] + " not found.");
                     return true;
                 }
                 if (!file.HasWritePermission(client.activeSession))
                 {
-                    client.Send("MESSG:Permission denied.");
+                    client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                     return true;
                 }
                 int n;
                 if (!int.TryParse(cmdArgs[2], out n))
                 {
-                    client.Send("MESSG:Wrong line number.");
+                    client.Send(NetUtil.PacketType.MESSG, "Wrong line number.");
                     return true;
                 }
                 var nth = file.content.GetNthOccurence(n, '\n');
                 file.content = file.content.Remove(nth, file.content.GetNthOccurence(n+1, '\n')-nth);
-                client.Send("MESSG:Line removed");
+                client.Send(NetUtil.PacketType.MESSG, "Line removed");
                 return true;
             }
             if (cmdArgs[0] == "insert")
             {
                 if (cmdArgs.Length < 3)
                 {
-                    client.Send("MESSG:Missing arguments");
+                    client.Send(NetUtil.PacketType.MESSG, "Missing arguments");
                     return true;
                 }
                 var file = client.activeSession.activeDirectory.GetFile(cmdArgs[1]);
                 if (file == null)
                 {
-                    client.Send("MESSG:File " + cmdArgs[1] + " not found.");
+                    client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[1] + " not found.");
                     return true;
                 }
                 if (!file.HasWritePermission(client.activeSession))
                 {
-                    client.Send("MESSG:Permission denied.");
+                    client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                     return true;
                 }
                 int n;
                 if (!int.TryParse(cmdArgs[2], out n))
                 {
-                    client.Send("MESSG:Wrong line number.");
+                    client.Send(NetUtil.PacketType.MESSG, "Wrong line number.");
                     return true;
                 }
                 file.content = file.content.Insert(file.content.GetNthOccurence(n, '\n'), '\n' + cmdArgs.JoinWords(" ", 3));
-                client.Send("MESSG:Content inserted");
+                client.Send(NetUtil.PacketType.MESSG, "Content inserted");
                 return true;
             }
-            client.Send("MESSG:Usage : fedit [append/line/remove/insert/help]");
+            client.Send(NetUtil.PacketType.MESSG, "Usage : fedit [append/line/remove/insert/help]");
             return true;
         }
 
@@ -196,38 +197,38 @@ namespace HackLinks_Server
         {
             if (client.activeSession == null || client.activeSession.connectedNode == null)
             {
-                client.Send("MESSG:You are not connected to a node.");
+                client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
             if (command.Length < 2)
             {
-                client.Send("MESSG:Usage : view [file]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : view [file]");
                 return true;
             }
             var cmdArgs = command[1].Split(' ');
             if (cmdArgs.Length != 1)
             {
-                client.Send("MESSG:Usage : view [file]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : view [file]");
                 return true;
             }
             var activeDirectory = client.activeSession.activeDirectory;
             var file = activeDirectory.GetFile(cmdArgs[0]);
             if(file == null)
             {
-                client.Send("MESSG:File " + cmdArgs[0] + " not found.");
+                client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[0] + " not found.");
                 return true;
             }
             if(file.IsFolder())
             {
-                client.Send("MESSG:You cannot display a directory.");
+                client.Send(NetUtil.PacketType.MESSG, "You cannot display a directory.");
                 return true;
             }
             if(!file.HasReadPermission(client.activeSession.privilege))
             {
-                client.Send("MESSG:Permission denied.");
+                client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                 return true;
             }
-            client.Send("KERNL:state;view;"+file.name+";"+file.content);
+            client.Send(NetUtil.PacketType.KERNL, "state;view;"+file.name+";"+file.content);
             return true;
         }
 
@@ -282,7 +283,7 @@ namespace HackLinks_Server
 
             builder.Append(footer);
 
-            client.Send("MESSG:" + builder.ToString());
+            client.Send(NetUtil.PacketType.MESSG, builder.ToString());
 
             return true;
         }
@@ -291,18 +292,18 @@ namespace HackLinks_Server
         {
             if (client.activeSession == null || client.activeSession.connectedNode == null)
             {
-                client.Send("MESSG:You are not connected to a node.");
+                client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
             if (command.Length < 2)
             {
-                client.Send("MESSG:Usage : chmod [file] [readLevel] [writeLevel]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : chmod [file] [readLevel] [writeLevel]");
                 return true;
             }
             var cmdArgs = command[1].Split(' ');
             if(cmdArgs.Length != 3)
             {
-                client.Send("MESSG:Usage : chmod [file] [readLevel] [writeLevel]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : chmod [file] [readLevel] [writeLevel]");
                 return true;
             }
             var writeLevel = PermissionHelper.ParsePermissionLevel(cmdArgs[2]);
@@ -310,12 +311,12 @@ namespace HackLinks_Server
             var activePriv = client.activeSession.privilege;
             if(writeLevel == -1 || readLevel == -1)
             {
-                client.Send("MESSG:Input valid writeLevel or readLevel");
+                client.Send(NetUtil.PacketType.MESSG, "Input valid writeLevel or readLevel");
                 return true;
             }
             if(writeLevel < activePriv || readLevel < activePriv)
             {
-                client.Send("MESSG:You cannot change to a higher permission than your current level.");
+                client.Send(NetUtil.PacketType.MESSG, "You cannot change to a higher permission than your current level.");
                 return true;
             }
             var activeDirectory = client.activeSession.activeDirectory;
@@ -325,16 +326,16 @@ namespace HackLinks_Server
                 {
                     if (!fileC.HasWritePermission(client.activeSession.privilege))
                     {
-                        client.Send("MESSG:Permission denied.");
+                        client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                         return true;
                     }
-                    client.Send("MESSG:File " + cmdArgs[0] + " permissions changed.");
+                    client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[0] + " permissions changed.");
                     fileC.writePriv = writeLevel;
                     fileC.readPriv = readLevel;
                     return true;
                 }
             }
-            client.Send("MESSG:File " + cmdArgs[0] + " was not found.");
+            client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[0] + " was not found.");
             return true;
         }
 
@@ -343,18 +344,18 @@ namespace HackLinks_Server
             // login [username] [password]
             if(client.activeSession == null || client.activeSession.connectedNode == null)
             {
-                client.Send("MESSG:You are not connected to a node.");
+                client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
             if(command.Length < 2)
             {
-                client.Send("MESSG:Usage : login [username] [password]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : login [username] [password]");
                 return true;
             }
             var args = command[1].Split(' ');
             if(args.Length < 2)
             {
-                client.Send("MESSG:Usage : login [username] [password]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : login [username] [password]");
                 return true;
             }
             client.activeSession.connectedNode.Login(client, args[0], args[1]);
@@ -366,16 +367,16 @@ namespace HackLinks_Server
             var compManager = client.server.GetComputerManager();
             if(command.Length < 2)
             {
-                client.Send("MESSG:Usage : ping [ip]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : ping [ip]");
                 return true;
             }
             var connectingToNode = compManager.GetNodeByIp(command[1]);
             if (connectingToNode == null)
             {
-                client.Send("MESSG:Ping on " + command[1] + " timeout.");
+                client.Send(NetUtil.PacketType.MESSG, "Ping on " + command[1] + " timeout.");
                 return true;
             }
-            client.Send("MESSG:Ping on " + command[1] + " success.");
+            client.Send(NetUtil.PacketType.MESSG, "Ping on " + command[1] + " success.");
             return true;       
         }
 
@@ -383,7 +384,7 @@ namespace HackLinks_Server
         {
             if (command.Length < 2)
             {
-                client.Send("MESSG:Usage : command [ip]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : command [ip]");
                 return true;
             }
             if(client.activeSession != null)
@@ -393,32 +394,9 @@ namespace HackLinks_Server
             if(connectingToNode != null)
                 client.ConnectTo(connectingToNode);                    
             else
-                client.Send("KERNL:connect;fail;0");
+                client.Send(NetUtil.PacketType.KERNL, "connect;fail;0");
             return true;
         }
-
-/*        public static bool SendMessage(GameClient client, string[] command)
-        {
-            string message = "Sent from {{blue}}"+client.username+"{{white}}>";
-            for(int i = 1; i < command.Length; i++)
-            {
-                message += command[i] + " ";
-            }
-            foreach(var Cclient in client.server.clients)
-            {
-                try
-                {
-                    Console.WriteLine(Cclient.username);
-                    Cclient.Send("MESSG:" + message);
-                }
-                catch(Exception ex)
-                {
-                    
-                }
-                
-            }
-            return true;
-        }*/
 
         public static bool Disconnect(GameClient client, string[] command)
         {
@@ -432,7 +410,7 @@ namespace HackLinks_Server
             var session = client.activeSession;
             if(session == null)
             {
-                client.Send("MESSG:You are not connected to a node.");
+                client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
             var root = session.connectedNode.rootFolder;
@@ -442,11 +420,11 @@ namespace HackLinks_Server
                 {
                     if (command[1] == file.name)
                     {
-                        client.Send("MESSG:File " + file.name + " > Permissions | Read : " + file.readPriv + "; Write : " + file.writePriv);
+                        client.Send(NetUtil.PacketType.MESSG, "File " + file.name + " > Permissions " + file.readPriv + "" + file.writePriv);
                         return true;
                     }
                 }
-                client.Send("MESSG:File " + command[1] + " not found.");
+                client.Send(NetUtil.PacketType.MESSG, "File " + command[1] + " not found.");
                 return true;
             }
             else
@@ -460,7 +438,7 @@ namespace HackLinks_Server
                             (file.HasWritePermission(client.activeSession.privilege) ? "w" : "-") + ";";
                     }
                 }
-                client.Send("KERNL:ls;" + session.activeDirectory.name + ";" + fileList); // ls;[working path];[listoffiles]
+                client.Send(NetUtil.PacketType.KERNL, "ls;" + session.activeDirectory.name + ";" + fileList); // ls;[working path];[listoffiles]
                 return true;
             }
         }
@@ -470,13 +448,13 @@ namespace HackLinks_Server
             var session = client.activeSession;
             if (session == null)
             {
-                client.Send("MESSG:You are not connected to a node.");
+                client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
 
             if (command.Length < 2)
             {
-                client.Send("MESSG:Usage : cd [folder]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : cd [folder]");
                 return true;
             }
             if(command[1] == "..")
@@ -488,7 +466,7 @@ namespace HackLinks_Server
                 }
                 else
                 {
-                    client.Send("MESSG:Invalid operation.");
+                    client.Send(NetUtil.PacketType.MESSG, "Invalid operation.");
                     return true;
                 }
             }
@@ -498,15 +476,15 @@ namespace HackLinks_Server
                 {
                     if(!file.IsFolder())
                     {
-                        client.Send("MESSG:You cannot change active directory to a file.");
+                        client.Send(NetUtil.PacketType.MESSG, "You cannot change active directory to a file.");
                         return true;
                     }
                     session.activeDirectory = (Folder)file;
-                    client.Send("KERNL:cd;"+file.name);
+                    client.Send(NetUtil.PacketType.KERNL, "cd;"+file.name);
                     return true;
                 }
             }
-            client.Send("MESSG:No such folder.");
+            client.Send(NetUtil.PacketType.MESSG, "No such folder.");
             return true;
         }
 
@@ -515,12 +493,12 @@ namespace HackLinks_Server
             var session = client.activeSession;
             if (session == null)
             {
-                client.Send("MESSG:You are not connected to a node.");
+                client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
             if(command.Length < 2)
             {
-                client.Send("MESSG:Usage : touch [fileName]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : touch [fileName]");
             }
 
             var activeDirectory = session.activeDirectory;
@@ -528,13 +506,13 @@ namespace HackLinks_Server
             {
                 if(fileC.name == command[1])
                 {
-                    client.Send("MESSG:File " + command[1] + " touched.");
+                    client.Send(NetUtil.PacketType.MESSG, "File " + command[1] + " touched.");
                     return true;
                 }
             }
             if(!activeDirectory.HasWritePermission(client.activeSession.privilege))
             {
-                client.Send("MESSG:Permission denied.");
+                client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                 return true;
             }
 
@@ -542,7 +520,7 @@ namespace HackLinks_Server
             file.writePriv = client.activeSession.privilege;
             file.readPriv = client.activeSession.privilege;
 
-            client.Send("MESSG:File " + command[1] + " was added.");
+            client.Send(NetUtil.PacketType.MESSG, "File " + command[1] + " was added.");
             return true;
         }
 
@@ -551,12 +529,12 @@ namespace HackLinks_Server
             var session = client.activeSession;
             if (session == null)
             {
-                client.Send("MESSG:You are not connected to a node.");
+                client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
             if (command.Length < 2)
             {
-                client.Send("MESSG:Usage : rm [fileName]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : rm [fileName]");
             }
             var activeDirectory = session.activeDirectory;
             foreach (var fileC in activeDirectory.children)
@@ -565,10 +543,10 @@ namespace HackLinks_Server
                 {
                     if (!fileC.HasWritePermission(client.activeSession.privilege))
                     {
-                        client.Send("MESSG:Permission denied.");
+                        client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                         return true;
                     }
-                    client.Send("MESSG:File " + command[1] + " removed.");
+                    client.Send(NetUtil.PacketType.MESSG, "File " + command[1] + " removed.");
                     fileC.RemoveFile();
                     return true;
                 }
@@ -576,7 +554,7 @@ namespace HackLinks_Server
 
             
 
-            client.Send("MESSG:File does not exist.");
+            client.Send(NetUtil.PacketType.MESSG, "File does not exist.");
             return true;
         }
 
@@ -585,12 +563,12 @@ namespace HackLinks_Server
             var session = client.activeSession;
             if (session == null)
             {
-                client.Send("MESSG:You are not connected to a node.");
+                client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
             if (command.Length < 2)
             {
-                client.Send("MESSG:Usage : mkdir [folderName]");
+                client.Send(NetUtil.PacketType.MESSG, "Usage : mkdir [folderName]");
                 return true;
             }
 
@@ -599,14 +577,14 @@ namespace HackLinks_Server
             {
                 if (fileC.name == command[1])
                 {
-                    client.Send("MESSG:Folder " + command[1] + " already exists.");
+                    client.Send(NetUtil.PacketType.MESSG, "Folder " + command[1] + " already exists.");
                     return true;
                 }
             }
 
             if (!activeDirectory.HasWritePermission(client.activeSession.privilege))
             {
-                client.Send("MESSG:Permission denied.");
+                client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                 return true;
             }
 

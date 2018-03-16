@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HackLinks_Server.Computers;
 using System.Text.RegularExpressions;
+using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
@@ -113,16 +114,16 @@ namespace HackLinks_Server
                         if(correctUser)
                         {
                             client.username = messages[1];
-                            client.Send("LOGRE:0"); // Good account*/
+                            client.Send(PacketType.LOGRE, "0"); // Good account*/
                             var homeNode = computerManager.GetNodeById(homeId);
                             var ip = "none";
                             if (homeNode != null)
                                 ip = homeNode.ip;
-                            client.Send("START:" + ip);
+                            client.Send(PacketType.START, ip);
                         }
                         else
                         {
-                            client.Send("LOGRE:1");
+                            client.Send(PacketType.LOGRE, "1");
                             client.Disconnect();
                         }
                     }
@@ -135,7 +136,7 @@ namespace HackLinks_Server
                     if(messages[0] == "COMND")
                     {
                         if (!CommandHandler.TreatCommand(messages[1], client))
-                            client.Send("OSMSG:ERR:0"); // OSMSG:ERR:0 = La commande est introuvable
+                            client.Send(PacketType.OSMSG, "ERR:0"); // OSMSG:ERR:0 = La commande est introuvable
                     }
                 }
             }
@@ -149,11 +150,11 @@ namespace HackLinks_Server
         }
 
 
-        public void Broadcast(string message)
+        public void Broadcast(PacketType type, string message)
         {
             foreach(GameClient client in clients)
             {
-                client.Send(message);
+                client.Send(type, message);
             }
         }
 

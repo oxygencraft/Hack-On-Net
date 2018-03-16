@@ -12,13 +12,6 @@ namespace HackLinks_Server
 {
     class Program
     {
-        public class StateObject
-        {
-            public Socket workSocket = null;
-            public const int BufferSize = 2048;
-            public byte[] buffer = new byte[BufferSize];
-            public StringBuilder sb = new StringBuilder();
-        }
 
         public static bool recieving = false;
 
