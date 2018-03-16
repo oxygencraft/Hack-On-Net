@@ -387,6 +387,7 @@ namespace HackOnNet.Screens
         {
             base.ExitScreen();
             MainMenu.resetOS();
+            GUI.MainMenu.SetLoginStatus(cause);
             base.ScreenManager.AddScreen(new MainMenu());
         }
 

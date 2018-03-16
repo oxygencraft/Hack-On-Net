@@ -340,6 +340,11 @@ namespace HackOnNet.GUI
             Hacknet.Gui.TextBox.cursorPosition = 0;
         }
 
+        public static void SetLoginStatus(string status)
+        {
+            loginMessage = status;
+        }
+
         #endregion Functions
     }
 }

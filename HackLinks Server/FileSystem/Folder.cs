@@ -28,6 +28,20 @@ namespace HackLinks_Server.FileSystem
             return null;
         }
 
+        public File GetFileAtPath(string path)
+        {
+            string[] pathSteps = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            Folder activeFolder = this;
+            for(int i = 0; i < pathSteps.Length-1; i++)
+            {
+                var folder = activeFolder.GetFile(pathSteps[i]);
+                if (folder == null || !folder.IsFolder())
+                    return null;
+                activeFolder = (Folder)folder;
+            }
+            return activeFolder.GetFile(pathSteps[pathSteps.Length - 1]);
+        }
+
         public void PrintFolderRecursive(int depth)
         {
             string tabs = new String(' ', depth);

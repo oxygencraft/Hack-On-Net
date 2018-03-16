@@ -18,12 +18,14 @@ namespace HackLinks_Server.Daemons
         public Daemon(Node node)
         {
             this.node = node;
+            OnStartUp();
         }
 
         public enum DaemonType
         {
             DEFAULT,
-            IRC
+            IRC,
+            DNS
         }
 
         public virtual DaemonType GetDaemonType()
@@ -40,6 +42,8 @@ namespace HackLinks_Server.Daemons
         {
             return false;
         }
+
+        public virtual void OnStartUp() { }
 
         public virtual void OnConnect(Session connectSession)
         {

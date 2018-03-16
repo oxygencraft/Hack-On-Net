@@ -34,6 +34,8 @@ namespace HackLinks_Server
         {
             activeSession = new Session(this, node);
             Send(PacketType.KERNL, "connect;succ;" + node.ip + ";" + 3);
+            if (node == homeComputer)
+                activeSession.Login("root", username);
         }
 
         public void Disconnect()
