@@ -119,6 +119,8 @@ namespace HackOnNet.Net
                 // Signal that the connection has been made.
                 connectDone.Set();
                 response = "";
+
+                Receive();
             }
             catch (Exception e)
             {
@@ -215,7 +217,6 @@ namespace HackOnNet.Net
 
             clientSocket.BeginSend(byteData, 0, byteData.Length, 0,
                 new AsyncCallback(SendCallback), clientSocket);
-            this.Receive();
         }
 
         private void SendCallback(IAsyncResult ar)

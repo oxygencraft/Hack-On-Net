@@ -117,10 +117,7 @@ namespace HackOnNet.Screens
 
         public override void Update(GameTime gameTime, bool otherScreenHasFocus, bool coveredByOtherScreen)
         {
-            
             base.Update(gameTime, otherScreenHasFocus, coveredByOtherScreen);
-            netManager.Receive();
-            
         }
 
         public override void Draw(GameTime gameTime)
