@@ -55,6 +55,7 @@ namespace HackLinks_Server.Computers
                             }
                             newNode.id = reader.GetInt32(0);
                             newNode.ip = reader.GetString(1);
+                            newNode.ownerId = reader.GetInt32(2);
 
                             MySqlCommand fileCommand = new MySqlCommand("SELECT * FROM files WHERE computerId = @0", cn1);
                             fileCommand.Parameters.Add(new MySqlParameter("0", newNode.id));

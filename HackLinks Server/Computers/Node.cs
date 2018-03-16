@@ -15,6 +15,8 @@ namespace HackLinks_Server.Computers
         public int id;
         public string ip;
 
+        public int ownerId;
+
         public Folder rootFolder = new Folder(null, "/");
 
         public List<Session> sessions = new List<Session>();
@@ -33,6 +35,14 @@ namespace HackLinks_Server.Computers
                 var newDaemon = new DNSDaemon(this);
                 daemons.Add(newDaemon);
             }
+        }
+
+        public Daemon GetDaemon(string type)
+        {
+            foreach(Daemon daemon in daemons)
+                if (daemon.IsOfType(type))
+                    return daemon;
+            return null;
         }
 
         public void Login(GameClient client, string username, string password)

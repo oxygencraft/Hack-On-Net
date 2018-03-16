@@ -1,4 +1,5 @@
 ﻿using HackLinks_Server.Computers;
+using HackLinks_Server.Daemons.Types;
 using HackLinks_Server.FileSystem;
 using HackLinksCommon;
 using MySql.Data.MySqlClient;
@@ -390,9 +391,35 @@ namespace HackLinks_Server
             if(client.activeSession != null)
                 client.activeSession.DisconnectSession();
             var compManager = client.server.GetComputerManager();
-            var connectingToNode = compManager.GetNodeByIp(command[1]);
+            string resultIP = null;
+
+            if (client.homeComputer != null)
+            {
+                if (command[1] == "localhost" || command[1] == "127.0.0.1")
+                    resultIP = client.homeComputer.ip;
+                else
+                {
+                    var DNSConfigFile = client.homeComputer.rootFolder.GetFileAtPath("/cfg/dns.cfg");
+                    if (DNSConfigFile != null)
+                    {
+                        foreach (string ip in DNSConfigFile.content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            var DNSNode = compManager.GetNodeByIp(ip);
+                            if (DNSNode == null)
+                                continue;
+                            var daemon = (DNSDaemon)DNSNode.GetDaemon("dns");
+                            if (daemon == null)
+                                continue;
+                            resultIP = daemon.LookUp(command[1]);
+                            if (resultIP != null)
+                                break;
+                        }
+                    }
+                }
+            }
+            var connectingToNode = compManager.GetNodeByIp(resultIP ?? command[1]);
             if(connectingToNode != null)
-                client.ConnectTo(connectingToNode);                    
+                client.ConnectTo(connectingToNode);
             else
                 client.Send(NetUtil.PacketType.KERNL, "connect;fail;0");
             return true;
