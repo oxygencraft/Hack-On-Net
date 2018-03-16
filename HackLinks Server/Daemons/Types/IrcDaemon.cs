@@ -41,7 +41,7 @@ namespace HackLinks_Server.Daemons.Types
         public override void OnConnect(Session connectSession)
         {
             base.OnConnect(connectSession);
-            connectSession.owner.Send(PacketType.KERNL, "Connected to IRC Service");
+            connectSession.owner.Send(PacketType.MESSG, "Connected to IRC Service");
             connectSession.owner.Send(PacketType.KERNL, "state;irc;join");
             var messageText = "";
             foreach (var message in messages)

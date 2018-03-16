@@ -42,6 +42,8 @@ namespace HackLinks_Server.Daemons
             return false;
         }
 
+        public virtual void OnStartUp() { }
+
         public virtual void OnConnect(Session connectSession)
         {
             connectedSessions.Add(connectSession);
