@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HackLinks_Server.Daemons.Types.Irc;
+using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server.Daemons.Types
 {
@@ -40,12 +41,12 @@ namespace HackLinks_Server.Daemons.Types
         public override void OnConnect(Session connectSession)
         {
             base.OnConnect(connectSession);
-            connectSession.owner.Send("MESSG:Connected to IRC Service");
-            connectSession.owner.Send("KERNL:state;irc;join");
+            connectSession.owner.Send(PacketType.KERNL, "Connected to IRC Service");
+            connectSession.owner.Send(PacketType.KERNL, "state;irc;join");
             var messageText = "";
             foreach (var message in messages)
                 messageText += message.author + "`" + message.content + ";";
-            connectSession.owner.Send("KERNL:state;irc;messg;" + messageText);
+            connectSession.owner.Send(PacketType.KERNL, "state;irc;messg;" + messageText);
             SendMessage(new IrcMessage("ChanBot", connectSession.owner.username + " just logged in !"));
         }
 
@@ -63,7 +64,7 @@ namespace HackLinks_Server.Daemons.Types
             {
                 if (session == null)
                     continue;
-                session.owner.Send("KERNL:state;irc;messg;" + message.author + "`" + message.content);
+                session.owner.Send(PacketType.KERNL, "state;irc;messg;" + message.author + "`" + message.content);
             }
         }
 
@@ -78,13 +79,13 @@ namespace HackLinks_Server.Daemons.Types
             {
                 if (command.Length < 2)
                 {
-                    session.owner.Send("MESSG:Usage : irc [send]");
+                    session.owner.Send(PacketType.MESSG, "Usage : irc [send]");
                     return true;
                 }
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs.Length < 2)
                 {
-                    session.owner.Send("MESSG:Usage : irc [send]");
+                    session.owner.Send(PacketType.MESSG, "Usage : irc [send]");
                     return true;
                 }
                 if (cmdArgs[0] == "send")
@@ -95,7 +96,7 @@ namespace HackLinks_Server.Daemons.Types
                     daemon.SendMessage(new IrcMessage(session.owner.username, text));
                     return true;
                 }
-                session.owner.Send("MESSG:Usage : irc [send/logout]");
+                session.owner.Send(PacketType.MESSG, "Usage : irc [send/logout]");
                 return true;
             }
             return false;

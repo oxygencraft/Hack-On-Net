@@ -1,4 +1,5 @@
-﻿using Hacknet;
+﻿using HackLinksCommon;
+using Hacknet;
 using HackOnNet.DotNetCompatibility;
 using HackOnNet.FileSystem;
 using HackOnNet.Modules;
@@ -370,7 +371,7 @@ namespace HackOnNet.Screens
         {
             try
             {
-                netManager.Send("COMND:"+command/*.EscapeChar()*/);
+                netManager.Send(NetUtil.PacketType.COMND, command);
             }
             catch(Exception ex)
             {

@@ -1,4 +1,5 @@
 ﻿using HackOnNet.GUI;
+using HackLinksCommon;
 using HackOnNet.Screens;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,6 @@ namespace HackOnNet.Net
 {
     class NetManager
     {
-        public class StateObject
-        {
-            public const int BufferSize = 32000;
-            public byte[] buffer = new byte[BufferSize];
-            public StringBuilder sb = new StringBuilder();
-        }
 
         private const string configFile = "Mods/HNMP.conf";
         public Socket clientSocket;
@@ -107,7 +102,7 @@ namespace HackOnNet.Net
 
         public void Login(string username, string password)
         {
-            Send("LOGIN:" + username + ":" + password);
+            Send(NetUtil.PacketType.LOGIN, username + ":" + password);
         }
 
         private void ConnectCallback(IAsyncResult ar)
@@ -136,9 +131,9 @@ namespace HackOnNet.Net
         {
             try
             {
-                StateObject state = new StateObject();
+                NetUtil.StateObject state = new NetUtil.StateObject();
 
-                clientSocket.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                clientSocket.BeginReceive(state.buffer, 0, NetUtil.StateObject.BufferSize, 0,
                     new AsyncCallback(ReceiveCallback), state);
             }
             catch (Exception e)
@@ -152,7 +147,7 @@ namespace HackOnNet.Net
         {
             try
             {
-                StateObject state = (StateObject)ar.AsyncState;
+                NetUtil.StateObject state = (NetUtil.StateObject)ar.AsyncState;
 
                 int bytesRead = clientSocket.EndReceive(ar);
 
@@ -166,7 +161,7 @@ namespace HackOnNet.Net
                 }
 
                 state.sb.Clear();
-                clientSocket.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                clientSocket.BeginReceive(state.buffer, 0, NetUtil.StateObject.BufferSize, 0,
                     new AsyncCallback(ReceiveCallback), state);
             }
             catch (Exception e)
@@ -213,9 +208,9 @@ namespace HackOnNet.Net
             }
         }
 
-        public void Send(String data)
+        public void Send(NetUtil.PacketType type, String data)
         {
-            data += "!!!";
+            data = $"{type.ToString()}:{data}!!!";
             byte[] byteData = Encoding.ASCII.GetBytes(data);
 
             clientSocket.BeginSend(byteData, 0, byteData.Length, 0,

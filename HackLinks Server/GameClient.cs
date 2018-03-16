@@ -7,19 +7,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
     class GameClient
     {
-
-        public class StateObject
-        {
-            public Socket workSocket = null;
-            public const int BufferSize = 2048;
-            public byte[] buffer = new byte[BufferSize];
-            public StringBuilder sb = new StringBuilder();
-        }
 
         public Socket client;
         public Server server;
@@ -40,7 +33,7 @@ namespace HackLinks_Server
         public void ConnectTo(Node node)
         {
             activeSession = new Session(this, node);
-            Send("KERNL:connect;succ;" + node.ip + ";" + 3);
+            Send(PacketType.KERNL, "connect;succ;" + node.ip + ";" + 3);
         }
 
         public void Disconnect()
@@ -49,7 +42,7 @@ namespace HackLinks_Server
             {
                 activeSession.DisconnectSession();
                 activeSession = null;
-                Send("KERNL:disconnect");
+                Send(PacketType.KERNL, "disconnect");
             }
         }
 
@@ -113,11 +106,11 @@ namespace HackLinks_Server
             server.RemoveClient(this);
         }
 
-        public void Send(String data)
+        public void Send(PacketType type, String data)
         {
             try
             {
-                data += "!!!"; // MESSAGE DELIMITER
+                data = $"{type.ToString()}:{data}!!!";
                                // Convert the string data to byte data using ASCII encoding.
                 byte[] byteData = Encoding.ASCII.GetBytes(data);
 
