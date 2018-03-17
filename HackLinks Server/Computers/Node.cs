@@ -47,13 +47,13 @@ namespace HackLinks_Server.Computers
 
         public void Login(GameClient client, string username, string password)
         {
-            var configFolder = (Folder)rootFolder.GetFile("cfg");
-            if (configFolder == null)
+            var configFolder = rootFolder.GetFile("cfg");
+            if (configFolder == null || !configFolder.IsFolder())
             {
                 client.Send(NetUtil.PacketType.MESSG, "No config folder was found !");
                 return;
             }
-            var usersFile = configFolder.GetFile("users.cfg");
+            var usersFile = ((Folder)configFolder).GetFile("users.cfg");
             if (usersFile == null)
             {
                 client.Send(NetUtil.PacketType.MESSG, "No config file was found !");
