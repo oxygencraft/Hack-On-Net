@@ -266,8 +266,11 @@ namespace HackOnNet.GUI
 
         private static string Hash(string input)
         {
-            var hash = (new SHA1Managed()).ComputeHash(Encoding.UTF8.GetBytes(input));
-            return string.Join("", hash.Select(b => b.ToString("x2")).ToArray());
+            var crypt = new System.Security.Cryptography.SHA256Managed();
+            var hash = new System.Text.StringBuilder();
+            byte[] crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(input));
+            foreach (byte theByte in crypto) { hash.Append(theByte.ToString("x2")); }
+            return hash.ToString();
         }
 
         private static void Advance(string answer)
