@@ -11,7 +11,12 @@ namespace HackLinks_Server.Daemons
     {
         protected Node node;
         protected List<Session> connectedSessions = new List<Session>();
+        protected int accessLevel = 0;
 
+        public abstract string StrType
+        {
+            get;
+        }
         //This should be created and populated by the implementing class
         public abstract SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands { get; }
 
@@ -33,9 +38,9 @@ namespace HackLinks_Server.Daemons
             return DaemonType.DEFAULT;
         }
 
-        public virtual bool IsOfType(string strType)
+        public bool IsOfType(string strType)
         {
-            return strType.ToLower() == "default";
+            return StrType == strType.ToLower();
         }
 
         public virtual bool HandleDaemonCommand(GameClient client, string[] command)
@@ -55,6 +60,14 @@ namespace HackLinks_Server.Daemons
             connectedSessions.Remove(disconnectSession);
         }
 
-        
+        public bool CanBeAccessedBy(Session session)
+        {
+            return session.privilege <= this.accessLevel;
+        }
+
+        public virtual string GetSSHDisplayName()
+        {
+            return null;
+        }
     }
 }

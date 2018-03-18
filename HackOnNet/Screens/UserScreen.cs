@@ -362,6 +362,11 @@ namespace HackOnNet.Screens
                     display.state = DisplayState.VIEW;
                 }
             }
+            else if(command.StartsWith("node"))
+            {
+                if (activeSession != null)
+                    activeSession.SetNodeInfo(command);
+            }
         }
         
         public void Execute(string command)

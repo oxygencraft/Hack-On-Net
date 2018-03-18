@@ -32,8 +32,8 @@ namespace HackLinks_Server
 
         public void ConnectTo(Node node)
         {
-            activeSession = new Session(this, node);
             Send(PacketType.KERNL, "connect;succ;" + node.ip + ";" + 3);
+            activeSession = new Session(this, node);
             if (node == homeComputer)
                 activeSession.Login("root", username);
         }

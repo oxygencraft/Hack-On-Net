@@ -23,19 +23,16 @@ namespace HackLinks_Server.Daemons.Types
             get => daemonCommands;
         }
 
+        public override string StrType => "irc";
+
         public IrcDaemon(Node node) : base(node)
         {
-
+            this.accessLevel = 3;
         }
 
         public override DaemonType GetDaemonType()
         {
             return DaemonType.IRC;
-        }
-
-        public override bool IsOfType(string strType)
-        {
-            return strType.ToLower() == "irc";
         }
 
         public override void OnConnect(Session connectSession)
@@ -108,6 +105,11 @@ namespace HackLinks_Server.Daemons.Types
                 return Commands[command[0]].Item2(client, command);
 
             return false;
+        }
+
+        public override string GetSSHDisplayName()
+        {
+            return "Open IRC";
         }
     }
 }

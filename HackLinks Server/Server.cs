@@ -147,6 +147,7 @@ namespace HackLinks_Server
         {
             if(client.activeSession != null)
                 client.activeSession.DisconnectSession();
+            Console.WriteLine(client.username + " disconnected from server.");
             clients.Remove(client);
         }
 
