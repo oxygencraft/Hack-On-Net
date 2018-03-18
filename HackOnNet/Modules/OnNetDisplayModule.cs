@@ -5,27 +5,20 @@ using HackOnNet.Sessions.States.Irc;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HackOnNet.Modules
 {
-    class OnNetDisplayModule : OnCoreModule
+    internal class OnNetDisplayModule : OnCoreModule
     {
-        int x;
-        int y;
+        private int x;
+        private int y;
 
         private Hacknet.UIUtils.ScrollableTextRegion viewTextRegion;
-
 
         public OnNetDisplayModule(Rectangle location, UserScreen screen) : base(location, screen)
         {
             this.viewTextRegion = new Hacknet.UIUtils.ScrollableTextRegion(GuiData.spriteBatch.GraphicsDevice);
         }
-
-        
 
         public enum DisplayState
         {
@@ -119,7 +112,7 @@ namespace HackOnNet.Modules
                     accountColor = userScreen.kernelAccountColor;
                 this.spriteBatch.Draw(Utils.white, _empty, accountColor);
 
-                var _text = LocaleTerms.Loc("You are "+userScreen.activeSession.GetRankName()+" on this System");
+                var _text = LocaleTerms.Loc("You are " + userScreen.activeSession.GetRankName() + " on this System");
                 Vector2 _vector = GuiData.UISmallfont.MeasureString(_text);
 
                 var _pos = new Vector2((float)(_empty.X + _empty.Width / 2) - _vector.X / 2f, (float)_empty.Y);
@@ -162,7 +155,6 @@ namespace HackOnNet.Modules
             else
             {
                 this.y += 12;
-                
             }
         }
 
@@ -231,7 +223,7 @@ namespace HackOnNet.Modules
             dest.Y = this.bounds.Y + 55;
             dest.Height = this.bounds.Height - 57;
 
-            Hacknet.Gui.TextItem.doFontLabel(new Vector2(dest.X, dest.Y), "Working Directory : "+userScreen.activeSession.workingPath, GuiData.smallfont, new Color?(Color.White), (float)this.bounds.Width - 46f, 60f, false);
+            Hacknet.Gui.TextItem.doFontLabel(new Vector2(dest.X, dest.Y), "Working Directory : " + userScreen.activeSession.workingPath, GuiData.smallfont, new Color?(Color.White), (float)this.bounds.Width - 46f, 60f, false);
 
             int ButtonHeight = (int)(GuiData.ActiveFontConfig.tinyFontCharHeight + 10f);
 
@@ -239,7 +231,7 @@ namespace HackOnNet.Modules
 
             int width = dest.Width - 25;
             var sessionState = (LsState)userScreen.activeSession.GetState();
-            for(int i = 0; i < sessionState.files.Count; i++)
+            for (int i = 0; i < sessionState.files.Count; i++)
             {
                 if (sessionState.files[i].GetDisplayName() == "" || sessionState.files[i] == null)
                     continue;
@@ -247,9 +239,9 @@ namespace HackOnNet.Modules
                 var activeFile = sessionState.files[i];
 
                 //spriteBatch.Draw(Utils.white, new Rectangle((int)bounds.X+6, (int)dest.Y + 3 + (ButtonHeight + 5) * i, 5, (int)ButtonHeight), activeFile.hasWritePermission ? Color.White : Color.Black);
-                if (Hacknet.Gui.Button.doButton(300000 + i, bounds.X + 5 + 5, dest.Y + 2 + (ButtonHeight+5)*i, width - 5, ButtonHeight, activeFile.GetDisplayName(), null))
+                if (Hacknet.Gui.Button.doButton(300000 + i, bounds.X + 5 + 5, dest.Y + 2 + (ButtonHeight + 5) * i, width - 5, ButtonHeight, activeFile.GetDisplayName(), null))
                 {
-                    if(activeFile.IsFolder())
+                    if (activeFile.IsFolder())
                     {
                         this.userScreen.Execute("cd " + activeFile.GetActualName());
                         this.userScreen.Execute("ls");
@@ -257,7 +249,6 @@ namespace HackOnNet.Modules
                     else
                     {
                         this.userScreen.Execute("view " + activeFile.GetActualName());
-
                     }
                 }
             };
@@ -366,61 +357,34 @@ namespace HackOnNet.Modules
         private int DrawIRCMessage(IrcMessage message, Rectangle startingDest, int lineHeight, int linesRemaining, int yNotToPass, out Rectangle dest)
         {
             dest = startingDest;
-            int num = 55;
-            int num2 = 76;
-            int num3 = 4;
-            if (Settings.ActiveLocale != "en-us")
-            {
-                num2 = 78;
-            }
-            if (GuiData.ActiveFontConfig.name.ToLower() == "medium")
-            {
-                num2 = 92;
-            }
-            else if (GuiData.ActiveFontConfig.name.ToLower() == "large")
-            {
-                num2 = 115;
-            }
+            int num = 55, num2 = 76, num3 = 4;
+            if (Settings.ActiveLocale != "en-us") { num2 = 78; }
+            if (GuiData.ActiveFontConfig.name.ToLower() == "medium") { num2 = 92; }
+            else if (GuiData.ActiveFontConfig.name.ToLower() == "large") { num2 = 115; }
+
             string text = "<" + message.author + ">";
             int num4 = (int)(GuiData.tinyfont.MeasureString(text).X + (float)num3);
             num2 = System.Math.Max(num2, (int)(GuiData.tinyfont.MeasureString(text).X + (float)num3));
             int width = dest.Width - (num + num3 + num2);
             string text2 = message.content;
-            string[] array = new string[]
-            {
-                text2
-            };
-            /*if (!log.Message.StartsWith("!ATTACHMENT:"))
-            {
-                text2 = Utils.SuperSmartTwimForWidth(text2, width, GuiData.tinyfont);
-                array = text2.Split(Utils.newlineDelim, System.StringSplitOptions.None);
-            }*/
+            string[] array = new string[] { text2 };
             Rectangle rectangle = new Rectangle(dest.X + num + num3 + num2, dest.Y, dest.Width - (num + num3 + num2), dest.Height);
             Rectangle dest2 = new Rectangle(dest.X, dest.Y, num + num2, dest.Height);
             Color color = Color.LightBlue;
-            /*if (HighlightKeywords.ContainsKey(log.Author))
-            {
-                color = HighlightKeywords[log.Author];
-            }*/
             Color defaultColor = Color.Lerp(Color.White, color, 0.22f);
-            /*if (needsNewMessagesLineDraw)
-            {
-                int num5 = array.Length;
-                Rectangle destinationRectangle = new Rectangle(dest.X, dest.Y + dest.Height - lineHeight * num5 + 1, dest.Width, 1);
-                sb.Draw(Utils.white, destinationRectangle, Color.White * 0.5f);
-            }*/
+
             int num6 = array.Length - 1;
             while (num6 >= 0 && linesRemaining > 0)
             {
                 if (num6 == 0)
                 {
-                    this.DrawLine("[" + "tst"/*log.Timestamp*/ + "] ", dest2, spriteBatch, Color.White);
+                    this.DrawLine("[RANK] "/*To be changed, to work with the irc perms thing*/, dest2, spriteBatch, Color.White);
                     int x = dest2.X;
                     dest2.X = dest2.X + dest2.Width - num4;
                     this.DrawLine(text, dest2, spriteBatch, color);
                     dest2.X = x;
                 }
-                this.DrawLine(array[num6], rectangle, spriteBatch, defaultColor);
+                this.DrawLine(Truncate(array[num6], 75), rectangle, spriteBatch, defaultColor);
                 dest.Height -= lineHeight;
                 rectangle.Height = dest.Height;
                 dest2.Height = dest.Height;
@@ -447,8 +411,11 @@ namespace HackOnNet.Modules
 
             sb.DrawString(GuiData.tinyfont, line, vector, defaultColor);
         }
-
-
+        public static string Truncate(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return value.Length <= maxLength ? value : value.Substring(0, maxLength);
+        }
 
         /*private void doCatModule()
         {
