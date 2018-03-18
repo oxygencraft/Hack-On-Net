@@ -8,6 +8,7 @@ using Pathfinder.Event;
 using Pathfinder.GUI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -41,6 +42,7 @@ namespace HackOnNet.GUI
 
         private static string loginMessage = "";
         private static Hacknet.MainMenu bMenu;
+
 
         #region Buttons
 
@@ -81,7 +83,7 @@ namespace HackOnNet.GUI
             if (currentState == MenuState.MAIN_MENU)
                 DrawMain(e);
             else if (currentState == MenuState.LOGIN)
-                DrawLogin(e);
+                DrawLogin(e);            
         }
 
         private static void DrawMain(DrawMainMenuEvent e)
@@ -264,16 +266,8 @@ namespace HackOnNet.GUI
 
         private static string Hash(string input)
         {
-            byte[] arrBytes = System.Text.Encoding.UTF8.GetBytes(input);
-            SHA256Managed hashString = new SHA256Managed();
-            string hex = "";
-
-            var hashValue = hashString.ComputeHash(arrBytes);
-            foreach (byte x in hashValue)
-            {
-                hex += String.Format("{0:x2}", x);
-            }
-            return hex;
+            var hash = (new SHA1Managed()).ComputeHash(Encoding.UTF8.GetBytes(input));
+            return string.Join("", hash.Select(b => b.ToString("x2")).ToArray());
         }
 
         private static void Advance(string answer)
