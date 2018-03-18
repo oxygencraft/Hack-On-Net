@@ -70,7 +70,7 @@ namespace HackLinks_Server
                 var command = "daemon " + daemon.StrType;
                 daemonTx += command + "," + daemonDisplay + "`";
             }
-            owner.Send(PacketType.KERNL, "node;" + "none" + ";" + daemonTx);
+            owner.Send(PacketType.KERNL, "node;" + connectedNode.GetDisplayName() + ";" + daemonTx);
         }
 
         public void Login(string level, string username)

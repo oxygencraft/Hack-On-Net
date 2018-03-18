@@ -72,5 +72,10 @@ namespace HackLinks_Server.FileSystem
         {
             type = (FileType)specType;
         }
+
+        public string[] GetLines()
+        {
+            return this.content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.None);
+        }
     }
 }

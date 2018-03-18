@@ -93,7 +93,7 @@ namespace HackLinks_Server.Daemons.Types
                     daemon.SendMessage(new IrcMessage(session.owner.username, text));
                     return true;
                 }
-                session.owner.Send(PacketType.MESSG, "Usage : irc [send/logout]");
+                session.owner.Send(PacketType.MESSG, "Usage : irc [send]");
                 return true;
             }
             return false;

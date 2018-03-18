@@ -12,6 +12,8 @@ namespace HackLinks_Server.Computers
 {
     class Node
     {
+        public static string SERVER_CONFIG_PATH = "/cfg/server.cfg";
+
         public int id;
         public string ip;
 
@@ -21,6 +23,20 @@ namespace HackLinks_Server.Computers
 
         public List<Session> sessions = new List<Session>();
         public List<Daemon> daemons = new List<Daemon>();
+
+        public string GetDisplayName()
+        {
+            var cfgFile = rootFolder.GetFileAtPath(SERVER_CONFIG_PATH);
+            if (cfgFile == null)
+                return ip;
+            var lines = cfgFile.GetLines();
+            foreach(var line in lines)
+            {
+                if (line.StartsWith("name="))
+                    return line.Substring(5);
+            }
+            return ip;
+        }
 
         public void LaunchDaemon(File daemonLauncher)
         {
