@@ -120,7 +120,7 @@ namespace HackLinks_Server.Daemons.Types
                 return;
             foreach (string line in entryFile.content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                var data = line.Split(':');
+                var data = line.Split(new char[]{ ':', '='});
                 if (data.Length < 2)
                     continue;
                 entries.Add(new DNSEntry(data[1], data[0]));
