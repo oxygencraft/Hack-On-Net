@@ -276,93 +276,87 @@ namespace HackOnNet.Screens
             this.terminal.writeLine(text);
         }
 
-        public void HandleKernel(string command)
+        public void HandleKernel(string[] command)
         {
-            if(command.StartsWith("connect"))
+            if(command[0] == "connect")
             {
-                var cmdArgs = command.Split(new char[]{';'}, 4);
-                if(cmdArgs[1] == "fail")
+                if(command[1] == "fail")
                 {
                     Write("Connection failed.");
                     return;
                 }
                 int privilege;
-                int.TryParse(cmdArgs[3], out privilege);
-                this.netMap.DiscoverNode(cmdArgs[2]);
+                int.TryParse(command[3], out privilege);
+                this.netMap.DiscoverNode(command[2]);
                 string currentIP;
-                currentIP = cmdArgs[2];
+                currentIP = command[2];
                 display.state = DisplayState.SSH_SESSION;
-                Write("Connected to: " + cmdArgs[2]);
+                Write("Connected to: " + command[2]);
                 activeSession = new Session(currentIP, privilege);
             }
-            else if(command.StartsWith("disconnect"))
+            else if(command[0] == "disconnect")
             {
                 activeSession = null;
                 display.state = DisplayState.NONE;
             }
-            else if(command.StartsWith("ls"))
+            else if(command[0] == "ls")
             {
                 display.state = DisplayState.NONE;
-                var cmdArgs = command.Split(new char[] { ';' });
-                activeSession.workingPath = cmdArgs[1];
+                activeSession.workingPath = command[1];
                 if(activeSession.GetState().GetStateType() != SessionState.StateType.LS)
                 {
                     activeSession.SetState(new LsState(activeSession));
                 }
                 var sessionState = (LsState)activeSession.GetState();
                 sessionState.files.Clear();
-                for(int i = 2; i < cmdArgs.Length; i++)
+                for(int i = 2; i < command.Length; i++)
                 {
-                    if (cmdArgs[i] == "")
+                    if (command[i] == "")
                         continue;
-                    sessionState.files.Add(new LsFileEntry(cmdArgs[i]));
+                    sessionState.files.Add(new LsFileEntry(command[i]));
                 }
                 display.state = DisplayState.LS;
             }
-            else if(command.StartsWith("cd"))
+            else if(command[0] == "cd")
             {
-                var cmdArgs = command.Split(new char[] { ';' });
-                activeSession.workingPath = cmdArgs[1];
+                activeSession.workingPath = command[1];
             }
-            else if(command.StartsWith("login"))
+            else if(command[0] == "login")
             {
-                var cmdArgs = command.Split(new char[] { ';' });
-                activeSession.privilege = int.Parse(cmdArgs[1]);
-                activeSession.accountName = cmdArgs[2];
+                activeSession.privilege = int.Parse(command[1]);
+                activeSession.accountName = command[2];
             }
-            else if(command.StartsWith("state"))
+            else if(command[0] == "state")
             {
-                var cmdArgs = command.Split(new char[] { ';' });
-                if(cmdArgs[1] == "irc")
+                if(command[1] == "irc")
                 {
-                    if(cmdArgs[2] == "join")
+                    if(command[2] == "join")
                     {
                         activeSession.SetState(new IrcState(activeSession));
                         display.state = DisplayState.IRC;
                     }
-                    else if(cmdArgs[2] == "messg")
+                    else if(command[2] == "messg")
                     {
-                        for(int i = 3; i < cmdArgs.Length; i++)
+                        for(int i = 3; i < command.Length; i += 2)
                         {
-                            var message = cmdArgs[i];
-                            if (message == "")
-                                continue;
-                            var tmp = message.Split('`');
-                            ((IrcState)activeSession.GetState()).AddMessage(tmp[0], tmp[1]);
+                            string author = command[i];
+                            string message = command[i + 1];
+
+                            ((IrcState)activeSession.GetState()).AddMessage(author, message);
                         }
                         
                     }
                 }
-                if(cmdArgs[1] == "view")
+                if(command[1] == "view")
                 {
-                    string fileName = cmdArgs[2];
-                    string fileContent = cmdArgs[3];
+                    string fileName = command[2];
+                    string fileContent = command[3];
 
                     activeSession.SetState(new ViewState(activeSession, fileName, fileContent));
                     display.state = DisplayState.VIEW;
                 }
             }
-            else if(command.StartsWith("node"))
+            else if(command[0] == "node")
             {
                 if (activeSession != null)
                     activeSession.SetNodeInfo(command);

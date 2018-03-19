@@ -39,11 +39,13 @@ namespace HackLinks_Server.Daemons.Types
         {
             base.OnConnect(connectSession);
             connectSession.owner.Send(PacketType.MESSG, "Connected to IRC Service");
-            connectSession.owner.Send(PacketType.KERNL, "state;irc;join");
-            var messageText = "";
-            foreach (var message in messages)
-                messageText += message.author + "`" + message.content + ";";
-            connectSession.owner.Send(PacketType.KERNL, "state;irc;messg;" + messageText);
+            connectSession.owner.Send(PacketType.KERNL, "state", "irc", "join");
+            var commandData = new List<string>() { "state", "irc", "messg" };
+            foreach (IrcMessage message in messages)
+            {
+                commandData.AddRange(new string[] { message.author, message.content });
+            }
+            connectSession.owner.Send(PacketType.KERNL, commandData.ToArray());
             SendMessage(new IrcMessage("ChanBot", connectSession.owner.username + " just logged in !"));
         }
 
@@ -61,7 +63,7 @@ namespace HackLinks_Server.Daemons.Types
             {
                 if (session == null)
                     continue;
-                session.owner.Send(PacketType.KERNL, "state;irc;messg;" + message.author + "`" + message.content);
+                session.owner.Send(PacketType.KERNL, "state", "irc", "messg", message.author, message.content);
             }
         }
 

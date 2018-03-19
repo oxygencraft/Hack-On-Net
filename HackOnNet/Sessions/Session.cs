@@ -60,18 +60,13 @@ namespace HackOnNet.Sessions
             return privilege == 3 ? "Guest" : privilege == 2 ? "User" : privilege == 1 ? "Administrator" : "root";
         }
 
-        public void SetNodeInfo(string command)
+        public void SetNodeInfo(string[] command)
         {
-            var args = command.Split(';');
-            if (args[1] != "none")
-                serverName = args[1];
-            var daemonDisplays = args[2].Split('`');
-            foreach(string button in daemonDisplays)
+            if (command[1] != "none")
+                serverName = command[1];
+            for(int i = 2; i < command.Length; i += 2)
             {
-                var buttonArgs = button.Split(',');
-                if (buttonArgs.Length != 2)
-                    continue;
-                daemonButtons.Add(new DaemonButton(buttonArgs[0], buttonArgs[1]));
+                daemonButtons.Add(new DaemonButton(command[i], command[i + 1]));
             }
         }
     }

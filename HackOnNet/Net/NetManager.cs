@@ -11,6 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static HackOnNet.ConfigUtil;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace HackOnNet.Net
 {
@@ -102,7 +104,7 @@ namespace HackOnNet.Net
 
         public void Login(string username, string password)
         {
-            Send(NetUtil.PacketType.LOGIN, username + ":" + password);
+            Send(NetUtil.PacketType.LOGIN, username, password);
         }
 
         private void ConnectCallback(IAsyncResult ar)
@@ -157,9 +159,16 @@ namespace HackOnNet.Net
                 {
                     state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
                     var content = state.sb.ToString();
-                    var messages = content.Split(new string[] { "!!!" }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach(var message in messages)
-                        TreatMessage(message);
+
+                    Console.WriteLine($"Received Data: \"{content}\"");
+
+                    List<NetUtil.Packet> packets = NetUtil.ParsePackets(content);
+
+                    foreach(NetUtil.Packet packet in packets)
+                    {
+                        TreatMessage(packet.Type, packet.Data);
+                    }
+
                 }
 
                 state.sb.Clear();
@@ -173,48 +182,54 @@ namespace HackOnNet.Net
             }
         }
 
-        private void TreatMessage(string message)
+        private void TreatMessage(NetUtil.PacketType type, string[] messages)
         {
-            if (message.StartsWith("LOGRE:")) // LOGRE:[token(byte)]
+            switch (type)
             {
-                var messages = message.Split(new char[] { ':' }, 2);
-                if (messages.Length >= 2)
-                {
-                    if (messages[1] == "0") // LOGRE:0 = You're logged in
-                        MainMenu.loginState = MainMenu.LoginState.LOGGED;
-                    else if (messages[1] == "1") // LOGRE:1 = Invalid account
-                        MainMenu.loginState = MainMenu.LoginState.INVALID;
-                }
-            }
-            else if (message.StartsWith("MESSG:"))
-            {
-                var messages = message.Split(new char[] { ':' }, 2);
-                if (messages.Length >= 2)
-                {
-                    string printMessage = messages[1];
-                    userScreen.Write(printMessage);
-                }
-            }
-            else if (message.StartsWith("KERNL:"))
-            {
-                var messages = message.Split(new char[] { ':' }, 2);
-                if (messages.Length >= 2)
-                {
-                    userScreen.HandleKernel(messages[1]);
-                }
-            }
-            else if (message.StartsWith("START:"))
-            {
-                var messages = message.Split(new char[] { ':' }, 2);
-                userScreen.homeIP = messages[1];
+                case NetUtil.PacketType.KERNL:
+                    if (messages.Length > 0)
+                    {
+                        userScreen.HandleKernel(messages);
+                    }
+                    break;
+                case NetUtil.PacketType.MESSG:
+                    if (messages.Length > 0)
+                    {
+                        string printMessage = messages[0];
+                        userScreen.Write(printMessage);
+                    }
+                    break;
+                case NetUtil.PacketType.LOGRE:
+                    if (messages.Length > 0)
+                    {
+                        if (messages[0] == "0") // LOGRE:0 = You're logged in
+                            MainMenu.loginState = MainMenu.LoginState.LOGGED;
+                        else if (messages[0] == "1") // LOGRE:1 = Invalid account
+                            MainMenu.loginState = MainMenu.LoginState.INVALID;
+                    }
+                    break;
+                case NetUtil.PacketType.START:
+                    userScreen.homeIP = messages[0];
+                    break;
+                case NetUtil.PacketType.OSMSG:
+                    break;
+                default:
+                    throw new InvalidOperationException($"Netmanager attempted treat message with invalid type { type.ToString() }");
             }
         }
 
-        public void Send(NetUtil.PacketType type, String data)
+        public void Send(NetUtil.PacketType type, params string[] data)
         {
-            data = $"{type.ToString()}:{data}!!!";
-            byte[] byteData = Encoding.ASCII.GetBytes(data);
+            JObject packet = new JObject
+            {
+                {"type", type.ToString()},
+                {"data", new JArray(data)},
+            };
 
+            // Convert the string data to byte data using ASCII encoding.
+            byte[] byteData = Encoding.ASCII.GetBytes(packet.ToString());
+
+            // Begin sending the data to the remote device.
             clientSocket.BeginSend(byteData, 0, byteData.Length, 0,
                 new AsyncCallback(SendCallback), clientSocket);
         }
