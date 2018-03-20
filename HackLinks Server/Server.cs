@@ -71,75 +71,60 @@ namespace HackLinks_Server
             return connectionStringBuilder.GetConnectionString(true);
         }
 
-        public void TreatMessage(GameClient client, string message)
+        public void TreatMessage(GameClient client, PacketType type, string[] messages)
         {
-            //var messages = Regex.Split(message, "(?< !\\\\):");
-            var messages = message.Split(new char[] { ':' });
-
-            if (client.username == "")
+            switch (type)
             {
-                if(messages.Length >= 2)
-                {
-                    if(messages[0] == "LOGIN") // LOGIN:[username]:[password]
+                case PacketType.COMND:
+                    if (!CommandHandler.TreatCommand(client, messages[0]))
+                        client.Send(PacketType.OSMSG, "ERR:0"); // OSMSG:ERR:0 = La commande est introuvable
+                    break;
+                case PacketType.LOGIN:
+                    if (messages.Length < 2)
+                        return;
+
+                    string tempUsername = messages[0];
+                    string tempPass = messages[1];
+
+                    MySqlCommand command = new MySqlCommand("SELECT pass, homeComputer FROM accounts WHERE username = @0", conn);
+                    command.Parameters.Add(new MySqlParameter("0", tempUsername));
+                    bool correctUser = false;
+                    int homeId = -1;
+                    using (MySqlDataReader reader = command.ExecuteReader())
                     {
-                        if (messages.Length < 3)
-                            return;
-
-                        string tempUsername = messages[1];
-                        string tempPass = messages[2];
-
-                        MySqlCommand command = new MySqlCommand("SELECT pass, homeComputer FROM accounts WHERE username = @0", conn);
-                        command.Parameters.Add(new MySqlParameter("0", tempUsername));
-                        bool correctUser = false;
-                        int homeId = -1;
-                        using (MySqlDataReader reader = command.ExecuteReader())
+                        while (reader.Read())
                         {
-                            while (reader.Read())
+                            try
                             {
-                                try
+                                if (reader.GetString("pass") == tempPass)
                                 {
-                                    if(reader.GetString("pass") == tempPass)
-                                    {
-                                        correctUser = true;
-                                        homeId = reader.GetInt32("homeComputer");
-                                        break;
-                                    }
-                                }
-                                catch(Exception ex)
-                                {
-
+                                    correctUser = true;
+                                    homeId = reader.GetInt32("homeComputer");
+                                    break;
                                 }
                             }
-                        }
-                        if(correctUser)
-                        {
-                            client.username = messages[1];
-                            client.Send(PacketType.LOGRE, "0"); // Good account*/
-                            var homeNode = computerManager.GetNodeById(homeId);
-                            client.homeComputer = homeNode;
-                            var ip = "none";
-                            if (homeNode != null)
-                                ip = homeNode.ip;
-                            client.Send(PacketType.START, ip);
-                        }
-                        else
-                        {
-                            client.Send(PacketType.LOGRE, "1");
-                            client.Disconnect();
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.ToString());
+                            }
                         }
                     }
-                }
-            }
-            else
-            {
-                if(messages.Length >= 2)
-                {
-                    if(messages[0] == "COMND")
+                    if (correctUser)
                     {
-                        if (!CommandHandler.TreatCommand(messages[1], client))
-                            client.Send(PacketType.OSMSG, "ERR:0"); // OSMSG:ERR:0 = La commande est introuvable
+                        client.username = tempUsername;
+                        client.Send(PacketType.LOGRE, "0"); // Good account*/
+                        var homeNode = computerManager.GetNodeById(homeId);
+                        var ip = "none";
+                        if (homeNode != null)
+                            ip = homeNode.ip;
+                        client.Send(PacketType.START, ip);
                     }
-                }
+                    else
+                    {
+                        client.Send(PacketType.LOGRE, "1");
+                        client.Disconnect();
+                    }
+                    break;
             }
         }
 
@@ -152,11 +137,11 @@ namespace HackLinks_Server
         }
 
 
-        public void Broadcast(PacketType type, string message)
+        public void Broadcast(PacketType type, params string[] data)
         {
             foreach(GameClient client in clients)
             {
-                client.Send(type, message);
+                client.Send(type, data);
             }
         }
 

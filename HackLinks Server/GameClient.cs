@@ -1,4 +1,6 @@
 ﻿using HackLinks_Server.Computers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,10 +34,15 @@ namespace HackLinks_Server
 
         public void ConnectTo(Node node)
         {
-            Send(PacketType.KERNL, "connect;succ;" + node.ip + ";" + 3);
-            activeSession = new Session(this, node);
+            Send(PacketType.KERNL, "connect", "succ", node.ip, "3");
             if (node == homeComputer)
+            {
                 activeSession.Login("root", username);
+            }
+            else
+            {
+                activeSession = new Session(this, node);
+            }
         }
 
         public void Disconnect()
@@ -81,13 +88,14 @@ namespace HackLinks_Server
 
                     content = state.sb.ToString();
 
-                    Console.WriteLine("Read {0} bytes from socket. \n Data : {1}",
-                        content.Length, content);
+                    Console.WriteLine($"Received Data: \"{content}\"");
 
-                    var messages = content.Split(new string[] { "!!!" }, StringSplitOptions.RemoveEmptyEntries);
+                    List<Packet> packets = ParsePackets(content);
 
-                    foreach(var message in messages)
-                        server.TreatMessage(this, message);
+                    foreach (Packet packet in packets)
+                    {
+                        server.TreatMessage(this, packet.Type, packet.Data);
+                    }
 
                     state.sb.Clear();
                     
@@ -108,13 +116,18 @@ namespace HackLinks_Server
             server.RemoveClient(this);
         }
 
-        public void Send(PacketType type, String data)
+        public void Send(PacketType type, params string[] data)
         {
             try
             {
-                data = $"{type.ToString()}:{data}!!!";
-                               // Convert the string data to byte data using ASCII encoding.
-                byte[] byteData = Encoding.ASCII.GetBytes(data);
+                JObject packet = new JObject
+                {
+                    {"type", type.ToString()},
+                    {"data", new JArray(data)},
+                };
+
+                // Convert the string data to byte data using ASCII encoding.
+                byte[] byteData = Encoding.ASCII.GetBytes(packet.ToString());
 
                 // Begin sending the data to the remote device.
                 client.BeginSend(byteData, 0, byteData.Length, 0,

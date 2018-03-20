@@ -61,16 +61,15 @@ namespace HackLinks_Server
 
         public void SendNodeInfo()
         {
-            string daemonTx = "";
+            List<string> daemonTx = new List<string>(new string[] { "node", connectedNode.GetDisplayName() });
             foreach(Daemon daemon in connectedNode.daemons)
             {
                 var daemonDisplay = daemon.GetSSHDisplayName();
                 if (daemonDisplay == null)
                     continue;
-                var command = "daemon " + daemon.StrType;
-                daemonTx += command + "," + daemonDisplay + "`";
+                daemonTx.AddRange(new string[] { $"daemon { daemon.StrType }", daemonDisplay });
             }
-            owner.Send(PacketType.KERNL, "node;" + connectedNode.GetDisplayName() + ";" + daemonTx);
+            owner.Send(PacketType.KERNL, daemonTx.ToArray());
         }
 
         public void Login(string level, string username)
@@ -85,7 +84,7 @@ namespace HackLinks_Server
                 privilege = 3;
             currentUsername = username;
 
-            owner.Send(PacketType.KERNL, "login;" + privilege + ";" + username);
+            owner.Send(PacketType.KERNL, "login", privilege.ToString(), username);
         }
 
         public bool HandleSessionCommand(GameClient client, string[] command)
