@@ -456,16 +456,17 @@ namespace HackLinks_Server
             }
             else
             {
-                string fileList = "";
-                foreach (var file in session.activeDirectory.children)
+                List<string> fileList = new List<string>(new string[] { "ls", session.activeDirectory.name});
+                foreach (File file in session.activeDirectory.children)
                 {
                     if (file.HasReadPermission(client.activeSession.privilege))
                     {
-                        fileList += file.name + "," + (file.IsFolder() ? "d" : "f") + ',' +
-                            (file.HasWritePermission(client.activeSession.privilege) ? "w" : "-") + ";";
+                        fileList.AddRange(new string[] {
+                                file.name, (file.IsFolder() ? "d" : "f"), (file.HasWritePermission(client.activeSession.privilege) ? "w" : "-")
+                            });
                     }
                 }
-                client.Send(NetUtil.PacketType.KERNL, "ls", session.activeDirectory.name, fileList); // ls;[working path];[listoffiles]
+                client.Send(NetUtil.PacketType.KERNL, fileList.ToArray());
                 return true;
             }
         }
