@@ -309,11 +309,11 @@ namespace HackOnNet.Screens
                 }
                 var sessionState = (LsState)activeSession.GetState();
                 sessionState.files.Clear();
-                for(int i = 2; i < command.Length; i++)
+                for(int i = 2; i < command.Length; i += 3)
                 {
                     if (command[i] == "")
                         continue;
-                    sessionState.files.Add(new LsFileEntry(command[i]));
+                    sessionState.files.Add(new LsFileEntry(command.Skip(i).Take(3).ToArray()));
                 }
                 display.state = DisplayState.LS;
             }
