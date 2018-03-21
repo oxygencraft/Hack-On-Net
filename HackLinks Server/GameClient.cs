@@ -105,6 +105,7 @@ namespace HackLinks_Server
             }
             catch(Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 netDisconnect();
             }
         }
@@ -135,6 +136,7 @@ namespace HackLinks_Server
             }
             catch(Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 netDisconnect();
             }
         }

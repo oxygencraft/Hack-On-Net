@@ -85,6 +85,7 @@ namespace HackOnNet.Modules
                     }
                     catch (System.Exception ex)
                     {
+                        Console.WriteLine(ex.ToString());
                     }
                 }
             }

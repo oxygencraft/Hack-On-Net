@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HackLinks_Server.Computers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace HackLinks_Server.FileSystem
 {
     class Folder : File
     {
-        public Folder(Folder parent, string name) : base(parent, name)
+        public Folder(Node computer,Folder parent, string name) : base(computer, parent, name)
         {
 
         }
@@ -22,7 +23,7 @@ namespace HackLinks_Server.FileSystem
         {
             foreach(File file in children)
             {
-                if (file.name == name)
+                if (file.Name == name)
                     return file;
             }
             return null;
@@ -45,7 +46,7 @@ namespace HackLinks_Server.FileSystem
         public void PrintFolderRecursive(int depth)
         {
             string tabs = new String(' ', depth);
-            Console.WriteLine(tabs + id + "  d- " + name);
+            Console.WriteLine(tabs + id + "  d- " + Name);
             foreach(var item in children)
             {
                 if(item.IsFolder())
@@ -54,7 +55,7 @@ namespace HackLinks_Server.FileSystem
                 }
                 else
                 {
-                    Console.WriteLine(tabs + " " + item.id + "  f- " + item.name);
+                    Console.WriteLine(tabs + " " + item.id + "  f- " + item.Name);
                 }
             }
         }
