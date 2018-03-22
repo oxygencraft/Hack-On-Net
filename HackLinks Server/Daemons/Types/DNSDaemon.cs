@@ -129,7 +129,7 @@ namespace HackLinks_Server.Daemons.Types
         {
             base.OnConnect(connectSession);
             connectSession.owner.Send(PacketType.MESSG, "Opening DNS service");
-            connectSession.owner.Send(PacketType.KERNL, "state;dns;open");
+            connectSession.owner.Send(PacketType.KERNL, "state", "dns", "open");
         }
 
         public override void OnDisconnect(Session disconnectSession)

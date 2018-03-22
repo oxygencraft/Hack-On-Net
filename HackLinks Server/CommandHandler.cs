@@ -33,7 +33,7 @@ namespace HackLinks_Server
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
         };
 
-        public static bool TreatCommand(string command, GameClient client)
+        public static bool TreatCommand(GameClient client, string command)
         {
             if (TreatKernelCommands(client, command.Split(new char[] { ' ' }, 2)))
                 return true;
@@ -229,7 +229,7 @@ namespace HackLinks_Server
                 client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                 return true;
             }
-            client.Send(NetUtil.PacketType.KERNL, "state;view;"+file.name+";"+file.content);
+            client.Send(NetUtil.PacketType.KERNL, "state", "view", file.name, file.content);
             return true;
         }
 
@@ -421,7 +421,7 @@ namespace HackLinks_Server
             if(connectingToNode != null)
                 client.ConnectTo(connectingToNode);
             else
-                client.Send(NetUtil.PacketType.KERNL, "connect;fail;0");
+                client.Send(NetUtil.PacketType.KERNL, "connect", "fail", "0");
             return true;
         }
 
@@ -456,16 +456,17 @@ namespace HackLinks_Server
             }
             else
             {
-                string fileList = "";
-                foreach (var file in session.activeDirectory.children)
+                List<string> fileList = new List<string>(new string[] { "ls", session.activeDirectory.name});
+                foreach (File file in session.activeDirectory.children)
                 {
                     if (file.HasReadPermission(client.activeSession.privilege))
                     {
-                        fileList += file.name + "," + (file.IsFolder() ? "d" : "f") + ',' +
-                            (file.HasWritePermission(client.activeSession.privilege) ? "w" : "-") + ";";
+                        fileList.AddRange(new string[] {
+                                file.name, (file.IsFolder() ? "d" : "f"), (file.HasWritePermission(client.activeSession.privilege) ? "w" : "-")
+                            });
                     }
                 }
-                client.Send(NetUtil.PacketType.KERNL, "ls;" + session.activeDirectory.name + ";" + fileList); // ls;[working path];[listoffiles]
+                client.Send(NetUtil.PacketType.KERNL, fileList.ToArray());
                 return true;
             }
         }
@@ -507,7 +508,7 @@ namespace HackLinks_Server
                         return true;
                     }
                     session.activeDirectory = (Folder)file;
-                    client.Send(NetUtil.PacketType.KERNL, "cd;"+file.name);
+                    client.Send(NetUtil.PacketType.KERNL, "cd", file.name);
                     return true;
                 }
             }

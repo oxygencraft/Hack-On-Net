@@ -15,10 +15,8 @@ namespace HackOnNet.FileSystem
 
         public bool isFolder = false;
 
-        public LsFileEntry(string lsInput, int permission=0)
+        public LsFileEntry(string[] fileData, int permission=0)
         {
-            string[] fileData = lsInput.Split(',');
-
             name = fileData[0];
             isFolder = fileData[1] == "d";
             hasWritePermission = fileData[2] == "w";
