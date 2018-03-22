@@ -56,6 +56,21 @@ namespace HackLinks_Server
             this.activeDirectory = node.rootFolder;
             this.owner = client;
             node.sessions.Add(this);
+            SendNodeInfo();
+        }
+
+        public void SendNodeInfo()
+        {
+            string daemonTx = "";
+            foreach(Daemon daemon in connectedNode.daemons)
+            {
+                var daemonDisplay = daemon.GetSSHDisplayName();
+                if (daemonDisplay == null)
+                    continue;
+                var command = "daemon " + daemon.StrType;
+                daemonTx += command + "," + daemonDisplay + "`";
+            }
+            owner.Send(PacketType.KERNL, "node;" + connectedNode.GetDisplayName() + ";" + daemonTx);
         }
 
         public void Login(string level, string username)
@@ -91,10 +106,18 @@ namespace HackLinks_Server
                 return true;
             }
             var target = command[1];
+            if(target == "exit")
+            {
+                activeSession.activeDaemon.OnDisconnect(activeSession);
+                activeSession.activeDaemon = null;
+                return true;
+            }
             foreach (Daemon daemon in activeSession.connectedNode.daemons)
             {
                 if (daemon.IsOfType(target))
                 {
+                    if(activeSession.activeDaemon != null)
+                        activeSession.activeDaemon.OnDisconnect(activeSession);
                     activeSession.activeDaemon = daemon;
                     daemon.OnConnect(activeSession);
                     return true;

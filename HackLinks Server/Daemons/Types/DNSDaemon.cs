@@ -16,7 +16,7 @@ namespace HackLinks_Server.Daemons.Types
 
         public DNSDaemon(Node node) : base(node)
         {
-
+            this.accessLevel = 3;
         }
 
         public List<DNSEntry> entries = new List<DNSEntry>();
@@ -31,13 +31,11 @@ namespace HackLinks_Server.Daemons.Types
             get => daemonCommands;
         }
 
+        public override string StrType => "dns";
+
         public override DaemonType GetDaemonType()
         {
             return DaemonType.DNS;
-        }
-        public override bool IsOfType(string strType)
-        {
-            return strType.ToLower() == "dns";
         }
 
         public static bool Dns(GameClient client, string[] command)
@@ -145,6 +143,11 @@ namespace HackLinks_Server.Daemons.Types
                 return Commands[command[0]].Item2(client, command);
 
             return false;
+        }
+
+        public override string GetSSHDisplayName()
+        {
+            return null;
         }
     }
 }

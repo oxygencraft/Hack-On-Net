@@ -95,11 +95,11 @@ namespace HackOnNet.Modules
             this.y += 5;
             this.spriteBatch.DrawString(GuiData.font, LocaleTerms.Loc("Connected to") + " ", new Vector2((float)(this.x + 160), (float)this.y), Color.White);
             this.y += 40;
-            string text = this.userScreen.activeSession.ip;
+            string text = userScreen.activeSession.serverName;
             Hacknet.Gui.TextItem.doFontLabel(new Vector2((float)(this.x + 160), (float)this.y), text, GuiData.font, new Color?(Color.White), (float)this.bounds.Width - 190f, 60f, false);
             this.y += 33;
             float num = Hacknet.Localization.LocaleActivator.ActiveLocaleIsCJK() ? 4f : 0f;
-            this.spriteBatch.DrawString(GuiData.smallfont, "@  " + text, new Vector2((float)(this.x + 160), (float)this.y + num), Color.White);
+            this.spriteBatch.DrawString(GuiData.smallfont, "@  " + userScreen.activeSession.ip, new Vector2((float)(this.x + 160), (float)this.y + num), Color.White);
             this.y += 60;
             if (userScreen.activeSession.privilege != 3)
             {
@@ -178,25 +178,35 @@ namespace HackOnNet.Modules
             {
                 num2 = (int)((double)num3 / (double)num);
             }
+
+            for (int i = 0; i < userScreen.activeSession.daemonButtons.Count; i++)
+            {
+                var daemonButton = userScreen.activeSession.daemonButtons[i];
+                if (Hacknet.Gui.Button.doButton(29000 + i, this.x, this.y, 300, num2, daemonButton.Display, this.userScreen.highlightColor))
+                {
+                    this.userScreen.Execute(daemonButton.Command);
+                }
+                this.y += num2 + 5;
+            }
             if (Hacknet.Gui.Button.doButton(300000, this.x, this.y, 300, num2, LocaleTerms.Loc("Login"), this.userScreen.highlightColor))
             {
                 this.userScreen.Execute("login");
             }
             this.y += num2 + 5;
-            if (Hacknet.Gui.Button.doButton(300002, this.x, this.y, 300, num2, LocaleTerms.Loc("Probe System"), new Color?(this.userScreen.highlightColor)))
+            /*if (Hacknet.Gui.Button.doButton(300002, this.x, this.y, 300, num2, LocaleTerms.Loc("Probe System"), new Color?(this.userScreen.highlightColor)))
             {
                 this.userScreen.Execute("probe");
             }
-            this.y += num2 + 5;
+            this.y += num2 + 5;*/
             if (Hacknet.Gui.Button.doButton(300003, this.x, this.y, 300, num2, LocaleTerms.Loc("View Filesystem"), this.userScreen.highlightColor))
             {
                 this.userScreen.Execute("ls");
             }
             this.y += num2 + 5;
-            if (Hacknet.Gui.Button.doButton(300009, this.x, this.y, 300, num2, LocaleTerms.Loc("Scan Network"), this.userScreen.highlightColor))
+            /*if (Hacknet.Gui.Button.doButton(300009, this.x, this.y, 300, num2, LocaleTerms.Loc("Scan Network"), this.userScreen.highlightColor))
             {
                 this.userScreen.Execute("scan");
-            }
+            }*/
             this.y = this.bounds.Y + this.bounds.Height - 30;
             if (Hacknet.Gui.Button.doButton(300012, this.x, this.y, 300, 20, LocaleTerms.Loc("Disconnect"), this.userScreen.lockedColor))
             {
@@ -305,7 +315,8 @@ namespace HackOnNet.Modules
             int num2 = 22;
             if (Hacknet.Gui.Button.doButton(37849102, rectangle.X + rectangle.Width - 6 - num, rectangle.Y + rectangle.Height - rectangle.Height / 2 - num2 / 2, num, num2, LocaleTerms.Loc("Exit IRC"), userScreen.moduleColorSolid))
             {
-                //this.userScreen.display.command = "connect";
+                this.userScreen.Execute("daemon exit");
+                this.state = DisplayState.SSH_SESSION;
             }
             rectangle.Y += rectangle.Height;
             rectangle.X -= 6;
