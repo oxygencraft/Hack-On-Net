@@ -14,6 +14,7 @@ namespace HackLinks_Server
     {
 
         public static bool recieving = false;
+        private static long previousUploadTime = 0;
 
         static void Main(string[] args)
         {
@@ -156,6 +157,12 @@ namespace HackLinks_Server
                         recieving = true;
                     }
                     Server.Instance.MainLoop();
+
+                    if(DateTimeOffset.UtcNow.ToUnixTimeSeconds() - previousUploadTime > 300)
+                    {
+                        previousUploadTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                        Server.Instance.GetComputerManager().UploadDatabase();
+                    }
                 }
 
             }
