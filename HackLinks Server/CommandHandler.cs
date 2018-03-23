@@ -535,6 +535,7 @@ namespace HackLinks_Server
                 if(fileC.Name == command[1])
                 {
                     client.Send(NetUtil.PacketType.MESSG, "File " + command[1] + " touched.");
+                    fileC.Dirty = true;
                     return true;
                 }
             }
