@@ -31,6 +31,7 @@ namespace HackLinks_Server
             configData.Database = "hacklinks";
             configData.UserID = "root";
             configData.Password = "";
+            configData.SaveFrequency = 300; // 300 seconds, 60 seconds * 5, 5 minutes.
 
             bool passSet = true;
 
@@ -38,6 +39,7 @@ namespace HackLinks_Server
             OptionSet options = new OptionSet() {
                 { "s|server=", "the MySQL {SERVER} to use (default: \"127.0.0.1\").", v => configData.MySQLServer = v},
                 { "d|database=", "the {DATABASE} to use (default: \"hacklinks\").", v => configData.Database = v},
+                { "f|save-frequency=",  "the time to wait, in seconds, between writing the game state to the database (default: 300).", v => configData.SaveFrequency = int.Parse(v) },
                 { "u|user=", "the {USERNAME} to connect with (default: \"root\").", v => configData.UserID = v},
                 { "p|password:", "set the {PASSWORD} to connect with (default: None) or prompt for a password.", v => {passSet = v != null;  configData.Password = v;} },
                 { "P|port=",
@@ -158,7 +160,7 @@ namespace HackLinks_Server
                     }
                     Server.Instance.MainLoop();
 
-                    if(DateTimeOffset.UtcNow.ToUnixTimeSeconds() - previousUploadTime > 300)
+                    if(DateTimeOffset.UtcNow.ToUnixTimeSeconds() - previousUploadTime > configData.SaveFrequency)
                     {
                         previousUploadTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                         Server.Instance.GetComputerManager().UploadDatabase();
