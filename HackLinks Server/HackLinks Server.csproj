@@ -71,6 +71,10 @@
     <Compile Include="Daemons\Types\HTTPDaemon.cs" />
     <Compile Include="Daemons\Types\DNSDaemon.cs" />
     <Compile Include="Daemons\Types\Dns\DNSEntry.cs" />
+    <Compile Include="Daemons\Types\Http\HTTPSession.cs" />
+    <Compile Include="Daemons\Types\Http\Interfaces\PasswordSecurity.cs" />
+    <Compile Include="Daemons\Types\Http\Interfaces\WebInterface.cs" />
+    <Compile Include="Daemons\Types\Http\WebPage.cs" />
     <Compile Include="Daemons\Types\IrcDaemon.cs" />
     <Compile Include="Daemons\Types\Irc\IrcMessage.cs" />
     <Compile Include="Extensions.cs" />
