@@ -161,8 +161,10 @@ namespace HackLinks_Server.Computers
                 }
             }
 
-            foreach (File file in toDelete)
+            //We iterate our list backwards to avoid our indices being clobbered by removals.
+            for (int i = toDelete.Count -1; i >= 0; i--)
             {
+                File file = toDelete[i];
                 if (DeleteDbFile(file, conn))
                 {
                     Console.WriteLine($"    Deleted {file.Name}");
