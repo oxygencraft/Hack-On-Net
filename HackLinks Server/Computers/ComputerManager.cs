@@ -12,6 +12,7 @@ namespace HackLinks_Server.Computers
     {
         List<Node> nodeList = new List<Node>();
         Server server;
+        private List<File> toDelete = new List<File>();
 
         public ComputerManager(Server server)
         {
@@ -159,6 +160,19 @@ namespace HackLinks_Server.Computers
                     child.Dirty = false;
                 }
             }
+
+            foreach (File file in toDelete)
+            {
+                if (DeleteDbFile(file, conn))
+                {
+                    Console.WriteLine($"    Deleted {file.Name}");
+                    toDelete.Remove(file);
+                }
+                else
+                {
+                    Console.WriteLine($"    Can't Delete {file.Name} ID {file.id}");
+                }
+            }
         }
 
         private bool UpdateDbFile(File child, MySqlConnection conn)
@@ -200,6 +214,20 @@ namespace HackLinks_Server.Computers
             return  res > 0;
         }
 
+        private bool DeleteDbFile(File file, MySqlConnection conn)
+        {
+            MySqlCommand fileCommand = new MySqlCommand(
+            "DELETE FROM files" +
+            " WHERE" +
+            " id = @id"
+            , conn);
+
+            fileCommand.Parameters.AddRange(new MySqlParameter[] {
+                        new MySqlParameter("id", file.id),
+                    });
+
+            return fileCommand.ExecuteNonQuery() > 0;
+        }
 
         public Node GetNodeById(int homeId)
         {
@@ -224,6 +252,11 @@ namespace HackLinks_Server.Computers
             }
 
             return fixedFiles;
+        }
+
+        public void AddToDelete(File file)
+        {
+            toDelete.Add(file);
         }
     }
 }

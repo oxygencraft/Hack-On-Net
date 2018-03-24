@@ -577,6 +577,7 @@ namespace HackLinks_Server
                     }
                     client.Send(NetUtil.PacketType.MESSG, "File " + command[1] + " removed.");
                     fileC.RemoveFile();
+                    client.server.GetComputerManager().AddToDelete(fileC);
                     return true;
                 }
             }
