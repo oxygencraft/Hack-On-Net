@@ -25,7 +25,7 @@ namespace HackLinks_Server.FileSystem
         private string name;
         private int writePriv = 0;
         private int readPriv = 0;
-        private string content;
+        private string content = "";
 
         private Folder parent;
         private int parentId;
