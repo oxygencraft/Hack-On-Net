@@ -2,6 +2,9 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <SteamHNDir>$(MSBuildProgramFiles32)\steam\SteamApps\common\Hacknet</SteamHNDir>
+  </PropertyGroup>
+  <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{244411E2-786C-4B04-8F1D-E8A1DEB4AD6B}</ProjectGuid>
@@ -111,4 +114,25 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="AfterBuildSteam">
+    <Message Importance="high" Text="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" />
+    <ItemGroup>
+      <HNLibs Include="$(OutDir)\*.dll" Exclude="$(OutDir)\$(TargetFileName)" />
+    </ItemGroup>
+    <Message Importance="high" Text="== Copying Lib files &quot;@(HNLibs, ', ')&quot; to $(SteamHNDir) ==" />
+    <Copy SourceFiles="@(HNLibs)" DestinationFolder="$(SteamHNDir)" />
+    <Message Importance="high" Text="== Copying Mod file to $(SteamHNDir)\Mods ==" />
+    <Copy SourceFiles="$(OutDir)\$(TargetFileName)" DestinationFolder="$(SteamHNDir)" />
+    <Message Importance="high" Text="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" />
+  </Target>
+  <Target Name="AfterBuildNoSteam">
+    <Message Importance="high" Text="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" />
+    <Message Importance="high" Text="== WARNING: HacknetPathfinder.exe not installed under Steam ==" />
+    <Message Importance="high" Text="== Please copy the $(TargetFileName) file from $(OutDir) to the mods folder under your Hacknet Pathfinder installation directory ==" />
+    <Message Importance="high" Text="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" />
+  </Target>
+  <Target Name="AfterBuild">
+    <CallTarget Targets="AfterBuildSteam" Condition="Exists('$(SteamHNDir)\HacknetPathfinder.exe')" />
+    <CallTarget Targets="AfterBuildNoSteam" Condition="!Exists('$(SteamHNDir)\HacknetPathfinder.exe')" />
+  </Target>
 </Project>
