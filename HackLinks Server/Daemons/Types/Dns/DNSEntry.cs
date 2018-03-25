@@ -11,7 +11,7 @@ namespace HackLinks_Server.Daemons.Types.Dns
         string IP;
         string URL;
 
-        public DNSEntry(string ip, string url)
+        public DNSEntry(string url, string ip)
         {
             IP = ip;
             URL = url;

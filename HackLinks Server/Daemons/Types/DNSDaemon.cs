@@ -81,24 +81,37 @@ namespace HackLinks_Server.Daemons.Types
                 {
                     if (client.activeSession.privilege > 1)
                     {
-                        client.Send(PacketType.MESSG, "Insufficient permission.");
+                        session.owner.Send(PacketType.MESSG, "Insufficient permission.");
                         return true;
                     }
                     if (cmdArgs.Length <= 2)
                     {
-                        client.Send(PacketType.MESSG, "Missing arguments.");
+                        session.owner.Send(PacketType.MESSG, "Missing arguments.\nProper usage: dns assign [IP] [DNS]");
                         daemon.LoadEntries();
                         return true;
                     }
                     File entryFile = daemon.node.rootFolder.GetFileAtPath(DEFAULT_CONFIG_PATH);
                     if (entryFile == null)
                     {
-                        client.Send(PacketType.MESSG, "Entry file not found.");
+                        session.owner.Send(PacketType.MESSG, "Entry file not found.");
                         return true;
+                    }
+                    foreach (DNSEntry entry in daemon.entries)
+                    {
+                        if(entry.Ip == cmdArgs[1])
+                        {
+                            session.owner.Send(PacketType.MESSG, "The provided IP address is already assigned a URL.");
+                            return true;
+                        }
+                        if (entry.Url == cmdArgs[2])
+                        {
+                            session.owner.Send(PacketType.MESSG, "The provided URL is already assigned an IP address.");
+                            return true;
+                        }
                     }
                     entryFile.Content += '\n' + cmdArgs[1] + '=' + cmdArgs[2];
                     daemon.LoadEntries();
-                    client.Send(PacketType.MESSG, "Content appended.");
+                    session.owner.Send(PacketType.MESSG, "Content appended.");
                     return true;
                 }
                 session.owner.Send(PacketType.MESSG, "Usage : dns [lookup/rlookup] [URL/IP]");
@@ -136,7 +149,9 @@ namespace HackLinks_Server.Daemons.Types
                 return;
             foreach (string line in entryFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                var data = line.Split(':');
+                var data = line.Split(new char[] { ':', '=' });
+                if (data.Length < 2)
+                    continue;
                 entries.Add(new DNSEntry(data[1], data[0]));
             }
         }
