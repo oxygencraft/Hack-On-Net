@@ -32,18 +32,38 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+
+  <!-- Determine what libs to use -->
+  <Choose>
+    <!-- IF HackNet libs are present in lib folder -->
+    <When Condition="Exists('..\lib\HacknetPathfinder.exe')">
+      <PropertyGroup>
+        <HNPath>..\lib</HNPath>
+      </PropertyGroup>
+    </When>
+    <!-- IF HackNet is installed in under Steam and has Pathfinder.exe present -->
+    <When Condition="Exists('$(MSBuildProgramFiles32)\steam\SteamApps\common\Hacknet\HacknetPathfinder.exe')">
+      <PropertyGroup>
+        <HNPath>$(MSBuildProgramFiles32)\Steam\SteamApps\common\Hacknet</HNPath>
+      </PropertyGroup>
+    </When>
+  </Choose>
+
+  <!-- Lib References -->
   <ItemGroup>
     <Reference Include="FNA">
-      <HintPath>..\lib\FNA.dll</HintPath>
+      <HintPath>$(HNPath)\FNA.dll</HintPath>
     </Reference>
     <Reference Include="HacknetPathfinder">
-      <HintPath>..\lib\HacknetPathfinder.exe</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(HNPath)\HacknetPathfinder.exe</HintPath>
     </Reference>
     <Reference Include="Pathfinder">
-      <HintPath>..\lib\Pathfinder.dll</HintPath>
+      <HintPath>$(HNPath)\Pathfinder.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
