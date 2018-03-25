@@ -53,12 +53,15 @@
   <ItemGroup>
     <Reference Include="FNA">
       <HintPath>$(HNPath)\FNA.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="HacknetPathfinder">
       <HintPath>$(HNPath)\HacknetPathfinder.exe</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Pathfinder">
       <HintPath>$(HNPath)\Pathfinder.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
