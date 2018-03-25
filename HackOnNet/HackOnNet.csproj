@@ -38,29 +38,28 @@
     <!-- IF HackNet libs are present in lib folder -->
     <When Condition="Exists('..\lib\HacknetPathfinder.exe')">
       <PropertyGroup>
-        <HNPath>..\lib</HNPath>
+        <HNLibPath>..\lib</HNLibPath>
       </PropertyGroup>
     </When>
     <!-- IF HackNet is installed in under Steam and has Pathfinder.exe present -->
     <When Condition="Exists('$(MSBuildProgramFiles32)\steam\SteamApps\common\Hacknet\HacknetPathfinder.exe')">
       <PropertyGroup>
-        <HNPath>$(MSBuildProgramFiles32)\Steam\SteamApps\common\Hacknet</HNPath>
+        <HNLibPath>$(MSBuildProgramFiles32)\Steam\SteamApps\common\Hacknet</HNLibPath>
       </PropertyGroup>
     </When>
   </Choose>
-
   <!-- Lib References -->
   <ItemGroup>
     <Reference Include="FNA">
-      <HintPath>$(HNPath)\FNA.dll</HintPath>
+      <HintPath>$(HNLibPath)\FNA.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="HacknetPathfinder">
-      <HintPath>$(HNPath)\HacknetPathfinder.exe</HintPath>
+      <HintPath>$(HNLibPath)\HacknetPathfinder.exe</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Pathfinder">
-      <HintPath>$(HNPath)\Pathfinder.dll</HintPath>
+      <HintPath>$(HNLibPath)\Pathfinder.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
