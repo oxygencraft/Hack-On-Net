@@ -63,11 +63,6 @@ namespace HackLinks_Server.Daemons.Types
                     session.owner.Send(PacketType.MESSG, "Successfully updated the DNS.");
                     return true;
                 }
-                if (cmdArgs.Length != 2)
-                {
-                    session.owner.Send(PacketType.MESSG, "Usage : dns [lookup/rlookup] [URL/IP]");
-                    return true;
-                }
                 if (cmdArgs[0] == "lookup")
                 {
                     var url = cmdArgs[1];
@@ -82,7 +77,30 @@ namespace HackLinks_Server.Daemons.Types
                     session.owner.Send(PacketType.MESSG, "Result URL : " + (url ?? "unknown"));
                     return true;
                 }
-                
+                if (cmdArgs[0] == "assign")
+                {
+                    if (client.activeSession.privilege > 1)
+                    {
+                        client.Send(PacketType.MESSG, "Insufficient permission.");
+                        return true;
+                    }
+                    if (cmdArgs.Length <= 2)
+                    {
+                        client.Send(PacketType.MESSG, "Missing arguments.");
+                        daemon.LoadEntries();
+                        return true;
+                    }
+                    File entryFile = daemon.node.rootFolder.GetFileAtPath(DEFAULT_CONFIG_PATH);
+                    if (entryFile == null)
+                    {
+                        client.Send(PacketType.MESSG, "Entry file not found.");
+                        return true;
+                    }
+                    entryFile.Content += '\n' + cmdArgs[1] + '=' + cmdArgs[2];
+                    daemon.LoadEntries();
+                    client.Send(PacketType.MESSG, "Content appended.");
+                    return true;
+                }
                 session.owner.Send(PacketType.MESSG, "Usage : dns [lookup/rlookup] [URL/IP]");
                 return true;
             }
