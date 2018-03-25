@@ -161,8 +161,10 @@ namespace HackLinks_Server.Computers
                 }
             }
 
-            foreach (File file in toDelete)
+            //We iterate our list backwards to avoid our indices being clobbered by removals.
+            for (int i = toDelete.Count -1; i >= 0; i--)
             {
+                File file = toDelete[i];
                 if (DeleteDbFile(file, conn))
                 {
                     Console.WriteLine($"    Deleted {file.Name}");
@@ -179,9 +181,9 @@ namespace HackLinks_Server.Computers
         {
             MySqlCommand fileCommand = new MySqlCommand(
                 "INSERT INTO files" +
-                " (name, parentFile, type, specialType, content, computerId, writePrivilege, readPrivilege)" +
+                " (id, name, parentFile, type, specialType, content, computerId, writePrivilege, readPrivilege)" +
                 " VALUES" +
-                " (@name, @parentFile, @type, @specialType, @content, @computerId, @writePrivilege, @readPrivilege)" +
+                " (@id, @name, @parentFile, @type, @specialType, @content, @computerId, @writePrivilege, @readPrivilege)" +
                 " ON DUPLICATE KEY UPDATE" +
                 " name = @name," +
                 " parentFile = @parentFile," +
@@ -191,6 +193,7 @@ namespace HackLinks_Server.Computers
                 " readPrivilege = @readPrivilege"
                 , conn);
             fileCommand.Parameters.AddRange(new MySqlParameter[] {
+                        new MySqlParameter("id", child.id),
                         new MySqlParameter("name", child.Name),
                         new MySqlParameter("parentFile", child.ParentId),
                         new MySqlParameter("type", child is Folder ? 1 : 0),
