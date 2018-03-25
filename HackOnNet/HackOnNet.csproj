@@ -4,6 +4,12 @@
   <PropertyGroup>
     <SteamHNDir>$(MSBuildProgramFiles32)\steam\SteamApps\common\Hacknet</SteamHNDir>
   </PropertyGroup>
+  <!-- In debug mode we'll run the default steam install of hacknet if we can find it -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU' And Exists('$(SteamHNDir)\HacknetPathfinder.exe')">
+    <StartAction>Program</StartAction>
+    <StartProgram>$(MSBuildProgramFiles32)\Steam\SteamApps\common\Hacknet\HacknetPathfinder.exe</StartProgram>
+    <StartWorkingDirectory>$(MSBuildProgramFiles32)\Steam\SteamApps\common\Hacknet\</StartWorkingDirectory>
+  </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
