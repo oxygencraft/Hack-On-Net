@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using HackLinks_Server.Computers;
 using MySql.Data.MySqlClient;
 
-namespace HackLinks_Server.FileSystem
+namespace HackLinks_Server.Files
 {
     class File
     {

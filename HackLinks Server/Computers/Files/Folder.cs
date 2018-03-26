@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HackLinks_Server.FileSystem
+namespace HackLinks_Server.Files
 {
     class Folder : File
     {
