@@ -49,7 +49,7 @@ namespace HackLinks_Server
         public Node connectedNode;
         public Daemon activeDaemon;
 
-        public Folder activeDirectory;
+        public File activeDirectory;
 
         public int privilege = 3;
         public string currentUsername = "Guest";

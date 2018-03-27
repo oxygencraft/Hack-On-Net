@@ -19,14 +19,15 @@ namespace HackLinks_Server.Computers
 
         public int ownerId;
 
-        public Folder rootFolder;
+        public File rootFolder;
 
         public List<Session> sessions = new List<Session>();
         public List<Daemon> daemons = new List<Daemon>();
 
         public Node()
         {
-            rootFolder = new Folder(this, null, "/");
+            rootFolder = new File(this, null, "/");
+            rootFolder.isFolder = true;
         }
 
         public string GetDisplayName()
@@ -74,7 +75,7 @@ namespace HackLinks_Server.Computers
                 client.Send(NetUtil.PacketType.MESSG, "No config folder was found !");
                 return;
             }
-            var usersFile = ((Folder)configFolder).GetFile("users.cfg");
+            var usersFile = configFolder.GetFile("users.cfg");
             if (usersFile == null)
             {
                 client.Send(NetUtil.PacketType.MESSG, "No config file was found !");

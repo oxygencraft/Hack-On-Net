@@ -27,7 +27,7 @@ namespace HackLinks_Server.Files
         private int readPriv = 0;
         private string content = "";
 
-        private Folder parent;
+        private File parent;
         private int parentId;
         public int computerId;
 
@@ -44,7 +44,7 @@ namespace HackLinks_Server.Files
 
         public FileType Type { get => type; set { type = value; Dirty = true; } }
 
-        internal Folder Parent { get => parent;
+        internal File Parent { get => parent;
             set
             {
                 if (parent != null)
@@ -62,8 +62,9 @@ namespace HackLinks_Server.Files
         }
 
         public List<File> children = new List<File>();
+        internal bool isFolder;
 
-        public File(Node computer, Folder parent, string name)
+        public File(Node computer, File parent, string name)
         {
             this.computerId = computer.id;
             this.Name = name;
@@ -91,7 +92,7 @@ namespace HackLinks_Server.Files
 
         virtual public bool IsFolder()
         {
-            return false;
+            return isFolder;
         }
 
         virtual public void RemoveFile()
@@ -108,6 +109,47 @@ namespace HackLinks_Server.Files
         public string[] GetLines()
         {
             return this.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.None);
+        }
+
+        public File GetFile(string name)
+        {
+            foreach (File file in children)
+            {
+                if (file.Name == name)
+                    return file;
+            }
+            return null;
+        }
+
+        public File GetFileAtPath(string path)
+        {
+            string[] pathSteps = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            File activeFolder = this;
+            for (int i = 0; i < pathSteps.Length - 1; i++)
+            {
+                var folder = activeFolder.GetFile(pathSteps[i]);
+                if (folder == null || !folder.IsFolder())
+                    return null;
+                activeFolder = folder;
+            }
+            return activeFolder.GetFile(pathSteps[pathSteps.Length - 1]);
+        }
+
+        public void PrintFolderRecursive(int depth)
+        {
+            string tabs = new String(' ', depth);
+            Console.WriteLine(tabs + id + "  d- " + Name);
+            foreach (var item in children)
+            {
+                if (item.IsFolder())
+                {
+                    item.PrintFolderRecursive(depth + 1);
+                }
+                else
+                {
+                    Console.WriteLine(tabs + " " + item.id + "  f- " + item.Name);
+                }
+            }
         }
 
     }

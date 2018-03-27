@@ -508,7 +508,7 @@ namespace HackLinks_Server
                         client.Send(NetUtil.PacketType.MESSG, "You cannot change active directory to a file.");
                         return true;
                     }
-                    session.activeDirectory = (Folder)file;
+                    session.activeDirectory = file;
                     client.Send(NetUtil.PacketType.KERNL, "cd", file.Name);
                     return true;
                 }
@@ -619,7 +619,8 @@ namespace HackLinks_Server
                 return true;
             }
 
-            var file = new Folder(client.activeSession.connectedNode, activeDirectory, command[1]);
+            var file = new File(client.activeSession.connectedNode, activeDirectory, command[1]);
+            file.isFolder = true;
             file.WritePriv = client.activeSession.privilege;
             file.ReadPriv = client.activeSession.privilege;
             return true;

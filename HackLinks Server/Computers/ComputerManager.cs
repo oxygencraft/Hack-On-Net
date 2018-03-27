@@ -60,7 +60,8 @@ namespace HackLinks_Server.Computers
 
                             MySqlCommand fileCommand = new MySqlCommand("SELECT * FROM files WHERE computerId = @0", cn1);
                             fileCommand.Parameters.Add(new MySqlParameter("0", newNode.id));
-                            Folder fileSystem = new Folder(newNode, null, "/");
+                            File fileSystem = new File(newNode, null, "/");
+                            fileSystem.isFolder = true;
                             List<File> computerFiles = new List<File>();
                             using (MySqlDataReader fileReader = fileCommand.ExecuteReader())
                             {
@@ -72,14 +73,10 @@ namespace HackLinks_Server.Computers
                                         int fileType = fileReader.GetByte(3);
                                         string fileName = fileReader.GetString(1);
 
-                                        if (fileType == 1)
-                                        {
-                                            newFile = new Folder(newNode, null, fileReader.GetString(1));
-                                        }
-                                        else
-                                        {
-                                            newFile = new File(newNode, null, fileReader.GetString(1));
-                                        }
+                                        newFile = new File(newNode, null, fileReader.GetString(1));
+
+                                        newFile.isFolder = fileType == 1;
+
                                         newFile.id = fileReader.GetInt32(0);
                                         newFile.ParentId = fileReader.GetInt32(2);
                                         newFile.ReadPriv = fileReader.GetInt32(8);
@@ -106,7 +103,7 @@ namespace HackLinks_Server.Computers
             Console.WriteLine("Initializing daemons");
             foreach(Node node in nodeList)
             {
-                var daemonsFolder = (Folder)node.rootFolder.GetFile("daemons");
+                var daemonsFolder = node.rootFolder.GetFile("daemons");
                 if (daemonsFolder == null)
                     continue;
                 var autorunFile = daemonsFolder.GetFile("autorun");
@@ -196,7 +193,7 @@ namespace HackLinks_Server.Computers
                         new MySqlParameter("id", child.id),
                         new MySqlParameter("name", child.Name),
                         new MySqlParameter("parentFile", child.ParentId),
-                        new MySqlParameter("type", child is Folder ? 1 : 0),
+                        new MySqlParameter("type", child.isFolder ? 1 : 0),
                         new MySqlParameter("specialType", child.Type),
                         new MySqlParameter("content", child.Content),
                         new MySqlParameter("computerId", child.computerId),
@@ -240,7 +237,7 @@ namespace HackLinks_Server.Computers
             return null;
         }
 
-        public static List<File> FixFolder(List<File> files, int parentId, Folder father=null)
+        public static List<File> FixFolder(List<File> files, int parentId, File father=null)
         {
             List<File> fixedFiles = new List<File>();
 
@@ -250,7 +247,7 @@ namespace HackLinks_Server.Computers
                 fixedFiles.Add(item);
                 if(item.IsFolder())
                 {
-                    item.children = FixFolder(files, item.id, (Folder)item);
+                    item.children = FixFolder(files, item.id, item);
                 }
             }
 
