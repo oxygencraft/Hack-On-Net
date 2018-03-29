@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using HackOnNet.DiscordRP;
 
 namespace HackOnNet.GUI
 {
@@ -25,7 +26,7 @@ namespace HackOnNet.GUI
         public static LoginState loginState = LoginState.MENU;
         private static MenuState currentState = MenuState.OG_MENU;
 
-        public static bool isPlayingOG = false;
+        public static RPHandler.State preset = new RPHandler.State();
 
         private static Color CancelColor = new Color(125, 82, 82);
         private static string terminalString = "";
@@ -78,23 +79,19 @@ namespace HackOnNet.GUI
                 bMenu = e.MainMenu;
             if (currentState == MenuState.OG_MENU)
             {
-                if(!isPlayingOG) {
-                    DiscordRP.RPHandler.Shutdown();
-                    isPlayingOG = true;
-                }
+                preset = RPHandler.State.OGMenu;
+                RPHandler.PresencePresetSet(preset);
                 openHackOnNet.Draw();
                 return;
             }
             e.IsCancelled = true;
             if (currentState == MenuState.MAIN_MENU) {
-                if(isPlayingOG) {
-                    DiscordRP.RPHandler.Initialize();
-                    isPlayingOG = false;
-                }
-                DiscordRP.RPHandler.UpdatePresence("Main Menu", "ambiguity");
+                preset = RPHandler.State.MainMenu;
+                RPHandler.PresencePresetSet(preset);
                 DrawMain(e);
             } else if (currentState == MenuState.LOGIN) {
-                DiscordRP.RPHandler.UpdatePresence("Logging In", "ambiguity");
+                preset = RPHandler.State.MPLogIn;
+                RPHandler.PresencePresetSet(preset);
                 DrawLogin(e);
             }
         }
@@ -249,7 +246,8 @@ namespace HackOnNet.GUI
             }
             else if (loginState == LoginState.LOGGED)
             {
-                DiscordRP.RPHandler.UpdatePresence("In Game", "ambiguity");
+                preset = RPHandler.State.InGame;
+                RPHandler.PresencePresetSet(preset);
                 loginMessage = "";
                 currentState = MenuState.LOGIN;
                 screen.netManager = netManager;
