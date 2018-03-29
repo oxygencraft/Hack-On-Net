@@ -2,7 +2,9 @@
 using Hacknet;
 using HackOnNet.DotNetCompatibility;
 using HackOnNet.FileSystem;
+using HackOnNet.Graphics;
 using HackOnNet.Modules;
+using HackOnNet.Modules.Overlays;
 using HackOnNet.Net;
 using HackOnNet.Sessions;
 using HackOnNet.Sessions.States;
@@ -64,6 +66,8 @@ namespace HackOnNet.Screens
         public OnNetDisplayModule display;
         public OnNetRamModule ram;
 
+        public List<Overlay> overlays = new List<Overlay>();
+
         private System.Collections.Generic.List<OnModule> modules;
         private MessageBoxScreen ExitToMenuMessageBox;
 
@@ -77,6 +81,9 @@ namespace HackOnNet.Screens
         public override void LoadContent()
         {
             this.content = base.ScreenManager.Game.Content;
+
+            AssetBank.LoadBank(content);
+
             scanLines = this.content.Load<Texture2D>("ScanLines");
             fullscreen = new Rectangle(0, 0, base.ScreenManager.GraphicsDevice.Viewport.Width, base.ScreenManager.GraphicsDevice.Viewport.Height);
 
@@ -118,6 +125,8 @@ namespace HackOnNet.Screens
         public override void Update(GameTime gameTime, bool otherScreenHasFocus, bool coveredByOtherScreen)
         {
             base.Update(gameTime, otherScreenHasFocus, coveredByOtherScreen);
+            foreach (Overlay overlay in overlays)
+                overlay.Update(gameTime.ElapsedGameTime.TotalSeconds);
         }
 
         public override void Draw(GameTime gameTime)
@@ -134,16 +143,19 @@ namespace HackOnNet.Screens
                 GuiData.startDraw();
                 try
                 {
-                    this.drawBackground();
-                    /*if (this.terminalOnlyMode)
+                    bool prevented = false;
+                    foreach(Overlay overlay in this.overlays)
+                        if(overlay.Draw())
+                        {
+                            prevented = true;
+                            break;
+                        }
+                    if(!prevented)
                     {
-                        this.terminal.Draw(t);
+                        this.drawBackground();
+                        this.drawModules(gameTime);
+                        SFX.Draw(GuiData.spriteBatch);
                     }
-                    else
-                    {*/
-                    this.drawModules(gameTime);
-                    //}
-                    SFX.Draw(GuiData.spriteBatch);
                 }
                 catch (System.Exception ex)
                 {
@@ -187,6 +199,14 @@ namespace HackOnNet.Screens
                     position.Y = 0f;
                     position.X += (float)this.scanLines.Width;
                 }
+            }
+        }
+
+        public void HandleFX(string[] messages)
+        {
+            if(messages[0] == "traceOver")
+            {
+                this.overlays.Add(new TerminationOverlay(this.ScreenManager.SpriteBatch, this.fullscreen, this));
             }
         }
 

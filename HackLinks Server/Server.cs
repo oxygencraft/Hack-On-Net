@@ -76,6 +76,8 @@ namespace HackLinks_Server
             switch (type)
             {
                 case PacketType.COMND:
+                    if (client.status == GameClient.PlayerStatus.TERMINATED)
+                        break;
                     if (!CommandHandler.TreatCommand(client, messages[0]))
                         client.Send(PacketType.OSMSG, "ERR:0"); // OSMSG:ERR:0 = La commande est introuvable
                     break;
@@ -125,6 +127,9 @@ namespace HackLinks_Server
                         client.Disconnect();
                     }
                     break;
+                case PacketType.DSCON:
+                    client.netDisconnect();
+                    break;
             }
         }
 
@@ -145,11 +150,15 @@ namespace HackLinks_Server
             }
         }
 
-        public void MainLoop()
+        public void MainLoop(double dT)
         {
             Thread.Sleep(10);
             foreach(GameClient client in clients)
             {
+                if(client.activeSession != null)
+                {
+                    client.activeSession.UpdateTrace(dT);
+                }
             }
         }
     }

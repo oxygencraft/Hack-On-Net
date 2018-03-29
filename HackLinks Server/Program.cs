@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Mono.Options;
+using System.Diagnostics;
 
 namespace HackLinks_Server
 {
@@ -145,8 +146,10 @@ namespace HackLinks_Server
                 listener.Bind(localEndPoint);
                 listener.Listen(100);
 
+                var stopWatch = Stopwatch.StartNew();
                 while (true)
                 {
+
                     if(recieving == false)
                     {
                         Console.WriteLine("Waiting for a connection...");
@@ -155,7 +158,9 @@ namespace HackLinks_Server
                             listener);
                         recieving = true;
                     }
-                    Server.Instance.MainLoop();
+                    double dT = stopWatch.ElapsedMilliseconds / 1000;
+                    stopWatch.Restart();
+                    Server.Instance.MainLoop(dT);
                 }
 
             }

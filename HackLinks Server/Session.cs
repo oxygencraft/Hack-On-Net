@@ -4,14 +4,16 @@ using HackLinks_Server.FileSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static HackLinks_Server.GameClient;
 using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
     class Session
     {
+        public float trace = 100;
+
+        public float traceSpd = 0;
 
         private SortedDictionary<string, Tuple<string, CommandHandler.Command>> sessionCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
         {
@@ -134,6 +136,20 @@ namespace HackLinks_Server
                 activeDaemon.OnDisconnect(this);
             activeDaemon = null;
             connectedNode = null;
+        }
+
+        public void SetTraceLevel(float spd)
+        {
+            this.traceSpd = spd;
+        }
+
+        public void UpdateTrace(double dT)
+        {
+            this.trace -= this.traceSpd * (float)dT;
+            if(this.trace < 0)
+            {
+                this.owner.TraceTermination();
+            }
         }
     }
 }
