@@ -152,7 +152,7 @@
     <Message Importance="high" Text="== Copying Lib files &quot;@(HNLibs, ', ')&quot; to $(SteamHNDir) ==" />
     <Copy SourceFiles="@(HNLibs)" DestinationFolder="$(SteamHNDir)" />
     <Message Importance="high" Text="== Copying Mod file to $(SteamHNDir)\Mods ==" />
-    <Copy SourceFiles="$(OutDir)\$(TargetFileName)" DestinationFolder="$(SteamHNDir)" />
+    <Copy SourceFiles="$(OutDir)\$(TargetFileName)" DestinationFolder="$(SteamHNDir)\Mods" />
     <Message Importance="high" Text="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" />
   </Target>
   <Target Name="AfterBuildNoSteam">
