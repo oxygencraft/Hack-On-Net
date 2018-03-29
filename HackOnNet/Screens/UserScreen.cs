@@ -347,13 +347,24 @@ namespace HackOnNet.Screens
                         
                     }
                 }
-                if(command[1] == "view")
+                else if(command[1] == "view")
                 {
                     string fileName = command[2];
                     string fileContent = command[3];
 
                     activeSession.SetState(new ViewState(activeSession, fileName, fileContent));
                     display.state = DisplayState.VIEW;
+                }
+                else if(command[1] == "http")
+                {
+                    if(command[2] == "page")
+                    {
+                        string pageTitle = command[3];
+                        string pageContent = command[4];
+
+                        activeSession.SetState(new WebState(activeSession, pageTitle, pageContent));
+                        display.state = DisplayState.WEB;
+                    }
                 }
             }
             else if(command[0] == "node")
