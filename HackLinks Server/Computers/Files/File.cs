@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HackLinks_Server.Computers;
+using HackLinks_Server.Computers.Files;
 using MySql.Data.MySqlClient;
 
 namespace HackLinks_Server.Files
@@ -20,7 +21,7 @@ namespace HackLinks_Server.Files
             CONFIG
         }
 
-        public int id;
+        public readonly int id;
 
         private string name;
         private int writePriv = 0;
@@ -53,7 +54,6 @@ namespace HackLinks_Server.Files
                 }
 
                 parent = value;
-
                 if(parent != null)
                 {
                     ParentId = parent.id;
@@ -64,8 +64,9 @@ namespace HackLinks_Server.Files
         public List<File> children = new List<File>();
         internal bool isFolder;
 
-        public File(Node computer, File parent, string name)
+        protected File(int id, Node computer, File parent, string name)
         {
+            this.id = id;
             this.computerId = computer.id;
             this.Name = name;
             this.Parent = parent;
@@ -73,6 +74,43 @@ namespace HackLinks_Server.Files
             {
                 this.Parent.children.Add(this);
             }
+        }
+
+        /// <summary>
+        /// Create a new file and register it a new file id with the given <see cref="FileSystemManager"/>
+        /// </summary>
+        /// <param name="manager"></param>
+        /// <param name="computer"></param>
+        /// <param name="parent"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static File CreateNewFile(FileSystemManager manager, Node computer, File parent, string name)
+        {
+            File newFile = new File(manager.GetNewFileId(), computer, parent, name);
+            manager.RegisterNewFile(newFile);
+            return newFile;
+        }
+
+        /// <summary>
+        /// Attempt to create a new file with the given id and register it with the given <see cref="FileSystemManager"/>
+        /// It's usually better to use <see cref="CreateNewFile(FileSystemManager, Node, File, string)"/> unless you need to explicitly specify the file id.
+        /// </summary>
+        /// <param name="manager"></param>
+        /// <param name="computer"></param>
+        /// <param name="parent"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentException">Thrown when the id is already registered</exception>
+        public static File CreateNewFile(int id, FileSystemManager manager, Node computer, File parent, string name)
+        {
+            if (manager.IsIdInUse(id))
+            {
+                throw new ArgumentException($"File id \"{id}\" is already in use");
+            }
+
+            File newFile = new File(id, computer, parent, name);
+            manager.RegisterNewFile(newFile);
+            return newFile;
         }
 
         public bool HasWritePermission(Session session)

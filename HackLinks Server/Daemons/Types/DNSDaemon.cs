@@ -89,33 +89,30 @@ namespace HackLinks_Server.Daemons.Types
                         session.owner.Send(PacketType.MESSG, "Missing arguments.\nProper usage: dns assign [IP] [URL]");
                         return true;
                     }
-                    File dnsFile = daemon.node.rootFolder.GetFile("dns");
-                    Folder dnsFolder;
-                    if (dnsFile == null)
-                        dnsFolder = new Folder(client.activeSession.connectedNode, daemon.node.rootFolder, "dns");
+                    File dnsFolder = daemon.node.fileSystem.rootFile.GetFile("dns");
+                    if (dnsFolder == null)
+                    {
+                        dnsFolder = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, daemon.node.fileSystem.rootFile, "dns");
+                        dnsFolder.isFolder = true;
+                    }
                     else
                     {
-                        if (!dnsFile.IsFolder())
+                        if (!dnsFolder.IsFolder())
                             return true;
-                        dnsFolder = (Folder)dnsFile;
                     }
                     File dnsEntries = dnsFolder.GetFile("entries.db");
                     if (dnsEntries == null)
                     {
-                        dnsEntries = new File(client.activeSession.connectedNode, dnsFolder, "entries.db")
-                        {
-                            WritePriv = 1,
-                            ReadPriv = 1
-                        };
+                        dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
+                        dnsEntries.WritePriv = 1;
+                        dnsEntries.ReadPriv = 1;
                     }
                     else if (dnsEntries.IsFolder())
                     {
                         dnsEntries.RemoveFile();
-                        dnsEntries = new File(client.activeSession.connectedNode, dnsFolder, "entries.db")
-                        {
-                            WritePriv = 1,
-                            ReadPriv = 1
-                        };
+                        dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
+                        dnsEntries.WritePriv = 1;
+                        dnsEntries.ReadPriv = 1;
                     }
                     foreach (DNSEntry entry in daemon.entries)
                     {
@@ -160,7 +157,7 @@ namespace HackLinks_Server.Daemons.Types
         public void LoadEntries()
         {
             this.entries.Clear();
-            File entryFile = node.rootFolder.GetFileAtPath(DEFAULT_CONFIG_PATH);
+            File entryFile = node.fileSystem.rootFile.GetFileAtPath(DEFAULT_CONFIG_PATH);
             if (entryFile == null)
                 return;
             foreach (string line in entryFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))

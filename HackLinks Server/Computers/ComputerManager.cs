@@ -60,24 +60,23 @@ namespace HackLinks_Server.Computers
 
                             MySqlCommand fileCommand = new MySqlCommand("SELECT * FROM files WHERE computerId = @0", cn1);
                             fileCommand.Parameters.Add(new MySqlParameter("0", newNode.id));
-                            File fileSystem = new File(newNode, null, "/");
-                            fileSystem.isFolder = true;
                             List<File> computerFiles = new List<File>();
+
                             using (MySqlDataReader fileReader = fileCommand.ExecuteReader())
                             {
                                 if (fileReader.HasRows)
                                 {
                                     while (fileReader.Read())
                                     {
-                                        File newFile = null;
                                         int fileType = fileReader.GetByte(3);
                                         string fileName = fileReader.GetString(1);
 
-                                        newFile = new File(newNode, null, fileReader.GetString(1));
+                                        Console.WriteLine($"Creating file {fileName} with id {fileReader.GetInt32(0)}");
+
+                                        File newFile = newNode.fileSystem.CreateFile(fileReader.GetInt32(0), newNode, newNode.fileSystem.rootFile, fileName);
 
                                         newFile.isFolder = fileType == 1;
 
-                                        newFile.id = fileReader.GetInt32(0);
                                         newFile.ParentId = fileReader.GetInt32(2);
                                         newFile.ReadPriv = fileReader.GetInt32(8);
                                         newFile.WritePriv = fileReader.GetInt32(7);
@@ -85,14 +84,16 @@ namespace HackLinks_Server.Computers
                                         newFile.SetType(fileReader.GetInt32(4));
 
                                         computerFiles.Add(newFile);
+
+                                        if(newFile.ParentId == 0)
+                                        {
+                                            newNode.SetRoot(newFile);
+                                        }
                                     }
                                 }
                             }
-                            fileSystem.children = FixFolder(computerFiles, 0, fileSystem);
-                            newNode.rootFolder = fileSystem;
-                            fileSystem.ReadPriv = 1;
-                            fileSystem.WritePriv = 1;
 
+                            FixFolder(computerFiles, newNode.fileSystem.rootFile);
                             nodeList.Add(newNode);
                         }
                     }
@@ -103,7 +104,7 @@ namespace HackLinks_Server.Computers
             Console.WriteLine("Initializing daemons");
             foreach(Node node in nodeList)
             {
-                var daemonsFolder = node.rootFolder.GetFile("daemons");
+                var daemonsFolder = node.fileSystem.rootFile.GetFile("daemons");
                 if (daemonsFolder == null)
                     continue;
                 var autorunFile = daemonsFolder.GetFile("autorun");
@@ -142,7 +143,7 @@ namespace HackLinks_Server.Computers
 
             foreach (Node node in nodeList)
             {
-                foreach (File child in Traverse(node.rootFolder.children, file => file.children))
+                foreach (File child in Traverse(node.fileSystem.rootFile.children, file => file.children))
                 {
                     if (!child.Dirty) // Our child is clean. Continue to the next
                     {
@@ -205,12 +206,6 @@ namespace HackLinks_Server.Computers
 
             int insertedId = (int)fileCommand.LastInsertedId;
 
-            //InsertedId will be 0 in the event of an update, so we ignore 0
-            if (insertedId != 0)
-            {
-                child.id = insertedId;
-            }
-
             return  res > 0;
         }
 
@@ -237,21 +232,32 @@ namespace HackLinks_Server.Computers
             return null;
         }
 
-        public static List<File> FixFolder(List<File> files, int parentId, File father=null)
+        public static void FixFolder(List<File> files, File rootFile)
         {
             List<File> fixedFiles = new List<File>();
+            Queue<File> fileQueue = new Queue<File>();
 
-            foreach (var item in files.Where(x => x.ParentId.Equals(parentId)))
+            fileQueue.Enqueue(rootFile);
+
+            while(fileQueue.Any())
             {
-                item.Parent = father;
-                fixedFiles.Add(item);
-                if(item.IsFolder())
+                File parent = fileQueue.Dequeue();
+                Console.WriteLine($"Processing File {parent.Name} {parent.id}");
+
+                foreach (File child in files.Where(x => x.ParentId.Equals(parent.id)))
                 {
-                    item.children = FixFolder(files, item.id, item);
+                    Console.WriteLine($"Processing Child File {child.Name} {child.id} of {parent.Name} {parent.id}");
+
+                    child.Parent = parent;
+                    parent.children.Add(child);
+
+                    fixedFiles.Add(child);
+                    if(child.IsFolder())
+                    {
+                        fileQueue.Enqueue(child);
+                    }
                 }
             }
-
-            return fixedFiles;
         }
 
         public void AddToDelete(File file)

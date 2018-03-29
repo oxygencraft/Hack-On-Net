@@ -400,7 +400,7 @@ namespace HackLinks_Server
                     resultIP = client.homeComputer.ip;
                 else
                 {
-                    var DNSConfigFile = client.homeComputer.rootFolder.GetFileAtPath("/cfg/dns.cfg");
+                    var DNSConfigFile = client.homeComputer.fileSystem.rootFile.GetFileAtPath("/cfg/dns.cfg");
                     if (DNSConfigFile != null)
                     {
                         foreach (string ip in DNSConfigFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
@@ -441,7 +441,7 @@ namespace HackLinks_Server
                 client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
-            var root = session.connectedNode.rootFolder;
+            var root = session.connectedNode.fileSystem.rootFile;
             if(command.Length == 2)
             {
                 foreach (var file in session.activeDirectory.children)
@@ -546,7 +546,7 @@ namespace HackLinks_Server
                 return true;
             }
 
-            var file = new File(client.activeSession.connectedNode, activeDirectory, command[1]);
+            var file = session.connectedNode.fileSystem.CreateFile(client.activeSession.connectedNode, activeDirectory, command[1]);
             file.WritePriv = client.activeSession.privilege;
             file.ReadPriv = client.activeSession.privilege;
 
@@ -619,7 +619,7 @@ namespace HackLinks_Server
                 return true;
             }
 
-            var file = new File(client.activeSession.connectedNode, activeDirectory, command[1]);
+            var file = session.connectedNode.fileSystem.CreateFile(client.activeSession.connectedNode, activeDirectory, command[1]);
             file.isFolder = true;
             file.WritePriv = client.activeSession.privilege;
             file.ReadPriv = client.activeSession.privilege;

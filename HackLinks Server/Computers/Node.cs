@@ -1,4 +1,5 @@
-﻿using HackLinks_Server.Daemons;
+﻿using HackLinks_Server.Computers.Files;
+using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
 using HackLinks_Server.Files;
 using HackLinksCommon;
@@ -19,20 +20,14 @@ namespace HackLinks_Server.Computers
 
         public int ownerId;
 
-        public File rootFolder;
+        public readonly FileSystem fileSystem = new FileSystem(Server.Instance.FileSystemManager);
 
         public List<Session> sessions = new List<Session>();
         public List<Daemon> daemons = new List<Daemon>();
 
-        public Node()
-        {
-            rootFolder = new File(this, null, "/");
-            rootFolder.isFolder = true;
-        }
-
         public string GetDisplayName()
         {
-            var cfgFile = rootFolder.GetFileAtPath(SERVER_CONFIG_PATH);
+            var cfgFile = fileSystem.rootFile.GetFileAtPath(SERVER_CONFIG_PATH);
             if (cfgFile == null)
                 return ip;
             var lines = cfgFile.GetLines();
@@ -69,7 +64,7 @@ namespace HackLinks_Server.Computers
 
         public void Login(GameClient client, string username, string password)
         {
-            var configFolder = rootFolder.GetFile("cfg");
+            var configFolder = fileSystem.rootFile.GetFile("cfg");
             if (configFolder == null || !configFolder.IsFolder())
             {
                 client.Send(NetUtil.PacketType.MESSG, "No config folder was found !");
@@ -93,6 +88,13 @@ namespace HackLinks_Server.Computers
                 }
             }
             client.Send(NetUtil.PacketType.MESSG, "Wrong identificants.");
+        }
+
+        internal void SetRoot(File newFile)
+        {
+            if(fileSystem.rootFile != null)
+                throw new ArgumentException("Root file for this computer is already set.");
+            fileSystem.rootFile = newFile;
         }
 
         /*public Folder getFolderFromPath(string path, bool createFoldersThatDontExist = false)

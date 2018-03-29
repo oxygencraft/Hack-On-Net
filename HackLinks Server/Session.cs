@@ -57,7 +57,7 @@ namespace HackLinks_Server
         public Session(GameClient client, Node node)
         {
             this.connectedNode = node;
-            this.activeDirectory = node.rootFolder;
+            this.activeDirectory = node.fileSystem.rootFile;
             this.owner = client;
             node.sessions.Add(this);
             SendNodeInfo();

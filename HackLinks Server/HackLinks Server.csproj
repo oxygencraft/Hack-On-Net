@@ -63,7 +63,8 @@
   <ItemGroup>
     <Compile Include="CommandHandler.cs" />
     <Compile Include="Computers\ComputerManager.cs" />
-    <Compile Include="Computers\Files\Folder.cs" />
+    <Compile Include="Computers\Files\FileSystemManager.cs" />
+    <Compile Include="Computers\Files\FileSystem.cs" />
     <Compile Include="Computers\Node.cs" />
     <Compile Include="Computers\PermissionHelper.cs" />
     <Compile Include="Computers\PlayerTerminal.cs" />

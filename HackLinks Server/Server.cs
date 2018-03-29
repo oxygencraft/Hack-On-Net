@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using HackLinks_Server.Computers;
 using System.Text.RegularExpressions;
 using static HackLinksCommon.NetUtil;
+using HackLinks_Server.Computers.Files;
 
 namespace HackLinks_Server
 {
@@ -22,6 +23,7 @@ namespace HackLinks_Server
 
 
         private ComputerManager computerManager;
+        private FileSystemManager fileSystemManager = new FileSystemManager();
 
         //Connection String args
         private MySqlConnectionStringBuilder connectionStringBuilder = new MySqlConnectionStringBuilder();
@@ -29,6 +31,8 @@ namespace HackLinks_Server
         public string Database { get => connectionStringBuilder.Database; internal set => connectionStringBuilder.Database = value; }
         public string UserID { get => connectionStringBuilder.UserID; internal set => connectionStringBuilder.UserID = value; }
         public string Password { get => connectionStringBuilder.Password; internal set => connectionStringBuilder.Password = value; }
+
+        public FileSystemManager FileSystemManager => fileSystemManager;
 
         private Server()
         {
