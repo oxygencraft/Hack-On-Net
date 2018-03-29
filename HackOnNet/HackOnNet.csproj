@@ -41,7 +41,24 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <!-- Determine what libs to use -->
   <Choose>
     <!-- IF HackNet libs are present in lib folder -->
@@ -87,6 +104,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigUtil.cs" />
+    <Compile Include="DiscordRP\RPHandler.cs" />
+    <Compile Include="DiscordRP\DiscordRpc.cs" />
     <Compile Include="DotNetCompatibility\Extensions.cs" />
     <Compile Include="FileSystem\LsFileEntry.cs" />
     <Compile Include="GUI\MainMenu.cs" />
@@ -118,6 +137,11 @@
       <Project>{15ba833d-405c-4997-88a5-286736e300be}</Project>
       <Name>HackLinksCommon</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DiscordRP\discord-rpc.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuildSteam">

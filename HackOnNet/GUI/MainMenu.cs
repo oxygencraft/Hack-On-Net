@@ -25,6 +25,8 @@ namespace HackOnNet.GUI
         public static LoginState loginState = LoginState.MENU;
         private static MenuState currentState = MenuState.OG_MENU;
 
+        public static bool isPlayingOG = false;
+
         private static Color CancelColor = new Color(125, 82, 82);
         private static string terminalString = "";
         private static string currentPrompt = "USERNAME :";
@@ -76,14 +78,25 @@ namespace HackOnNet.GUI
                 bMenu = e.MainMenu;
             if (currentState == MenuState.OG_MENU)
             {
+                if(!isPlayingOG) {
+                    DiscordRP.RPHandler.Shutdown();
+                    isPlayingOG = true;
+                }
                 openHackOnNet.Draw();
                 return;
             }
             e.IsCancelled = true;
-            if (currentState == MenuState.MAIN_MENU)
+            if (currentState == MenuState.MAIN_MENU) {
+                if(isPlayingOG) {
+                    DiscordRP.RPHandler.Initialize();
+                    isPlayingOG = false;
+                }
+                DiscordRP.RPHandler.UpdatePresence("Main Menu", "ambiguity");
                 DrawMain(e);
-            else if (currentState == MenuState.LOGIN)
-                DrawLogin(e);            
+            } else if (currentState == MenuState.LOGIN) {
+                DiscordRP.RPHandler.UpdatePresence("Logging In", "ambiguity");
+                DrawLogin(e);
+            }
         }
 
         private static void DrawMain(DrawMainMenuEvent e)
@@ -236,6 +249,7 @@ namespace HackOnNet.GUI
             }
             else if (loginState == LoginState.LOGGED)
             {
+                DiscordRP.RPHandler.UpdatePresence("In Game", "ambiguity");
                 loginMessage = "";
                 currentState = MenuState.LOGIN;
                 screen.netManager = netManager;

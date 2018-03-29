@@ -13,6 +13,7 @@ namespace HackOnNet
 
         public void Load()
         {
+            DiscordRP.RPHandler.Initialize();
             EventManager.RegisterListener<DrawMainMenuEvent>(GUI.MainMenu.DrawMainMenu);
         }
 
