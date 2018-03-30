@@ -86,8 +86,7 @@ namespace HackLinks_Server.Daemons.Types
                     }
                     if (cmdArgs.Length <= 2)
                     {
-                        session.owner.Send(PacketType.MESSG, "Missing arguments.\nProper usage: dns assign [IP] [DNS]");
-                        daemon.LoadEntries();
+                        session.owner.Send(PacketType.MESSG, "Missing arguments.\nProper usage: dns assign [IP] [URL]");
                         return true;
                     }
                     File dnsFile = daemon.node.rootFolder.GetFile("dns");
@@ -169,7 +168,7 @@ namespace HackLinks_Server.Daemons.Types
                 var data = line.Split(new char[] { ':', '=' });
                 if (data.Length < 2)
                     continue;
-                entries.Add(new DNSEntry(data[1], data[0]));
+                entries.Add(new DNSEntry(data[0], data[1]));
             }
         }
 
