@@ -12,7 +12,7 @@ namespace HackLinks_Server.Daemons.Types
 {
     class DNSDaemon : Daemon
     {
-        public static string DEFAULT_CONFIG_PATH = "/daemons/dns/entries.db";
+        public static string DEFAULT_CONFIG_PATH = "/dns/entries.db";
 
         public DNSDaemon(Node node) : base(node)
         {
@@ -90,26 +90,43 @@ namespace HackLinks_Server.Daemons.Types
                         daemon.LoadEntries();
                         return true;
                     }
-                    File entryFile = daemon.node.rootFolder.GetFileAtPath(DEFAULT_CONFIG_PATH);
-                    if (entryFile == null)
+                    File dnsFile = daemon.node.rootFolder.GetFile("dns");
+                    Folder dnsFolder;
+                    if (dnsFile == null)
+                        dnsFolder = new Folder(client.activeSession.connectedNode, daemon.node.rootFolder, "dns");
+                    else
                     {
-                        session.owner.Send(PacketType.MESSG, "Entry file not found.");
-                        return true;
+                        if (!dnsFile.IsFolder())
+                            return true;
+                        dnsFolder = (Folder)dnsFile;
+                    }
+                    File dnsEntries = dnsFolder.GetFile("entries.db");
+                    if (dnsEntries == null)
+                    {
+                        dnsEntries = new File(client.activeSession.connectedNode, dnsFolder, "entries.db")
+                        {
+                            WritePriv = 1,
+                            ReadPriv = 1
+                        };
+                    }
+                    else if (dnsEntries.IsFolder())
+                    {
+                        dnsEntries.RemoveFile();
+                        dnsEntries = new File(client.activeSession.connectedNode, dnsFolder, "entries.db")
+                        {
+                            WritePriv = 1,
+                            ReadPriv = 1
+                        };
                     }
                     foreach (DNSEntry entry in daemon.entries)
                     {
-                        if(entry.Ip == cmdArgs[1])
-                        {
-                            session.owner.Send(PacketType.MESSG, "The provided IP address is already assigned a URL.");
-                            return true;
-                        }
                         if (entry.Url == cmdArgs[2])
                         {
                             session.owner.Send(PacketType.MESSG, "The provided URL is already assigned an IP address.");
                             return true;
                         }
                     }
-                    entryFile.Content += '\n' + cmdArgs[1] + '=' + cmdArgs[2];
+                    dnsEntries.Content += '\n' + cmdArgs[1] + '=' + cmdArgs[2];
                     daemon.LoadEntries();
                     session.owner.Send(PacketType.MESSG, "Content appended.");
                     return true;
