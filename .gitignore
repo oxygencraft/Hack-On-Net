@@ -305,7 +305,4 @@ ASALocalRun/
 */bin
 
 HackOnNet/obj/*
-lib/FNA.dll
-lib/HacknetPathfinder.exe
-lib/Pathfinder.dll
 HackLinks Server/obj/*

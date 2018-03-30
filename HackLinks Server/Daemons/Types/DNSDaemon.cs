@@ -116,7 +116,7 @@ namespace HackLinks_Server.Daemons.Types
             File entryFile = node.rootFolder.GetFileAtPath(DEFAULT_CONFIG_PATH);
             if (entryFile == null)
                 return;
-            foreach (string line in entryFile.content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (string line in entryFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var data = line.Split(':');
                 entries.Add(new DNSEntry(data[1], data[0]));
