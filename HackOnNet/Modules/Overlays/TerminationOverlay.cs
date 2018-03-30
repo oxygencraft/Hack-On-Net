@@ -1,5 +1,6 @@
 ﻿using HackOnNet.Screens;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,8 @@ namespace HackOnNet.Modules.Overlays
             { 1f,       "You betrayed our trust. You will suffer the consequences."}
         };
 
+        private SoundEffect spinDownSound;
+
         string chosenStr = "Farewell, agent.";
 
 
@@ -32,7 +35,9 @@ namespace HackOnNet.Modules.Overlays
 
             Random rnd = new Random();
             float choice = (float)rnd.NextDouble();
-            foreach(KeyValuePair<float, string> message in farewellMessages)
+            this.spinDownSound = screen.content.Load<SoundEffect>("Music/Ambient/spiral_gauge_down");
+
+            foreach (KeyValuePair<float, string> message in farewellMessages)
             {
                 if (message.Key > choice)
                 {
@@ -44,12 +49,23 @@ namespace HackOnNet.Modules.Overlays
 
         private float time = 0f;
 
+        public override void Launch()
+        {
+            Hacknet.MusicManager.playSongImmediatley("Music/Ambient/dark_drone_008");
+            this.spinDownSound.Play();
+        }
+
+        public override bool PreventsDrawing()
+        {
+            return true;
+        }
+
         public override void Update(double dT)
         {
             time += (float)dT;
         }
 
-        public override bool Draw()
+        public override void Draw()
         {
             Hacknet.Gui.TextItem.DrawShadow = false;
 
@@ -68,7 +84,6 @@ namespace HackOnNet.Modules.Overlays
             pos = this.DrawFlashInString(Hacknet.LocaleTerms.Loc("All of your assets have been seized"), pos, 6f, 0.2f, false, 0.2f);
             pos = this.DrawFlashInString(Hacknet.LocaleTerms.Loc(chosenStr), pos, 10f, 0.2f, false, 0.8f);
             pos = this.DrawFlashInString(Hacknet.LocaleTerms.Loc("Remote connection shutting down"), pos, 12f, 0.2f, true, 0.8f);
-            return true;
         }
 
         private Vector2 DrawFlashInString(string text, Vector2 pos, float offset, float transitionInTime = 0.2f, bool hasDots = false, float dotsDelayer = 0.2f)

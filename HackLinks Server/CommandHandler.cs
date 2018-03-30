@@ -632,6 +632,10 @@ namespace HackLinks_Server
                 client.TraceTermination();
                 return true;
             }
+            if(command[1] == "beep")
+            {
+                client.Send(NetUtil.PacketType.FX, "warnBlink");
+            }
             return true;
         }
     }

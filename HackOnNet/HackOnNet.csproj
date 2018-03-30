@@ -58,7 +58,6 @@
     <Compile Include="ConfigUtil.cs" />
     <Compile Include="DotNetCompatibility\Extensions.cs" />
     <Compile Include="FileSystem\LsFileEntry.cs" />
-    <Compile Include="Graphics\Assets.cs" />
     <Compile Include="GUI\MainMenu.cs" />
     <Compile Include="GUI\TerminalStringParser.cs" />
     <Compile Include="HackOnNetMod.cs" />

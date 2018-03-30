@@ -23,14 +23,29 @@ namespace HackOnNet.Modules
             this.displayRect = displayRect;
         }
 
+        public virtual void Launch()
+        {
+
+        }
+
+        public virtual bool PreventsDrawing()
+        {
+            return false;
+        }
+
+        public virtual bool IsOnTop()
+        {
+            return true;
+        }
+
         public virtual void Update(double dT)
         {
 
         }
 
-        public virtual bool Draw()
+        public virtual void Draw()
         {
-            return false;
+
         }
     }
 }
