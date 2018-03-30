@@ -12,7 +12,7 @@ namespace HackLinks_Server.Daemons.Types
 {
     class DNSDaemon : Daemon
     {
-        public static string DEFAULT_CONFIG_PATH = "/daemons/dns/entries.db";
+        public static string DEFAULT_CONFIG_PATH = "/dns/entries.db";
 
         public DNSDaemon(Node node) : base(node)
         {
@@ -63,11 +63,6 @@ namespace HackLinks_Server.Daemons.Types
                     session.owner.Send(PacketType.MESSG, "Successfully updated the DNS.");
                     return true;
                 }
-                if (cmdArgs.Length != 2)
-                {
-                    session.owner.Send(PacketType.MESSG, "Usage : dns [lookup/rlookup] [URL/IP]");
-                    return true;
-                }
                 if (cmdArgs[0] == "lookup")
                 {
                     var url = cmdArgs[1];
@@ -82,7 +77,59 @@ namespace HackLinks_Server.Daemons.Types
                     session.owner.Send(PacketType.MESSG, "Result URL : " + (url ?? "unknown"));
                     return true;
                 }
-                
+                if (cmdArgs[0] == "assign")
+                {
+                    if (client.activeSession.privilege > 1)
+                    {
+                        session.owner.Send(PacketType.MESSG, "Insufficient permission.");
+                        return true;
+                    }
+                    if (cmdArgs.Length <= 2)
+                    {
+                        session.owner.Send(PacketType.MESSG, "Missing arguments.\nProper usage: dns assign [IP] [URL]");
+                        return true;
+                    }
+                    File dnsFile = daemon.node.rootFolder.GetFile("dns");
+                    Folder dnsFolder;
+                    if (dnsFile == null)
+                        dnsFolder = new Folder(client.activeSession.connectedNode, daemon.node.rootFolder, "dns");
+                    else
+                    {
+                        if (!dnsFile.IsFolder())
+                            return true;
+                        dnsFolder = (Folder)dnsFile;
+                    }
+                    File dnsEntries = dnsFolder.GetFile("entries.db");
+                    if (dnsEntries == null)
+                    {
+                        dnsEntries = new File(client.activeSession.connectedNode, dnsFolder, "entries.db")
+                        {
+                            WritePriv = 1,
+                            ReadPriv = 1
+                        };
+                    }
+                    else if (dnsEntries.IsFolder())
+                    {
+                        dnsEntries.RemoveFile();
+                        dnsEntries = new File(client.activeSession.connectedNode, dnsFolder, "entries.db")
+                        {
+                            WritePriv = 1,
+                            ReadPriv = 1
+                        };
+                    }
+                    foreach (DNSEntry entry in daemon.entries)
+                    {
+                        if (entry.Url == cmdArgs[2])
+                        {
+                            session.owner.Send(PacketType.MESSG, "The provided URL is already assigned an IP address.");
+                            return true;
+                        }
+                    }
+                    dnsEntries.Content += '\n' + cmdArgs[1] + '=' + cmdArgs[2];
+                    daemon.LoadEntries();
+                    session.owner.Send(PacketType.MESSG, "Content appended.");
+                    return true;
+                }
                 session.owner.Send(PacketType.MESSG, "Usage : dns [lookup/rlookup] [URL/IP]");
                 return true;
             }
@@ -118,8 +165,10 @@ namespace HackLinks_Server.Daemons.Types
                 return;
             foreach (string line in entryFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                var data = line.Split(':');
-                entries.Add(new DNSEntry(data[1], data[0]));
+                var data = line.Split(new char[] { ':', '=' });
+                if (data.Length < 2)
+                    continue;
+                entries.Add(new DNSEntry(data[0], data[1]));
             }
         }
 
