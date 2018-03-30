@@ -31,6 +31,7 @@ namespace HackLinks_Server
             { "chmod", new Tuple<string, Command>("chmod [file] [readLevel] [writeLevel]\n    Change the required user level for read and write operations on the given file.", ChMod) },
             { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
+            { "trace", new Tuple<string, Command>("trace [over/start]\n    DEBUG COMMAND", TraceDebug) }
         };
 
         public static bool TreatCommand(GameClient client, string command)
@@ -624,10 +625,37 @@ namespace HackLinks_Server
             return true;
         }
 
-        public static bool Cat(GameClient client, string[] command)
+        public static bool TraceDebug(GameClient client, string[] command)
         {
-
-
+            if (command.Length != 2)
+                return true;
+            if(command[1] == "over")
+            {
+                client.TraceTermination();
+                return true;
+            }
+            if(command[1] == "beep")
+            {
+                client.Send(NetUtil.PacketType.FX, "warnBlink");
+            }
+            if(command[1] == "trace")
+            {
+                client.Send(NetUtil.PacketType.FX, "trace", "100", "5");
+            }
+            if(command[1] == "traceEnd")
+            {
+                client.Send(NetUtil.PacketType.FX, "traceEnd");
+            }
+            if(command[1] == "realTrace")
+            {
+                if (client.activeSession != null)
+                    client.activeSession.SetTraceLevel(5);
+            }
+            if (command[1] == "realMagic")
+            {
+                if (client.activeSession != null)
+                    client.activeSession.SetTraceLevel(-5);
+            }
             return true;
         }
     }

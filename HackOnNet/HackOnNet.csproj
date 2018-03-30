@@ -99,6 +99,9 @@
     <Compile Include="Modules\OnNetRamModule.cs" />
     <Compile Include="Modules\OnNetTerminal.cs" />
     <Compile Include="Modules\OnNetworkMap.cs" />
+    <Compile Include="Modules\Overlay.cs" />
+    <Compile Include="Modules\Overlays\TerminationOverlay.cs" />
+    <Compile Include="Modules\Overlays\TraceOverlay.cs" />
     <Compile Include="Net\NetManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Screens\UserScreen.cs" />
