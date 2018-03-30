@@ -636,6 +636,24 @@ namespace HackLinks_Server
             {
                 client.Send(NetUtil.PacketType.FX, "warnBlink");
             }
+            if(command[1] == "trace")
+            {
+                client.Send(NetUtil.PacketType.FX, "trace", "100", "5");
+            }
+            if(command[1] == "traceEnd")
+            {
+                client.Send(NetUtil.PacketType.FX, "traceEnd");
+            }
+            if(command[1] == "realTrace")
+            {
+                if (client.activeSession != null)
+                    client.activeSession.SetTraceLevel(5);
+            }
+            if (command[1] == "realMagic")
+            {
+                if (client.activeSession != null)
+                    client.activeSession.SetTraceLevel(-5);
+            }
             return true;
         }
     }

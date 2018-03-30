@@ -158,7 +158,7 @@ namespace HackLinks_Server
                             listener);
                         recieving = true;
                     }
-                    double dT = stopWatch.ElapsedMilliseconds / 1000;
+                    double dT = stopWatch.ElapsedMilliseconds / (double)1000;
                     stopWatch.Restart();
                     Server.Instance.MainLoop(dT);
                 }

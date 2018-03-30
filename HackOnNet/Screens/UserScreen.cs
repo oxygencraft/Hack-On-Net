@@ -37,6 +37,7 @@ namespace HackOnNet.Screens
 
         private Rectangle topBar;
         private Color topBarColor = new Color(0, 139, 199, 255);
+
         private Color topBarTextColor = new Color(126, 126, 126, 100);
         private Color topBarIconsColor = Color.White;
 
@@ -65,6 +66,7 @@ namespace HackOnNet.Screens
         public Color kernelAccountColor = new Color(255, 80, 80);
 
         public SoundEffect beep;
+        public TraceOverlay traceOverlay;
 
         public OnNetTerminal terminal;
         public OnNetworkMap netMap;
@@ -243,6 +245,28 @@ namespace HackOnNet.Screens
             }
             else if(messages[0] == "warnBlink")
                 Flash(true);
+            else if(messages[0] == "trace")
+            {
+                if (traceOverlay == null)
+                {
+                    TraceOverlay overlay = new TraceOverlay(ScreenManager.SpriteBatch, fullscreen, this, 
+                        float.Parse(messages[1], System.Globalization.NumberStyles.AllowDecimalPoint), 
+                        float.Parse(messages[2], System.Globalization.NumberStyles.AllowDecimalPoint));
+                    this.traceOverlay = overlay;
+                    this.overlays.Add(overlay);
+                    traceOverlay.Launch();
+                }
+                else
+                    traceOverlay.Force(float.Parse(messages[1]), float.Parse(messages[2]));
+            }
+            else if(messages[0] == "traceEnd")
+            {
+                if (traceOverlay != null)
+                {
+                    DestroyOverlay(traceOverlay);
+                    traceOverlay = null;
+                }
+            }
         }
 
         public void Flash(bool doBeep)
@@ -250,6 +274,11 @@ namespace HackOnNet.Screens
             this.warningFlashTimer = UserScreen.WARNING_FLASH_TIME;
             if(doBeep)
                 beep.Play(0.5f, 0f, 0f);
+        }
+
+        public void DestroyOverlay(Overlay overlay)
+        {
+            this.overlays.Remove(overlay);
         }
 
         public void drawBackground()

@@ -47,5 +47,10 @@ namespace HackOnNet.Modules
         {
 
         }
+
+        public virtual void Destroy()
+        {
+            this.screen.DestroyOverlay(this);
+        }
     }
 }

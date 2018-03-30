@@ -15,6 +15,8 @@ namespace HackLinks_Server
 
         public float traceSpd = 0;
 
+        public float traceUpdtCooldown = 0;
+
         private SortedDictionary<string, Tuple<string, CommandHandler.Command>> sessionCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
         {
             { "daemon", new Tuple<string, CommandHandler.Command>("daemon [daemon name]\n    If it's available we'll launch the given daemon.", Daemon) },
@@ -130,6 +132,7 @@ namespace HackLinks_Server
 
         public void DisconnectSession()
         {
+            ResetTrace();
             if (this.connectedNode != null)
                 this.connectedNode.sessions.Remove(this);
             if(activeDaemon != null)
@@ -138,17 +141,44 @@ namespace HackLinks_Server
             connectedNode = null;
         }
 
+        public void ResetTrace()
+        {
+            this.trace = 100;
+            this.traceSpd = 0;
+            owner.Send(PacketType.FX, "traceEnd");
+        }
+
         public void SetTraceLevel(float spd)
         {
             this.traceSpd = spd;
+            this.traceUpdtCooldown = 2f;
+            owner.Send(PacketType.FX, "trace", this.trace.ToString(), this.traceSpd.ToString());
         }
 
         public void UpdateTrace(double dT)
         {
+
+            if (this.traceSpd == 0)
+                return;
             this.trace -= this.traceSpd * (float)dT;
             if(this.trace < 0)
             {
                 this.owner.TraceTermination();
+                owner.Send(PacketType.FX, "traceOver");
+            }
+            else if(this.trace > 100)
+            {
+                ResetTrace();
+            }
+            else if(this.trace < 100)
+            {
+                if (this.traceUpdtCooldown > 0)
+                    traceUpdtCooldown -= (float)dT;
+                else
+                {
+                    traceUpdtCooldown = 2f;
+                    owner.Send(PacketType.FX, "trace", this.trace.ToString(), this.traceSpd.ToString());
+                }
             }
         }
     }
