@@ -145,7 +145,8 @@ namespace HackLinks_Server
         {
             this.trace = 100;
             this.traceSpd = 0;
-            owner.Send(PacketType.FX, "traceEnd");
+            if(owner.client.Connected)
+                owner.Send(PacketType.FX, "traceEnd");
         }
 
         public void SetTraceLevel(float spd)

@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Softwares
 {
+
+
     class WebPassCracker : Software
     {
 
