@@ -26,11 +26,38 @@ namespace HackLinks_Server.Daemons.Types
 
         public SortedDictionary<string, Tuple<string, CommandHandler.Command>> daemonCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
         {
+            { "web", new Tuple<string, CommandHandler.Command>("web [interface name] [arguments]\n    Use an interface on your current webpage.", Web) }
         };
 
         public override SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands
         {
             get => daemonCommands;
+        }
+
+        public static bool Web(GameClient client, string[] arguments)
+        {
+            if(arguments.Length < 2)
+            {
+                client.Send(HackLinksCommon.NetUtil.PacketType.MESSG, "Usage : web [interface name] [arguments]");
+                return true;
+            }
+            Session session = client.activeSession;
+
+            HTTPDaemon daemon = (HTTPDaemon)client.activeSession.activeDaemon;
+
+            var httpSession = daemon.httpSessions[session];
+
+            httpSession.ActivePage.UseInterfaces(httpSession, arguments[1].Split(' '));
+
+            return true;
+        }
+
+        public WebPage GetPage(string v)
+        {
+            foreach (WebPage page in webPages)
+                if (page.title == v)
+                    return page;
+            return null;
         }
 
         public override string StrType => "http";
