@@ -1,4 +1,5 @@
 ﻿using HackLinks_Server.Computers;
+using HackLinks_Server.Computers.Permissions;
 using HackLinks_Server.Daemons.Types.Dns;
 using HackLinks_Server.Files;
 using System;
@@ -16,7 +17,7 @@ namespace HackLinks_Server.Daemons.Types
 
         public DNSDaemon(Node node) : base(node)
         {
-            this.accessLevel = 3;
+            this.accessLevel = Group.GUEST;
         }
 
         public List<DNSEntry> entries = new List<DNSEntry>();
@@ -54,7 +55,7 @@ namespace HackLinks_Server.Daemons.Types
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs[0] == "update")
                 {
-                    if(session.privilege > 1)
+                    if(session.group > Group.ADMIN)
                     {
                         session.owner.Send(PacketType.MESSG, "Permission denied");
                         return true;
@@ -79,7 +80,7 @@ namespace HackLinks_Server.Daemons.Types
                 }
                 if (cmdArgs[0] == "assign")
                 {
-                    if (client.activeSession.privilege > 1)
+                    if (client.activeSession.group > Group.ADMIN)
                     {
                         session.owner.Send(PacketType.MESSG, "Insufficient permission.");
                         return true;
@@ -104,15 +105,15 @@ namespace HackLinks_Server.Daemons.Types
                     if (dnsEntries == null)
                     {
                         dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
-                        dnsEntries.WritePriv = 1;
-                        dnsEntries.ReadPriv = 1;
+                        dnsEntries.WritePriv = Group.ADMIN;
+                        dnsEntries.ReadPriv = Group.ADMIN;
                     }
                     else if (dnsEntries.IsFolder())
                     {
                         dnsEntries.RemoveFile();
                         dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
-                        dnsEntries.WritePriv = 1;
-                        dnsEntries.ReadPriv = 1;
+                        dnsEntries.WritePriv = Group.ADMIN;
+                        dnsEntries.ReadPriv = Group.ADMIN;
                     }
                     foreach (DNSEntry entry in daemon.entries)
                     {

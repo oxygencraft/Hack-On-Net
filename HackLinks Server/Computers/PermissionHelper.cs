@@ -4,22 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HackLinks_Server.Computers
+namespace HackLinks_Server.Computers.Permissions
 {
     static class PermissionHelper
     {
-        public static int GetPermissionLevelFromString(string level)
+        /// <summary>
+        /// Returns the <see cref="Group"/> for the given string or <see cref="Group.INVALID"/> if no match was found.
+        /// </summary>
+        /// <param name="groupString"></param>
+        /// <returns>The matching Group or INVALID if no match</returns>
+        public static Group GetGroupFromString(string groupString)
         {
-            return level == "root" ? 0 : level == "admin" ? 1 : level == "user" ? 2 : level == "guest" ? 3 : -1;
-        }
-
-        public static int ParsePermissionLevel(string level)
-        {
-            int res = GetPermissionLevelFromString(level);
-            if (res == -1)
-                if (!int.TryParse(level, out res))
-                    return -1;
-            return res;
+            if (!Enum.TryParse(groupString.ToUpper(), out Group group) || !Enum.IsDefined(typeof(Group), group))
+            {
+                return Group.INVALID;
+            }
+            return group;
         }
     }
 }

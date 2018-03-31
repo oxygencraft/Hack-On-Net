@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HackLinks_Server.Daemons.Types.Irc;
 using static HackLinksCommon.NetUtil;
+using HackLinks_Server.Computers.Permissions;
 
 namespace HackLinks_Server.Daemons.Types
 {
@@ -27,7 +28,7 @@ namespace HackLinks_Server.Daemons.Types
 
         public IrcDaemon(Node node) : base(node)
         {
-            this.accessLevel = 3;
+            this.accessLevel = Group.GUEST;
         }
 
         public override DaemonType GetDaemonType()

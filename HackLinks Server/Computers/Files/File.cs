@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Files;
+using HackLinks_Server.Computers.Permissions;
 using MySql.Data.MySqlClient;
 
 namespace HackLinks_Server.Files
@@ -24,8 +25,8 @@ namespace HackLinks_Server.Files
         public readonly int id;
 
         private string name;
-        private int writePriv = 0;
-        private int readPriv = 0;
+        private Group writePriv = Group.ROOT;
+        private Group readPriv = Group.ROOT;
         private string content = "";
 
         private File parent;
@@ -36,8 +37,8 @@ namespace HackLinks_Server.Files
 
         public bool Dirty { get; set; }
         public string Name { get => name; set { name = value; Dirty = true; } }
-        public int WritePriv { get => writePriv; set { writePriv = value; Dirty = true; } }
-        public int ReadPriv { get => readPriv; set { readPriv = value; Dirty = true; } }
+        public Group WritePriv { get => writePriv; set { writePriv = value; Dirty = true; } }
+        public Group ReadPriv { get => readPriv; set { readPriv = value; Dirty = true; } }
         public string Content { get => content; set { content = value; Dirty = true;  } }
 
         public int ParentId { get => parentId; set { parentId = value; Dirty = true; } }
@@ -115,15 +116,15 @@ namespace HackLinks_Server.Files
 
         public bool HasWritePermission(Session session)
         {
-            return HasWritePermission(session.privilege);
+            return HasWritePermission(session.group);
         }
 
-        public bool HasWritePermission(int priv)
+        public bool HasWritePermission(Group priv)
         {
-            return priv <= WritePriv;
+            return priv <= writePriv;
         }
 
-        public bool HasReadPermission(int priv)
+        public bool HasReadPermission(Group priv)
         {
             return priv <= ReadPriv;
         }

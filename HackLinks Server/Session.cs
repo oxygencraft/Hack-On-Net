@@ -1,4 +1,5 @@
 ﻿using HackLinks_Server.Computers;
+using HackLinks_Server.Computers.Permissions;
 using HackLinks_Server.Daemons;
 using HackLinks_Server.Files;
 using System;
@@ -51,7 +52,7 @@ namespace HackLinks_Server
 
         public File activeDirectory;
 
-        public int privilege = 3;
+        public Group group = Group.GUEST;
         public string currentUsername = "Guest";
 
         public Session(GameClient client, Node node)
@@ -79,16 +80,16 @@ namespace HackLinks_Server
         public void Login(string level, string username)
         {
             if (level == "root")
-                privilege = 0;
+                group = Group.ROOT;
             else if (level == "admin")
-                privilege = 1;
+                group = Group.ADMIN;
             else if (level == "user")
-                privilege = 2;
+                group = Group.USER;
             else if (level == "guest")
-                privilege = 3;
+                group = Group.GUEST;
             currentUsername = username;
 
-            owner.Send(PacketType.KERNL, "login", privilege.ToString(), username);
+            owner.Send(PacketType.KERNL, "login", group.ToString(), username);
         }
 
         public bool HandleSessionCommand(GameClient client, string[] command)
