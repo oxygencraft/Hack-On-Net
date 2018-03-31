@@ -15,7 +15,8 @@ namespace HackOnNet.Sessions.States
             DEFAULT,
             LS,
             VIEW,
-            IRC
+            IRC,
+            WEB
         };
 
         public SessionState(Session session)

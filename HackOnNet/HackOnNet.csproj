@@ -112,6 +112,7 @@
     <Compile Include="Sessions\States\LsState.cs" />
     <Compile Include="Sessions\States\SessionState.cs" />
     <Compile Include="Sessions\States\ViewState.cs" />
+    <Compile Include="Sessions\States\WebState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
