@@ -155,10 +155,7 @@ namespace HackLinks_Server
             Thread.Sleep(10);
             foreach(GameClient client in clients)
             {
-                if(client.activeSession != null)
-                {
-                    client.activeSession.UpdateTrace(dT);
-                }
+                client.Update(dT);
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using HackLinks_Server.Computers;
+using HackLinks_Server.Softwares;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -25,6 +26,8 @@ namespace HackLinks_Server
         public Node homeComputer;
 
         public string buffer = "";
+
+        List<Software> softwares = new List<Software>();
 
         public enum PlayerStatus
         {
@@ -160,6 +163,16 @@ namespace HackLinks_Server
                 Console.WriteLine(e.ToString());
                 netDisconnect();
             }
+        }
+
+        public void Update(double dT)
+        {
+            if (this.activeSession != null)
+            {
+                this.activeSession.UpdateTrace(dT);
+            }
+            foreach (Software software in softwares)
+                software.Update(dT);
         }
 
         public void TraceTermination()
