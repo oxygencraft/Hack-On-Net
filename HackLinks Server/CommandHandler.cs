@@ -31,6 +31,7 @@ namespace HackLinks_Server
             { "chmod", new Tuple<string, Command>("chmod [file] [readLevel] [writeLevel]\n    Change the required user level for read and write operations on the given file.", ChMod) },
             { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
+            { "trace", new Tuple<string, Command>("trace [over/start]\n    DEBUG COMMAND", TraceDebug) }
         };
 
         public static bool TreatCommand(GameClient client, string command)
@@ -99,7 +100,7 @@ namespace HackLinks_Server
                     return true;
                 }
 
-                file.content += '\n' + cmdArgs.JoinWords(" ", 2);
+                file.Content += '\n' + cmdArgs.JoinWords(" ", 2);
                 client.Send(NetUtil.PacketType.MESSG, "Content appended.");
                 return true;
             }
@@ -127,9 +128,9 @@ namespace HackLinks_Server
                     client.Send(NetUtil.PacketType.MESSG, "Wrong line number.");
                     return true;
                 }
-                var nth = file.content.GetNthOccurence(n, '\n');
-                file.content = file.content.Remove(nth, file.content.GetNthOccurence(n + 1, '\n') - nth);
-                file.content = file.content.Insert(nth, '\n'+cmdArgs.JoinWords(" ", 3));
+                var nth = file.Content.GetNthOccurence(n, '\n');
+                file.Content = file.Content.Remove(nth, file.Content.GetNthOccurence(n + 1, '\n') - nth);
+                file.Content = file.Content.Insert(nth, '\n'+cmdArgs.JoinWords(" ", 3));
                 client.Send(NetUtil.PacketType.MESSG, "Line edited.");
                 return true;
             }
@@ -157,8 +158,8 @@ namespace HackLinks_Server
                     client.Send(NetUtil.PacketType.MESSG, "Wrong line number.");
                     return true;
                 }
-                var nth = file.content.GetNthOccurence(n, '\n');
-                file.content = file.content.Remove(nth, file.content.GetNthOccurence(n+1, '\n')-nth);
+                var nth = file.Content.GetNthOccurence(n, '\n');
+                file.Content = file.Content.Remove(nth, file.Content.GetNthOccurence(n+1, '\n')-nth);
                 client.Send(NetUtil.PacketType.MESSG, "Line removed");
                 return true;
             }
@@ -186,7 +187,7 @@ namespace HackLinks_Server
                     client.Send(NetUtil.PacketType.MESSG, "Wrong line number.");
                     return true;
                 }
-                file.content = file.content.Insert(file.content.GetNthOccurence(n, '\n'), '\n' + cmdArgs.JoinWords(" ", 3));
+                file.Content = file.Content.Insert(file.Content.GetNthOccurence(n, '\n'), '\n' + cmdArgs.JoinWords(" ", 3));
                 client.Send(NetUtil.PacketType.MESSG, "Content inserted");
                 return true;
             }
@@ -229,7 +230,7 @@ namespace HackLinks_Server
                 client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                 return true;
             }
-            client.Send(NetUtil.PacketType.KERNL, "state", "view", file.name, file.content);
+            client.Send(NetUtil.PacketType.KERNL, "state", "view", file.Name, file.Content);
             return true;
         }
 
@@ -323,7 +324,7 @@ namespace HackLinks_Server
             var activeDirectory = client.activeSession.activeDirectory;
             foreach (var fileC in activeDirectory.children)
             {
-                if (fileC.name == cmdArgs[0])
+                if (fileC.Name == cmdArgs[0])
                 {
                     if (!fileC.HasWritePermission(client.activeSession.privilege))
                     {
@@ -331,8 +332,8 @@ namespace HackLinks_Server
                         return true;
                     }
                     client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[0] + " permissions changed.");
-                    fileC.writePriv = writeLevel;
-                    fileC.readPriv = readLevel;
+                    fileC.WritePriv = writeLevel;
+                    fileC.ReadPriv = readLevel;
                     return true;
                 }
             }
@@ -402,7 +403,7 @@ namespace HackLinks_Server
                     var DNSConfigFile = client.homeComputer.rootFolder.GetFileAtPath("/cfg/dns.cfg");
                     if (DNSConfigFile != null)
                     {
-                        foreach (string ip in DNSConfigFile.content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+                        foreach (string ip in DNSConfigFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                         {
                             var DNSNode = compManager.GetNodeByIp(ip);
                             if (DNSNode == null)
@@ -445,9 +446,9 @@ namespace HackLinks_Server
             {
                 foreach (var file in session.activeDirectory.children)
                 {
-                    if (command[1] == file.name)
+                    if (command[1] == file.Name)
                     {
-                        client.Send(NetUtil.PacketType.MESSG, "File " + file.name + " > Permissions " + file.readPriv + "" + file.writePriv);
+                        client.Send(NetUtil.PacketType.MESSG, "File " + file.Name + " > Permissions " + file.ReadPriv + "" + file.WritePriv);
                         return true;
                     }
                 }
@@ -456,13 +457,13 @@ namespace HackLinks_Server
             }
             else
             {
-                List<string> fileList = new List<string>(new string[] { "ls", session.activeDirectory.name});
+                List<string> fileList = new List<string>(new string[] { "ls", session.activeDirectory.Name});
                 foreach (File file in session.activeDirectory.children)
                 {
                     if (file.HasReadPermission(client.activeSession.privilege))
                     {
                         fileList.AddRange(new string[] {
-                                file.name, (file.IsFolder() ? "d" : "f"), (file.HasWritePermission(client.activeSession.privilege) ? "w" : "-")
+                                file.Name, (file.IsFolder() ? "d" : "f"), (file.HasWritePermission(client.activeSession.privilege) ? "w" : "-")
                             });
                     }
                 }
@@ -487,9 +488,9 @@ namespace HackLinks_Server
             }
             if(command[1] == "..")
             {
-                if(session.activeDirectory.parent != null)
+                if(session.activeDirectory.Parent != null)
                 {
-                    session.activeDirectory = session.activeDirectory.parent;
+                    session.activeDirectory = session.activeDirectory.Parent;
                     return true;
                 }
                 else
@@ -500,7 +501,7 @@ namespace HackLinks_Server
             }
             foreach(var file in session.activeDirectory.children)
             {
-                if(file.name == command[1])
+                if(file.Name == command[1])
                 {
                     if(!file.IsFolder())
                     {
@@ -508,7 +509,7 @@ namespace HackLinks_Server
                         return true;
                     }
                     session.activeDirectory = (Folder)file;
-                    client.Send(NetUtil.PacketType.KERNL, "cd", file.name);
+                    client.Send(NetUtil.PacketType.KERNL, "cd", file.Name);
                     return true;
                 }
             }
@@ -532,9 +533,10 @@ namespace HackLinks_Server
             var activeDirectory = session.activeDirectory;
             foreach(var fileC in activeDirectory.children)
             {
-                if(fileC.name == command[1])
+                if(fileC.Name == command[1])
                 {
                     client.Send(NetUtil.PacketType.MESSG, "File " + command[1] + " touched.");
+                    fileC.Dirty = true;
                     return true;
                 }
             }
@@ -544,11 +546,11 @@ namespace HackLinks_Server
                 return true;
             }
 
-            var file = new File(activeDirectory, command[1]);
-            file.writePriv = client.activeSession.privilege;
-            file.readPriv = client.activeSession.privilege;
+            var file = new File(client.activeSession.connectedNode, activeDirectory, command[1]);
+            file.WritePriv = client.activeSession.privilege;
+            file.ReadPriv = client.activeSession.privilege;
 
-            client.Send(NetUtil.PacketType.MESSG, "File " + command[1] + " was added.");
+            client.Send(NetUtil.PacketType.MESSG, "File " + command[1]);
             return true;
         }
 
@@ -567,7 +569,7 @@ namespace HackLinks_Server
             var activeDirectory = session.activeDirectory;
             foreach (var fileC in activeDirectory.children)
             {
-                if (fileC.name == command[1])
+                if (fileC.Name == command[1])
                 {
                     if (!fileC.HasWritePermission(client.activeSession.privilege))
                     {
@@ -576,6 +578,7 @@ namespace HackLinks_Server
                     }
                     client.Send(NetUtil.PacketType.MESSG, "File " + command[1] + " removed.");
                     fileC.RemoveFile();
+                    client.server.GetComputerManager().AddToDelete(fileC);
                     return true;
                 }
             }
@@ -603,7 +606,7 @@ namespace HackLinks_Server
             var activeDirectory = session.activeDirectory;
             foreach (var fileC in activeDirectory.children)
             {
-                if (fileC.name == command[1])
+                if (fileC.Name == command[1])
                 {
                     client.Send(NetUtil.PacketType.MESSG, "Folder " + command[1] + " already exists.");
                     return true;
@@ -616,16 +619,43 @@ namespace HackLinks_Server
                 return true;
             }
 
-            var file = new Folder(activeDirectory, command[1]);
-            file.writePriv = client.activeSession.privilege;
-            file.readPriv = client.activeSession.privilege;
+            var file = new Folder(client.activeSession.connectedNode, activeDirectory, command[1]);
+            file.WritePriv = client.activeSession.privilege;
+            file.ReadPriv = client.activeSession.privilege;
             return true;
         }
 
-        public static bool Cat(GameClient client, string[] command)
+        public static bool TraceDebug(GameClient client, string[] command)
         {
-
-
+            if (command.Length != 2)
+                return true;
+            if(command[1] == "over")
+            {
+                client.TraceTermination();
+                return true;
+            }
+            if(command[1] == "beep")
+            {
+                client.Send(NetUtil.PacketType.FX, "warnBlink");
+            }
+            if(command[1] == "trace")
+            {
+                client.Send(NetUtil.PacketType.FX, "trace", "100", "5");
+            }
+            if(command[1] == "traceEnd")
+            {
+                client.Send(NetUtil.PacketType.FX, "traceEnd");
+            }
+            if(command[1] == "realTrace")
+            {
+                if (client.activeSession != null)
+                    client.activeSession.SetTraceLevel(5);
+            }
+            if (command[1] == "realMagic")
+            {
+                if (client.activeSession != null)
+                    client.activeSession.SetTraceLevel(-5);
+            }
             return true;
         }
     }

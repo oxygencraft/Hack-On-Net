@@ -12,6 +12,7 @@ namespace HackLinks_Server.Computers
     {
         List<Node> nodeList = new List<Node>();
         Server server;
+        private List<File> toDelete = new List<File>();
 
         public ComputerManager(Server server)
         {
@@ -59,7 +60,7 @@ namespace HackLinks_Server.Computers
 
                             MySqlCommand fileCommand = new MySqlCommand("SELECT * FROM files WHERE computerId = @0", cn1);
                             fileCommand.Parameters.Add(new MySqlParameter("0", newNode.id));
-                            Folder fileSystem = new Folder(null, "/");
+                            Folder fileSystem = new Folder(newNode, null, "/");
                             List<File> computerFiles = new List<File>();
                             using (MySqlDataReader fileReader = fileCommand.ExecuteReader())
                             {
@@ -73,27 +74,27 @@ namespace HackLinks_Server.Computers
 
                                         if (fileType == 1)
                                         {
-                                            newFile = new Folder(null, fileReader.GetString(1));
+                                            newFile = new Folder(newNode, null, fileReader.GetString(1));
                                         }
                                         else
                                         {
-                                            newFile = new File(null, fileReader.GetString(1));
+                                            newFile = new File(newNode, null, fileReader.GetString(1));
                                         }
                                         newFile.id = fileReader.GetInt32(0);
-                                        newFile.parentId = fileReader.GetInt32(2);
-                                        newFile.readPriv = fileReader.GetInt32(8);
-                                        newFile.writePriv = fileReader.GetInt32(7);
-                                        newFile.content = fileReader.GetString(5);
-
+                                        newFile.ParentId = fileReader.GetInt32(2);
+                                        newFile.ReadPriv = fileReader.GetInt32(8);
+                                        newFile.WritePriv = fileReader.GetInt32(7);
+                                        newFile.Content = fileReader.GetString(5);
                                         newFile.SetType(fileReader.GetInt32(4));
+
                                         computerFiles.Add(newFile);
                                     }
                                 }
                             }
                             fileSystem.children = FixFolder(computerFiles, 0, fileSystem);
                             newNode.rootFolder = fileSystem;
-                            fileSystem.readPriv = 1;
-                            fileSystem.writePriv = 1;
+                            fileSystem.ReadPriv = 1;
+                            fileSystem.WritePriv = 1;
 
                             nodeList.Add(newNode);
                         }
@@ -111,16 +112,124 @@ namespace HackLinks_Server.Computers
                 var autorunFile = daemonsFolder.GetFile("autorun");
                 if (autorunFile == null)
                     continue;
-                foreach(string line in autorunFile.content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+                foreach(string line in autorunFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var daemonFile = daemonsFolder.GetFile(line);
                     if (daemonFile == null)
                         continue;
-                    if (daemonFile.type != File.FileType.DAEMON)
+                    if (daemonFile.Type != File.FileType.DAEMON)
                         continue;
                     node.LaunchDaemon(daemonFile);
                 }
             }
+        }
+
+        public static IEnumerable<T> Traverse<T>(IEnumerable<T> items,
+        Func<T, IEnumerable<T>> childSelector)
+        {
+            var stack = new Stack<T>(items);
+            while (stack.Any())
+            {
+                var next = stack.Pop();
+                yield return next;
+                foreach (var child in childSelector(next))
+                    stack.Push(child);
+            }
+        }
+
+        public void UploadDatabase()
+        {
+            Console.WriteLine("Uploading Database");
+
+            var conn = server.GetConnection();
+
+            foreach (Node node in nodeList)
+            {
+                foreach (File child in Traverse(node.rootFolder.children, file => file.children))
+                {
+                    if (!child.Dirty) // Our child is clean. Continue to the next
+                    {
+                        continue;
+                    }
+
+                    if(UpdateDbFile(child, conn))
+                    {
+                        Console.WriteLine($"    Updated {child.Name}");
+                    }
+
+                    child.Dirty = false;
+                }
+            }
+
+            //We iterate our list backwards to avoid our indices being clobbered by removals.
+            for (int i = toDelete.Count -1; i >= 0; i--)
+            {
+                File file = toDelete[i];
+                if (DeleteDbFile(file, conn))
+                {
+                    Console.WriteLine($"    Deleted {file.Name}");
+                    toDelete.Remove(file);
+                }
+                else
+                {
+                    Console.WriteLine($"    Can't Delete {file.Name} ID {file.id}");
+                }
+            }
+        }
+
+        private bool UpdateDbFile(File child, MySqlConnection conn)
+        {
+            MySqlCommand fileCommand = new MySqlCommand(
+                "INSERT INTO files" +
+                " (id, name, parentFile, type, specialType, content, computerId, writePrivilege, readPrivilege)" +
+                " VALUES" +
+                " (@id, @name, @parentFile, @type, @specialType, @content, @computerId, @writePrivilege, @readPrivilege)" +
+                " ON DUPLICATE KEY UPDATE" +
+                " name = @name," +
+                " parentFile = @parentFile," +
+                " specialType = @specialType," +
+                " content = @content," +
+                " writePrivilege = @writePrivilege," +
+                " readPrivilege = @readPrivilege"
+                , conn);
+            fileCommand.Parameters.AddRange(new MySqlParameter[] {
+                        new MySqlParameter("id", child.id),
+                        new MySqlParameter("name", child.Name),
+                        new MySqlParameter("parentFile", child.ParentId),
+                        new MySqlParameter("type", child is Folder ? 1 : 0),
+                        new MySqlParameter("specialType", child.Type),
+                        new MySqlParameter("content", child.Content),
+                        new MySqlParameter("computerId", child.computerId),
+                        new MySqlParameter("writePrivilege", child.WritePriv),
+                        new MySqlParameter("readPrivilege", child.ReadPriv),
+                    });
+
+            int res = fileCommand.ExecuteNonQuery();
+
+            int insertedId = (int)fileCommand.LastInsertedId;
+
+            //InsertedId will be 0 in the event of an update, so we ignore 0
+            if (insertedId != 0)
+            {
+                child.id = insertedId;
+            }
+
+            return  res > 0;
+        }
+
+        private bool DeleteDbFile(File file, MySqlConnection conn)
+        {
+            MySqlCommand fileCommand = new MySqlCommand(
+            "DELETE FROM files" +
+            " WHERE" +
+            " id = @id"
+            , conn);
+
+            fileCommand.Parameters.AddRange(new MySqlParameter[] {
+                        new MySqlParameter("id", file.id),
+                    });
+
+            return fileCommand.ExecuteNonQuery() > 0;
         }
 
         public Node GetNodeById(int homeId)
@@ -135,9 +244,9 @@ namespace HackLinks_Server.Computers
         {
             List<File> fixedFiles = new List<File>();
 
-            foreach (var item in files.Where(x => x.parentId.Equals(parentId)))
+            foreach (var item in files.Where(x => x.ParentId.Equals(parentId)))
             {
-                item.parent = father;
+                item.Parent = father;
                 fixedFiles.Add(item);
                 if(item.IsFolder())
                 {
@@ -146,6 +255,11 @@ namespace HackLinks_Server.Computers
             }
 
             return fixedFiles;
+        }
+
+        public void AddToDelete(File file)
+        {
+            toDelete.Add(file);
         }
     }
 }

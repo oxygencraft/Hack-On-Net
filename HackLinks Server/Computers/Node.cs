@@ -19,10 +19,15 @@ namespace HackLinks_Server.Computers
 
         public int ownerId;
 
-        public Folder rootFolder = new Folder(null, "/");
+        public Folder rootFolder;
 
         public List<Session> sessions = new List<Session>();
         public List<Daemon> daemons = new List<Daemon>();
+
+        public Node()
+        {
+            rootFolder = new Folder(this, null, "/");
+        }
 
         public string GetDisplayName()
         {
@@ -40,7 +45,7 @@ namespace HackLinks_Server.Computers
 
         public void LaunchDaemon(File daemonLauncher)
         {
-            var lines = daemonLauncher.content.Split(new string[]{ "\r\n" }, StringSplitOptions.None);
+            var lines = daemonLauncher.Content.Split(new string[]{ "\r\n" }, StringSplitOptions.None);
             if(lines[0] == "IRC")
             {
                 var newDaemon = new IrcDaemon(this);
@@ -80,7 +85,7 @@ namespace HackLinks_Server.Computers
                 client.Send(NetUtil.PacketType.MESSG, "No config file was found !");
                 return;
             }
-            var accounts = usersFile.content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             foreach(var account in accounts)
             {
                 var accountData = account.Split(new char[] { ',', '=' });

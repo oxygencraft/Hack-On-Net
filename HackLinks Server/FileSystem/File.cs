@@ -3,21 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HackLinks_Server.Computers;
+using MySql.Data.MySqlClient;
 
 namespace HackLinks_Server.FileSystem
 {
     class File
     {
-        public int id;
-
-        public Folder parent;
-        public int parentId;
-
-        public string name;
-        public int writePriv = 0;
-        public int readPriv = 0;
-
-        public string content;
 
         public enum FileType
         {
@@ -28,17 +20,57 @@ namespace HackLinks_Server.FileSystem
             CONFIG
         }
 
-        public FileType type = FileType.NORMAL;
+        public int id;
+
+        private string name;
+        private int writePriv = 0;
+        private int readPriv = 0;
+        private string content = "";
+
+        private Folder parent;
+        private int parentId;
+        public int computerId;
+
+        private FileType type = FileType.NORMAL;
+
+        public bool Dirty { get; set; }
+        public string Name { get => name; set { name = value; Dirty = true; } }
+        public int WritePriv { get => writePriv; set { writePriv = value; Dirty = true; } }
+        public int ReadPriv { get => readPriv; set { readPriv = value; Dirty = true; } }
+        public string Content { get => content; set { content = value; Dirty = true;  } }
+
+        public int ParentId { get => parentId; set { parentId = value; Dirty = true; } }
+        public int ComputerId { get => computerId; set { computerId = value; Dirty = true; } }
+
+        public FileType Type { get => type; set { type = value; Dirty = true; } }
+
+        internal Folder Parent { get => parent;
+            set
+            {
+                if (parent != null)
+                {
+                    parent.children.RemoveAll(child => child.id == id);
+                }
+
+                parent = value;
+
+                if(parent != null)
+                {
+                    ParentId = parent.id;
+                }
+            }
+        }
 
         public List<File> children = new List<File>();
 
-        public File(Folder parent, string name)
+        public File(Node computer, Folder parent, string name)
         {
-            this.name = name;
-            this.parent = parent;
+            this.computerId = computer.id;
+            this.Name = name;
+            this.Parent = parent;
             if(parent != null)
             {
-                this.parent.children.Add(this);
+                this.Parent.children.Add(this);
             }
         }
 
@@ -49,12 +81,12 @@ namespace HackLinks_Server.FileSystem
 
         public bool HasWritePermission(int priv)
         {
-            return priv <= writePriv;
+            return priv <= WritePriv;
         }
 
         public bool HasReadPermission(int priv)
         {
-            return priv <= readPriv;
+            return priv <= ReadPriv;
         }
 
         virtual public bool IsFolder()
@@ -64,18 +96,19 @@ namespace HackLinks_Server.FileSystem
 
         virtual public void RemoveFile()
         {
-            parent.children.Remove(this);
-            parentId = 0;
+            Parent.children.Remove(this);
+            ParentId = 0;
         }
 
         public void SetType(int specType)
         {
-            type = (FileType)specType;
+            Type = (FileType)specType;
         }
 
         public string[] GetLines()
         {
-            return this.content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.None);
+            return this.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.None);
         }
+
     }
 }

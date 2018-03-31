@@ -26,6 +26,14 @@ namespace HackLinks_Server
 
         public string buffer = "";
 
+        public enum PlayerStatus
+        {
+            ONLINE,
+            TERMINATED
+        }
+
+        public PlayerStatus status = PlayerStatus.ONLINE;
+
         public GameClient(Socket client, Server server)
         {
             this.client = client;
@@ -105,6 +113,7 @@ namespace HackLinks_Server
             }
             catch(Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 netDisconnect();
             }
         }
@@ -135,6 +144,7 @@ namespace HackLinks_Server
             }
             catch(Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 netDisconnect();
             }
         }
@@ -150,6 +160,20 @@ namespace HackLinks_Server
                 Console.WriteLine(e.ToString());
                 netDisconnect();
             }
+        }
+
+        public void TraceTermination()
+        {
+            if(this.activeSession != null)
+            {
+                activeSession.traceSpd = 0;
+                activeSession.trace = 0;
+            }
+            
+
+            Send(PacketType.FX, "traceOver");
+            Disconnect();
+            status = PlayerStatus.TERMINATED;
         }
     }
 }

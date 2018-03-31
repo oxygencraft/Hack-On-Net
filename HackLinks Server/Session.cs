@@ -4,14 +4,18 @@ using HackLinks_Server.FileSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static HackLinks_Server.GameClient;
 using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
     class Session
     {
+        public float trace = 100;
+
+        public float traceSpd = 0;
+
+        public float traceUpdtCooldown = 0;
 
         private SortedDictionary<string, Tuple<string, CommandHandler.Command>> sessionCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
         {
@@ -128,12 +132,54 @@ namespace HackLinks_Server
 
         public void DisconnectSession()
         {
+            ResetTrace();
             if (this.connectedNode != null)
                 this.connectedNode.sessions.Remove(this);
             if(activeDaemon != null)
                 activeDaemon.OnDisconnect(this);
             activeDaemon = null;
             connectedNode = null;
+        }
+
+        public void ResetTrace()
+        {
+            this.trace = 100;
+            this.traceSpd = 0;
+            owner.Send(PacketType.FX, "traceEnd");
+        }
+
+        public void SetTraceLevel(float spd)
+        {
+            this.traceSpd = spd;
+            this.traceUpdtCooldown = 2f;
+            owner.Send(PacketType.FX, "trace", this.trace.ToString(), this.traceSpd.ToString());
+        }
+
+        public void UpdateTrace(double dT)
+        {
+
+            if (this.traceSpd == 0)
+                return;
+            this.trace -= this.traceSpd * (float)dT;
+            if(this.trace < 0)
+            {
+                this.owner.TraceTermination();
+                owner.Send(PacketType.FX, "traceOver");
+            }
+            else if(this.trace > 100)
+            {
+                ResetTrace();
+            }
+            else if(this.trace < 100)
+            {
+                if (this.traceUpdtCooldown > 0)
+                    traceUpdtCooldown -= (float)dT;
+                else
+                {
+                    traceUpdtCooldown = 2f;
+                    owner.Send(PacketType.FX, "trace", this.trace.ToString(), this.traceSpd.ToString());
+                }
+            }
         }
     }
 }
