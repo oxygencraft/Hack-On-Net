@@ -63,6 +63,8 @@
   <ItemGroup>
     <Compile Include="CommandHandler.cs" />
     <Compile Include="Computers\ComputerManager.cs" />
+    <Compile Include="Computers\Files\FileSystemManager.cs" />
+    <Compile Include="Computers\Files\FileSystem.cs" />
     <Compile Include="Computers\Node.cs" />
     <Compile Include="Computers\PermissionHelper.cs" />
     <Compile Include="Computers\PlayerTerminal.cs" />
@@ -78,8 +80,7 @@
     <Compile Include="Daemons\Types\IrcDaemon.cs" />
     <Compile Include="Daemons\Types\Irc\IrcMessage.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="FileSystem\File.cs" />
-    <Compile Include="FileSystem\Folder.cs" />
+    <Compile Include="Computers\Files\File.cs" />
     <Compile Include="GameClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

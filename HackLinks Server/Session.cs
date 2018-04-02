@@ -1,6 +1,6 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.Daemons;
-using HackLinks_Server.FileSystem;
+using HackLinks_Server.Files;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,7 +49,7 @@ namespace HackLinks_Server
         public Node connectedNode;
         public Daemon activeDaemon;
 
-        public Folder activeDirectory;
+        public File activeDirectory;
 
         public int privilege = 3;
         public string currentUsername = "Guest";
@@ -57,7 +57,7 @@ namespace HackLinks_Server
         public Session(GameClient client, Node node)
         {
             this.connectedNode = node;
-            this.activeDirectory = node.rootFolder;
+            this.activeDirectory = node.fileSystem.rootFile;
             this.owner = client;
             node.sessions.Add(this);
             SendNodeInfo();

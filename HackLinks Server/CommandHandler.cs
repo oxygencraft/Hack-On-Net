@@ -1,6 +1,6 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.Daemons.Types;
-using HackLinks_Server.FileSystem;
+using HackLinks_Server.Files;
 using HackLinksCommon;
 using MySql.Data.MySqlClient;
 using System;
@@ -400,7 +400,7 @@ namespace HackLinks_Server
                     resultIP = client.homeComputer.ip;
                 else
                 {
-                    var DNSConfigFile = client.homeComputer.rootFolder.GetFileAtPath("/cfg/dns.cfg");
+                    var DNSConfigFile = client.homeComputer.fileSystem.rootFile.GetFileAtPath("/cfg/dns.cfg");
                     if (DNSConfigFile != null)
                     {
                         foreach (string ip in DNSConfigFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
@@ -441,7 +441,7 @@ namespace HackLinks_Server
                 client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
                 return true;
             }
-            var root = session.connectedNode.rootFolder;
+            var root = session.connectedNode.fileSystem.rootFile;
             if(command.Length == 2)
             {
                 foreach (var file in session.activeDirectory.children)
@@ -508,7 +508,7 @@ namespace HackLinks_Server
                         client.Send(NetUtil.PacketType.MESSG, "You cannot change active directory to a file.");
                         return true;
                     }
-                    session.activeDirectory = (Folder)file;
+                    session.activeDirectory = file;
                     client.Send(NetUtil.PacketType.KERNL, "cd", file.Name);
                     return true;
                 }
@@ -546,7 +546,7 @@ namespace HackLinks_Server
                 return true;
             }
 
-            var file = new File(client.activeSession.connectedNode, activeDirectory, command[1]);
+            var file = session.connectedNode.fileSystem.CreateFile(client.activeSession.connectedNode, activeDirectory, command[1]);
             file.WritePriv = client.activeSession.privilege;
             file.ReadPriv = client.activeSession.privilege;
 
@@ -619,7 +619,8 @@ namespace HackLinks_Server
                 return true;
             }
 
-            var file = new Folder(client.activeSession.connectedNode, activeDirectory, command[1]);
+            var file = session.connectedNode.fileSystem.CreateFile(client.activeSession.connectedNode, activeDirectory, command[1]);
+            file.isFolder = true;
             file.WritePriv = client.activeSession.privilege;
             file.ReadPriv = client.activeSession.privilege;
             return true;
