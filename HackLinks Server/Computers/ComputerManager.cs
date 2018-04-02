@@ -1,4 +1,5 @@
-﻿using HackLinks_Server.Files;
+﻿using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Files;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -78,8 +79,8 @@ namespace HackLinks_Server.Computers
                                         newFile.isFolder = fileType == 1;
 
                                         newFile.ParentId = fileReader.GetInt32(2);
-                                        newFile.ReadPriv = fileReader.GetInt32(8);
-                                        newFile.WritePriv = fileReader.GetInt32(7);
+                                        newFile.ReadPriv = (Group) fileReader.GetInt32(8);
+                                        newFile.WritePriv = (Group) fileReader.GetInt32(7);
                                         newFile.Content = fileReader.GetString(5);
                                         newFile.SetType(fileReader.GetInt32(4));
 
