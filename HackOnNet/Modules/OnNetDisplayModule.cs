@@ -33,7 +33,8 @@ namespace HackOnNet.Modules
             SSH_SESSION,
             LS,
             VIEW,
-            IRC
+            IRC,
+            WEB
         }
 
         public DisplayState state = DisplayState.NONE;
@@ -68,6 +69,8 @@ namespace HackOnNet.Modules
                 doIRCModule();
             else if (state == DisplayState.VIEW)
                 doViewModule();
+            else if (state == DisplayState.WEB)
+                doWebModule();
         }
 
         private void doEmptyModule()
@@ -220,7 +223,7 @@ namespace HackOnNet.Modules
             this.x = 5;
             this.y = 5;
             int num = this.bounds.Width - 25;
-            string text = this.userScreen.activeSession.ip + " " + LocaleTerms.Loc("File System");
+            string text = this.userScreen.activeSession.serverName + " " + LocaleTerms.Loc("File System");
             Hacknet.Gui.TextItem.doFontLabel(new Vector2((float)(this.bounds.X + this.x), (float)(this.bounds.Y + this.y)), text, GuiData.font, new Color?(Color.White), (float)this.bounds.Width - 46f, 60f, false);
             if (Hacknet.Gui.Button.doButton(299999, this.bounds.X + (this.bounds.Width - 41), this.bounds.Y + 12, 27, 29, "<-", null))
             {
@@ -459,13 +462,11 @@ namespace HackOnNet.Modules
             sb.DrawString(GuiData.tinyfont, line, vector, defaultColor);
         }
 
-
-
-        /*private void doCatModule()
+        private void doWebModule()
         {
-            if (Hacknet.Gui.Button.doButton(299999, this.bounds.X + (this.bounds.Width - 41), this.bounds.Y + 12, 27, 29, "<-", null))
+            if (Hacknet.Gui.Button.doButton(299999, this.bounds.X + (this.bounds.Width - 41), this.bounds.Y + 12, 27, 29, "x", null))
             {
-                this.userScreen.Execute("ls");
+                this.state = DisplayState.SSH_SESSION;
             }
             Rectangle rectangle = GuiData.tmpRect;
             rectangle.Width = this.bounds.Width;
@@ -473,33 +474,16 @@ namespace HackOnNet.Modules
             rectangle.Y = this.bounds.Y + 1;
             rectangle.Height = this.bounds.Height - 2;
 
-            string text = "";
-            for (int i = 1; i < this.commandArgs.Length; i++)
-            {
-                text = text + this.commandArgs[i] + " ";
-            }
-            if (this.LastDisplayedFileFolder.searchForFile(text.Trim()) == null)
-            {
-                OS expr_193 = this.os;
-                expr_193.postFXDrawActions = (Action)System.Delegate.Combine(expr_193.postFXDrawActions, new Action(delegate
-                {
-                    Rectangle rectangle2 = new Rectangle(this.bounds.X + 1, this.bounds.Y + this.bounds.Height / 2 - 70, this.bounds.Width - 2, 140);
-                    this.spriteBatch.Draw(Utils.white, rectangle2, this.os.lockedColor);
-                    Hacknet.Gui.TextItem.doCenteredFontLabel(rectangle2, "File Not Found", GuiData.font, Color.White, false);
-                }));
-                this.catScroll = Vector2.Zero;
-            }
-            else
-            {
-                Hacknet.Gui.TextItem.doFontLabel(new Vector2((float)this.x, (float)(this.y + 3)), text, GuiData.font, new Color?(Color.White), (float)(this.bounds.Width - 70), 3.40282347E+38f, false);
-                int num = 55;
-                Rectangle dest = new Rectangle(rectangle.X + 4, rectangle.Y + num, rectangle.Width - 6, rectangle.Height - num - 2);
-                string data = this.os.displayCache;
-                this.y += 70;
-                data = LocalizedFileLoader.SafeFilterString(data);
-                string text2 = Utils.SuperSmartTwimForWidth(data, this.bounds.Width - 40, GuiData.tinyfont);
-                this.catTextRegion.Draw(dest, text2, this.spriteBatch);
-            }
-        }*/
+            string serverName = userScreen.activeSession.serverName;
+
+            Hacknet.Gui.TextItem.doFontLabel(new Vector2((float)this.x, (float)(this.y + 3)), serverName, GuiData.font, new Color?(Color.White), (float)(this.bounds.Width - 70), 3.40282347E+38f, false);
+            int num = 55;
+            Rectangle dest = new Rectangle(rectangle.X + 4, rectangle.Y + num, rectangle.Width - 6, rectangle.Height - num - 2);
+            string content = ((WebState)userScreen.activeSession.currentState).content;
+            this.y += 70;
+            string text2 = Utils.SuperSmartTwimForWidth(content, this.bounds.Width - 40, GuiData.tinyfont);
+            this.viewTextRegion.Draw(dest, text2, this.spriteBatch);
+        }
+
     }
 }

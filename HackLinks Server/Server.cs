@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using HackLinks_Server.Computers;
 using System.Text.RegularExpressions;
 using static HackLinksCommon.NetUtil;
+using HackLinks_Server.Computers.Files;
 
 namespace HackLinks_Server
 {
@@ -22,6 +23,7 @@ namespace HackLinks_Server
 
 
         private ComputerManager computerManager;
+        private FileSystemManager fileSystemManager = new FileSystemManager();
 
         //Connection String args
         private MySqlConnectionStringBuilder connectionStringBuilder = new MySqlConnectionStringBuilder();
@@ -29,6 +31,8 @@ namespace HackLinks_Server
         public string Database { get => connectionStringBuilder.Database; internal set => connectionStringBuilder.Database = value; }
         public string UserID { get => connectionStringBuilder.UserID; internal set => connectionStringBuilder.UserID = value; }
         public string Password { get => connectionStringBuilder.Password; internal set => connectionStringBuilder.Password = value; }
+
+        public FileSystemManager FileSystemManager => fileSystemManager;
 
         private Server()
         {
@@ -76,6 +80,8 @@ namespace HackLinks_Server
             switch (type)
             {
                 case PacketType.COMND:
+                    if (client.status == GameClient.PlayerStatus.TERMINATED)
+                        break;
                     if (!CommandHandler.TreatCommand(client, messages[0]))
                         client.Send(PacketType.OSMSG, "ERR:0"); // OSMSG:ERR:0 = La commande est introuvable
                     break;
@@ -125,6 +131,9 @@ namespace HackLinks_Server
                         client.Disconnect();
                     }
                     break;
+                case PacketType.DSCON:
+                    client.netDisconnect();
+                    break;
             }
         }
 
@@ -145,11 +154,15 @@ namespace HackLinks_Server
             }
         }
 
-        public void MainLoop()
+        public void MainLoop(double dT)
         {
             Thread.Sleep(10);
             foreach(GameClient client in clients)
             {
+                if(client.activeSession != null)
+                {
+                    client.activeSession.UpdateTrace(dT);
+                }
             }
         }
     }

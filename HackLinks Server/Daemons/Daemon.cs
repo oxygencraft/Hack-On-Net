@@ -1,4 +1,5 @@
 ﻿using HackLinks_Server.Computers;
+using HackLinks_Server.Computers.Permissions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace HackLinks_Server.Daemons
     {
         protected Node node;
         protected List<Session> connectedSessions = new List<Session>();
-        protected int accessLevel = 0;
+        protected Group accessLevel = Group.ROOT;
 
         public abstract string StrType
         {
@@ -62,7 +63,7 @@ namespace HackLinks_Server.Daemons
 
         public bool CanBeAccessedBy(Session session)
         {
-            return session.privilege <= this.accessLevel;
+            return session.group <= this.accessLevel;
         }
 
         public virtual string GetSSHDisplayName()

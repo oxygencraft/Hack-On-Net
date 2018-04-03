@@ -1,17 +1,22 @@
 ﻿using HackLinks_Server.Computers;
+using HackLinks_Server.Computers.Permissions;
 using HackLinks_Server.Daemons;
-using HackLinks_Server.FileSystem;
+using HackLinks_Server.Files;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static HackLinks_Server.GameClient;
 using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
     class Session
     {
+        public float trace = 100;
+
+        public float traceSpd = 0;
+
+        public float traceUpdtCooldown = 0;
 
         private SortedDictionary<string, Tuple<string, CommandHandler.Command>> sessionCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
         {
@@ -45,15 +50,15 @@ namespace HackLinks_Server
         public Node connectedNode;
         public Daemon activeDaemon;
 
-        public Folder activeDirectory;
+        public File activeDirectory;
 
-        public int privilege = 3;
+        public Group group = Group.GUEST;
         public string currentUsername = "Guest";
 
         public Session(GameClient client, Node node)
         {
             this.connectedNode = node;
-            this.activeDirectory = node.rootFolder;
+            this.activeDirectory = node.fileSystem.rootFile;
             this.owner = client;
             node.sessions.Add(this);
             SendNodeInfo();
@@ -75,16 +80,16 @@ namespace HackLinks_Server
         public void Login(string level, string username)
         {
             if (level == "root")
-                privilege = 0;
+                group = Group.ROOT;
             else if (level == "admin")
-                privilege = 1;
+                group = Group.ADMIN;
             else if (level == "user")
-                privilege = 2;
+                group = Group.USER;
             else if (level == "guest")
-                privilege = 3;
+                group = Group.GUEST;
             currentUsername = username;
 
-            owner.Send(PacketType.KERNL, "login", privilege.ToString(), username);
+            owner.Send(PacketType.KERNL, "login", group.ToString(), username);
         }
 
         public bool HandleSessionCommand(GameClient client, string[] command)
@@ -128,12 +133,54 @@ namespace HackLinks_Server
 
         public void DisconnectSession()
         {
+            ResetTrace();
             if (this.connectedNode != null)
                 this.connectedNode.sessions.Remove(this);
             if(activeDaemon != null)
                 activeDaemon.OnDisconnect(this);
             activeDaemon = null;
             connectedNode = null;
+        }
+
+        public void ResetTrace()
+        {
+            this.trace = 100;
+            this.traceSpd = 0;
+            owner.Send(PacketType.FX, "traceEnd");
+        }
+
+        public void SetTraceLevel(float spd)
+        {
+            this.traceSpd = spd;
+            this.traceUpdtCooldown = 2f;
+            owner.Send(PacketType.FX, "trace", this.trace.ToString(), this.traceSpd.ToString());
+        }
+
+        public void UpdateTrace(double dT)
+        {
+
+            if (this.traceSpd == 0)
+                return;
+            this.trace -= this.traceSpd * (float)dT;
+            if(this.trace < 0)
+            {
+                this.owner.TraceTermination();
+                owner.Send(PacketType.FX, "traceOver");
+            }
+            else if(this.trace > 100)
+            {
+                ResetTrace();
+            }
+            else if(this.trace < 100)
+            {
+                if (this.traceUpdtCooldown > 0)
+                    traceUpdtCooldown -= (float)dT;
+                else
+                {
+                    traceUpdtCooldown = 2f;
+                    owner.Send(PacketType.FX, "trace", this.trace.ToString(), this.traceSpd.ToString());
+                }
+            }
         }
     }
 }

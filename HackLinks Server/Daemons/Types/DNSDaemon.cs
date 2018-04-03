@@ -1,6 +1,7 @@
 ﻿using HackLinks_Server.Computers;
+using HackLinks_Server.Computers.Permissions;
 using HackLinks_Server.Daemons.Types.Dns;
-using HackLinks_Server.FileSystem;
+using HackLinks_Server.Files;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,11 +13,11 @@ namespace HackLinks_Server.Daemons.Types
 {
     class DNSDaemon : Daemon
     {
-        public static string DEFAULT_CONFIG_PATH = "/daemons/dns/entries.db";
+        public static string DEFAULT_CONFIG_PATH = "/dns/entries.db";
 
         public DNSDaemon(Node node) : base(node)
         {
-            this.accessLevel = 3;
+            this.accessLevel = Group.GUEST;
         }
 
         public List<DNSEntry> entries = new List<DNSEntry>();
@@ -54,18 +55,13 @@ namespace HackLinks_Server.Daemons.Types
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs[0] == "update")
                 {
-                    if(session.privilege > 1)
+                    if(session.group > Group.ADMIN)
                     {
                         session.owner.Send(PacketType.MESSG, "Permission denied");
                         return true;
                     }
                     daemon.LoadEntries();
                     session.owner.Send(PacketType.MESSG, "Successfully updated the DNS.");
-                    return true;
-                }
-                if (cmdArgs.Length != 2)
-                {
-                    session.owner.Send(PacketType.MESSG, "Usage : dns [lookup/rlookup] [URL/IP]");
                     return true;
                 }
                 if (cmdArgs[0] == "lookup")
@@ -82,7 +78,56 @@ namespace HackLinks_Server.Daemons.Types
                     session.owner.Send(PacketType.MESSG, "Result URL : " + (url ?? "unknown"));
                     return true;
                 }
-                
+                if (cmdArgs[0] == "assign")
+                {
+                    if (client.activeSession.group > Group.ADMIN)
+                    {
+                        session.owner.Send(PacketType.MESSG, "Insufficient permission.");
+                        return true;
+                    }
+                    if (cmdArgs.Length <= 2)
+                    {
+                        session.owner.Send(PacketType.MESSG, "Missing arguments.\nProper usage: dns assign [IP] [URL]");
+                        return true;
+                    }
+                    File dnsFolder = daemon.node.fileSystem.rootFile.GetFile("dns");
+                    if (dnsFolder == null)
+                    {
+                        dnsFolder = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, daemon.node.fileSystem.rootFile, "dns");
+                        dnsFolder.isFolder = true;
+                    }
+                    else
+                    {
+                        if (!dnsFolder.IsFolder())
+                            return true;
+                    }
+                    File dnsEntries = dnsFolder.GetFile("entries.db");
+                    if (dnsEntries == null)
+                    {
+                        dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
+                        dnsEntries.WritePriv = Group.ADMIN;
+                        dnsEntries.ReadPriv = Group.ADMIN;
+                    }
+                    else if (dnsEntries.IsFolder())
+                    {
+                        dnsEntries.RemoveFile();
+                        dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
+                        dnsEntries.WritePriv = Group.ADMIN;
+                        dnsEntries.ReadPriv = Group.ADMIN;
+                    }
+                    foreach (DNSEntry entry in daemon.entries)
+                    {
+                        if (entry.Url == cmdArgs[2])
+                        {
+                            session.owner.Send(PacketType.MESSG, "The provided URL is already assigned an IP address.");
+                            return true;
+                        }
+                    }
+                    dnsEntries.Content += '\n' + cmdArgs[1] + '=' + cmdArgs[2];
+                    daemon.LoadEntries();
+                    session.owner.Send(PacketType.MESSG, "Content appended.");
+                    return true;
+                }
                 session.owner.Send(PacketType.MESSG, "Usage : dns [lookup/rlookup] [URL/IP]");
                 return true;
             }
@@ -113,13 +158,15 @@ namespace HackLinks_Server.Daemons.Types
         public void LoadEntries()
         {
             this.entries.Clear();
-            File entryFile = node.rootFolder.GetFileAtPath(DEFAULT_CONFIG_PATH);
+            File entryFile = node.fileSystem.rootFile.GetFileAtPath(DEFAULT_CONFIG_PATH);
             if (entryFile == null)
                 return;
             foreach (string line in entryFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                var data = line.Split(':');
-                entries.Add(new DNSEntry(data[1], data[0]));
+                var data = line.Split(new char[] { ':', '=' });
+                if (data.Length < 2)
+                    continue;
+                entries.Add(new DNSEntry(data[0], data[1]));
             }
         }
 

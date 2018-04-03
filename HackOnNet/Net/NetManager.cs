@@ -213,6 +213,9 @@ namespace HackOnNet.Net
                     break;
                 case NetUtil.PacketType.OSMSG:
                     break;
+                case NetUtil.PacketType.FX:
+                    userScreen.HandleFX(messages);
+                    break;
                 default:
                     throw new InvalidOperationException($"Netmanager attempted treat message with invalid type { type.ToString() }");
             }

@@ -19,6 +19,8 @@ namespace HackLinksCommon
             START,
             OSMSG,
             LOGIN,
+            FX,
+            DSCON,
         }
 
         public class StateObject

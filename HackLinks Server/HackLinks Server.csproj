@@ -62,19 +62,27 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandHandler.cs" />
+    <Compile Include="Computers\Groups.cs" />
+    <Compile Include="Computers\Permissions.cs" />
     <Compile Include="Computers\ComputerManager.cs" />
+    <Compile Include="Computers\Files\FileSystemManager.cs" />
+    <Compile Include="Computers\Files\FileSystem.cs" />
     <Compile Include="Computers\Node.cs" />
     <Compile Include="Computers\PermissionHelper.cs" />
     <Compile Include="Computers\PlayerTerminal.cs" />
     <Compile Include="ConfigUtil.cs" />
     <Compile Include="Daemons\Daemon.cs" />
+    <Compile Include="Daemons\Types\HTTPDaemon.cs" />
     <Compile Include="Daemons\Types\DNSDaemon.cs" />
     <Compile Include="Daemons\Types\Dns\DNSEntry.cs" />
+    <Compile Include="Daemons\Types\Http\HTTPSession.cs" />
+    <Compile Include="Daemons\Types\Http\Interfaces\PasswordSecurity.cs" />
+    <Compile Include="Daemons\Types\Http\Interfaces\WebInterface.cs" />
+    <Compile Include="Daemons\Types\Http\WebPage.cs" />
     <Compile Include="Daemons\Types\IrcDaemon.cs" />
     <Compile Include="Daemons\Types\Irc\IrcMessage.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="FileSystem\File.cs" />
-    <Compile Include="FileSystem\Folder.cs" />
+    <Compile Include="Computers\Files\File.cs" />
     <Compile Include="GameClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

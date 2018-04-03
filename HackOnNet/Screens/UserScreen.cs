@@ -3,10 +3,12 @@ using Hacknet;
 using HackOnNet.DotNetCompatibility;
 using HackOnNet.FileSystem;
 using HackOnNet.Modules;
+using HackOnNet.Modules.Overlays;
 using HackOnNet.Net;
 using HackOnNet.Sessions;
 using HackOnNet.Sessions.States;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Pathfinder.GUI;
@@ -35,6 +37,7 @@ namespace HackOnNet.Screens
 
         private Rectangle topBar;
         private Color topBarColor = new Color(0, 139, 199, 255);
+
         private Color topBarTextColor = new Color(126, 126, 126, 100);
         private Color topBarIconsColor = Color.White;
 
@@ -54,18 +57,29 @@ namespace HackOnNet.Screens
         public Color darkBackgroundColor = new Color(8, 8, 8);
         public Color subtleTextColor = new Color(90, 90, 90);
 
+        public Color defaultHighlightColor = new Color(0, 139, 199, 255);
+        public Color warningColor = Color.Red;
+
         public Color guestAccountColor = new Color(119,119,119);
         public Color userAccountColor = new Color(0, 139, 199, 255);
         public Color adminAccountColor = new Color(242, 160, 0);
         public Color kernelAccountColor = new Color(255, 80, 80);
+
+        public SoundEffect beep;
+        public TraceOverlay traceOverlay;
 
         public OnNetTerminal terminal;
         public OnNetworkMap netMap;
         public OnNetDisplayModule display;
         public OnNetRamModule ram;
 
+        public List<Overlay> overlays = new List<Overlay>();
+
         private System.Collections.Generic.List<OnModule> modules;
         private MessageBoxScreen ExitToMenuMessageBox;
+
+        public static float WARNING_FLASH_TIME = 2f;
+        public float warningFlashTimer = 0f;
 
         public NetManager netManager;
 
@@ -77,11 +91,14 @@ namespace HackOnNet.Screens
         public override void LoadContent()
         {
             this.content = base.ScreenManager.Game.Content;
+
             scanLines = this.content.Load<Texture2D>("ScanLines");
             fullscreen = new Rectangle(0, 0, base.ScreenManager.GraphicsDevice.Viewport.Width, base.ScreenManager.GraphicsDevice.Viewport.Height);
 
             this.topBar = new Rectangle(0, 0, base.ScreenManager.GraphicsDevice.Viewport.Width, OS.TOP_BAR_HEIGHT - 1);
             this.cross = this.content.Load<Texture2D>("Cross");
+
+            this.beep = this.content.Load<SoundEffect>("SFX/beep");
 
             this.modules = new System.Collections.Generic.List<OnModule>();
             Viewport viewport = base.ScreenManager.GraphicsDevice.Viewport;
@@ -106,7 +123,7 @@ namespace HackOnNet.Screens
             this.ram.LoadContent();
             this.modules.Add(this.ram);
 
-
+            MusicManager.playSongImmediatley("Music\\Broken_Boy.ogg");
 
             this.modules.Add(terminal);
         }
@@ -118,6 +135,25 @@ namespace HackOnNet.Screens
         public override void Update(GameTime gameTime, bool otherScreenHasFocus, bool coveredByOtherScreen)
         {
             base.Update(gameTime, otherScreenHasFocus, coveredByOtherScreen);
+
+            float time = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (this.warningFlashTimer > 0f)
+            {
+                this.warningFlashTimer -= time;
+                if (this.warningFlashTimer <= 0f)
+                {
+                    this.highlightColor = this.defaultHighlightColor;
+                }
+                else
+                {
+                    this.highlightColor = Color.Lerp(this.defaultHighlightColor, this.warningColor, this.warningFlashTimer / OS.WARNING_FLASH_TIME);
+                    this.moduleColorSolid = Color.Lerp(this.moduleColorSolidDefault, this.warningColor, this.warningFlashTimer / OS.WARNING_FLASH_TIME);
+                }
+            }
+
+            foreach (Overlay overlay in overlays)
+                overlay.Update(gameTime.ElapsedGameTime.TotalSeconds);
         }
 
         public override void Draw(GameTime gameTime)
@@ -134,16 +170,25 @@ namespace HackOnNet.Screens
                 GuiData.startDraw();
                 try
                 {
-                    this.drawBackground();
-                    /*if (this.terminalOnlyMode)
+                    Overlay onlyOverlay = null;
+                    foreach (Overlay overlay in this.overlays)
+                        if (overlay.PreventsDrawing())
+                        {
+                            onlyOverlay = overlay;
+                            break;
+                        }
+                    if(onlyOverlay == null)
                     {
-                        this.terminal.Draw(t);
+                        this.drawBackground();
+                        this.drawModules(gameTime);
+                        SFX.Draw(GuiData.spriteBatch);
+                        foreach (Overlay overlay in this.overlays)
+                            overlay.Draw();
                     }
                     else
-                    {*/
-                    this.drawModules(gameTime);
-                    //}
-                    SFX.Draw(GuiData.spriteBatch);
+                    {
+                        onlyOverlay.Draw();
+                    }
                 }
                 catch (System.Exception ex)
                 {
@@ -188,6 +233,52 @@ namespace HackOnNet.Screens
                     position.X += (float)this.scanLines.Width;
                 }
             }
+        }
+
+        public void HandleFX(string[] messages)
+        {
+            if(messages[0] == "traceOver")
+            {
+                Overlay overlay = new TerminationOverlay(this.ScreenManager.SpriteBatch, this.fullscreen, this);
+                this.overlays.Add(overlay);
+                overlay.Launch();
+            }
+            else if(messages[0] == "warnBlink")
+                Flash(true);
+            else if(messages[0] == "trace")
+            {
+                if (traceOverlay == null)
+                {
+                    TraceOverlay overlay = new TraceOverlay(ScreenManager.SpriteBatch, fullscreen, this, 
+                        float.Parse(messages[1], System.Globalization.NumberStyles.AllowDecimalPoint), 
+                        float.Parse(messages[2], System.Globalization.NumberStyles.AllowDecimalPoint));
+                    this.traceOverlay = overlay;
+                    this.overlays.Add(overlay);
+                    traceOverlay.Launch();
+                }
+                else
+                    traceOverlay.Force(float.Parse(messages[1]), float.Parse(messages[2]));
+            }
+            else if(messages[0] == "traceEnd")
+            {
+                if (traceOverlay != null)
+                {
+                    DestroyOverlay(traceOverlay);
+                    traceOverlay = null;
+                }
+            }
+        }
+
+        public void Flash(bool doBeep)
+        {
+            this.warningFlashTimer = UserScreen.WARNING_FLASH_TIME;
+            if(doBeep)
+                beep.Play(0.5f, 0f, 0f);
+        }
+
+        public void DestroyOverlay(Overlay overlay)
+        {
+            this.overlays.Remove(overlay);
         }
 
         public void drawBackground()
@@ -347,13 +438,24 @@ namespace HackOnNet.Screens
                         
                     }
                 }
-                if(command[1] == "view")
+                else if(command[1] == "view")
                 {
                     string fileName = command[2];
                     string fileContent = command[3];
 
                     activeSession.SetState(new ViewState(activeSession, fileName, fileContent));
                     display.state = DisplayState.VIEW;
+                }
+                else if(command[1] == "http")
+                {
+                    if(command[2] == "page")
+                    {
+                        string pageTitle = command[3];
+                        string pageContent = command[4];
+
+                        activeSession.SetState(new WebState(activeSession, pageTitle, pageContent));
+                        display.state = DisplayState.WEB;
+                    }
                 }
             }
             else if(command[0] == "node")

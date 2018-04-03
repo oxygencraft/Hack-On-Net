@@ -1,6 +1,7 @@
-﻿using HackLinks_Server.Daemons;
+﻿using HackLinks_Server.Computers.Files;
+using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
-using HackLinks_Server.FileSystem;
+using HackLinks_Server.Files;
 using HackLinksCommon;
 using System;
 using System.Collections.Generic;
@@ -19,19 +20,14 @@ namespace HackLinks_Server.Computers
 
         public int ownerId;
 
-        public Folder rootFolder;
+        public readonly FileSystem fileSystem = new FileSystem(Server.Instance.FileSystemManager);
 
         public List<Session> sessions = new List<Session>();
         public List<Daemon> daemons = new List<Daemon>();
 
-        public Node()
-        {
-            rootFolder = new Folder(this, null, "/");
-        }
-
         public string GetDisplayName()
         {
-            var cfgFile = rootFolder.GetFileAtPath(SERVER_CONFIG_PATH);
+            var cfgFile = fileSystem.rootFile.GetFileAtPath(SERVER_CONFIG_PATH);
             if (cfgFile == null)
                 return ip;
             var lines = cfgFile.GetLines();
@@ -56,6 +52,11 @@ namespace HackLinks_Server.Computers
                 var newDaemon = new DNSDaemon(this);
                 daemons.Add(newDaemon);
             }
+            else if(lines[0] == "HTTP")
+            {
+                var newDaemon = new HTTPDaemon(this);
+                daemons.Add(newDaemon);
+            }
         }
 
         public Daemon GetDaemon(string type)
@@ -68,13 +69,13 @@ namespace HackLinks_Server.Computers
 
         public void Login(GameClient client, string username, string password)
         {
-            var configFolder = rootFolder.GetFile("cfg");
+            var configFolder = fileSystem.rootFile.GetFile("cfg");
             if (configFolder == null || !configFolder.IsFolder())
             {
                 client.Send(NetUtil.PacketType.MESSG, "No config folder was found !");
                 return;
             }
-            var usersFile = ((Folder)configFolder).GetFile("users.cfg");
+            var usersFile = configFolder.GetFile("users.cfg");
             if (usersFile == null)
             {
                 client.Send(NetUtil.PacketType.MESSG, "No config file was found !");
@@ -92,6 +93,13 @@ namespace HackLinks_Server.Computers
                 }
             }
             client.Send(NetUtil.PacketType.MESSG, "Wrong identificants.");
+        }
+
+        internal void SetRoot(File newFile)
+        {
+            if(fileSystem.rootFile != null)
+                throw new ArgumentException("Root file for this computer is already set.");
+            fileSystem.rootFile = newFile;
         }
 
         /*public Folder getFolderFromPath(string path, bool createFoldersThatDontExist = false)
