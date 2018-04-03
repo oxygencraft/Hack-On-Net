@@ -14,6 +14,7 @@ namespace HackOnNet
         public void Load()
         {
             EventManager.RegisterListener<DrawMainMenuEvent>(GUI.MainMenu.DrawMainMenu);
+            EventManager.RegisterListener<DrawMainMenuButtonsEvent>(GUI.MainMenu.DrawHackOnNetButton);
         }
 
         public void LoadContent()

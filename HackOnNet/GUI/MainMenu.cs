@@ -76,14 +76,21 @@ namespace HackOnNet.GUI
                 bMenu = e.MainMenu;
             if (currentState == MenuState.OG_MENU)
             {
-                openHackOnNet.Draw();
                 return;
             }
             e.IsCancelled = true;
             if (currentState == MenuState.MAIN_MENU)
                 DrawMain(e);
             else if (currentState == MenuState.LOGIN)
-                DrawLogin(e);            
+                DrawLogin(e);
+
+        }
+
+        internal static void DrawHackOnNetButton(DrawMainMenuButtonsEvent e)
+        {
+            openHackOnNet.Y = e.MainButtonY;
+            e.SecondaryButtonY = e.MainButtonY += 65;
+            openHackOnNet.Draw();
         }
 
         private static void DrawMain(DrawMainMenuEvent e)
