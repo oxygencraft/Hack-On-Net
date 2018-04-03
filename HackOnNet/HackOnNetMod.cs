@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace HackOnNet
 {
@@ -13,7 +14,7 @@ namespace HackOnNet
 
         public void Load()
         {
-            DiscordRP.RPHandler.Initialize();
+            if (File.Exists(@"DiscordRpc.dll")) DiscordRP.RPHandler.Initialize();
             EventManager.RegisterListener<DrawMainMenuEvent>(GUI.MainMenu.DrawMainMenu);
         }
 
