@@ -90,10 +90,9 @@ namespace HackLinks_Server.Daemons.Types
 
         public void LoadWebPages()
         {
-            File wwwF = node.rootFolder.GetFile("www");
-            if (wwwF == null || !wwwF.IsFolder())
+            File www = node.fileSystem.rootFile.GetFile("www");
+            if (www == null || !www.IsFolder())
                 return;
-            Folder www = (Folder)wwwF;
             foreach(File file in www.children)
             {
                 WebPage newPage = WebPage.ParseFromFile(file);

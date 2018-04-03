@@ -47,12 +47,12 @@ namespace HackLinks_Server.Daemons.Types.Http.Interfaces
             if (!attrValues.ContainsKey("file"))
                 return null;
             var interfaceFileName = attrValues["file"];
-            var interfaceFile = pageFile.parent.GetFile(interfaceFileName);
+            var interfaceFile = pageFile.Parent.GetFile(interfaceFileName);
             if (interfaceFile == null)
                 return null;
-            if (interfaceFile.type != File.FileType.EXE)
+            if (interfaceFile.Type != File.FileType.EXE)
                 return null;
-            var lines = interfaceFile.content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.None);
+            var lines = interfaceFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.None);
             string intId = lines[0];
 
             var newInterface = interfaceCreators[intId](attrValues);
