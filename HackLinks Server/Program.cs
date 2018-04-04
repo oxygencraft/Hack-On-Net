@@ -21,6 +21,7 @@ namespace HackLinks_Server
         {
 
             bool showHelp = false;
+            bool rebuildDB = false;
             bool writeConfig = false;
             bool overwriteConfig = false;
             string writeConfigPath = null;
@@ -85,6 +86,7 @@ namespace HackLinks_Server
                         overwriteConfig = true;
                     }
                 },
+                { "r|rebuild",  "rebuild the database (WARNING: this will delete all data).", v => rebuildDB = v != null },
                 { "h|help",  "show this message and exit.", v => showHelp = v != null },
             };
 
@@ -127,6 +129,11 @@ namespace HackLinks_Server
                 SocketType.Stream, ProtocolType.Tcp);
 
             Server.Instance.Initalize(configData);
+            //If we're going to rebuild the DB we need to do it before data is loaded but after the server has the mysql config
+            if (rebuildDB)
+            {
+                Server.Instance.DatabaseLink.RebuildDatabase();
+            }
             Server.Instance.StartServer();
 
             try

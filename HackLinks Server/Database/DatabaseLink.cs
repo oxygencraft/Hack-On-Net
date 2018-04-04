@@ -195,6 +195,22 @@ namespace HackLinks_Server.Database
             }
         }
 
+        public void RebuildDatabase()
+        {
+            Console.WriteLine("Rebuilding Database");
+
+            using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+
+                foreach (string commandString in DatabaseDump.Commands)
+                {
+                    MySqlCommand command = new MySqlCommand(commandString, conn);
+                    int res = command.ExecuteNonQuery();
+                }
+            }
+        }
+
         private bool UpdateDbFile(File child, MySqlConnection conn)
         {
             MySqlCommand fileCommand = new MySqlCommand(
