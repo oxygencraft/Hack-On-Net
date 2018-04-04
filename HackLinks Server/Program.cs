@@ -121,28 +121,13 @@ namespace HackLinks_Server
                 return;
             }
 
-            //Apply Config to Server
-            Server.Instance.MySQLServer = configData.MySQLServer;
-            Server.Instance.Database = configData.Database;
-            Server.Instance.UserID = configData.UserID;
-            Server.Instance.Password = configData.Password;
-
             IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, configData.Port);
           
             Socket listener = new Socket(AddressFamily.InterNetwork,
                 SocketType.Stream, ProtocolType.Tcp);
 
-            try
-            {
-                Server.Instance.StartServer();
-            } catch(MySql.Data.MySqlClient.MySqlException e)
-            {
-                Console.WriteLine(e.Message);
-
-                Console.WriteLine("\nHit enter to continue...");
-                Console.Read();
-                return;
-            }
+            Server.Instance.Initalize(configData);
+            Server.Instance.StartServer();
 
             try
             {
@@ -169,7 +154,7 @@ namespace HackLinks_Server
                     if(DateTimeOffset.UtcNow.ToUnixTimeSeconds() - previousUploadTime > configData.SaveFrequency)
                     {
                         previousUploadTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                        Server.Instance.GetComputerManager().UploadDatabase();
+                        Server.Instance.SaveDatabase();
                     }
                 }
 
