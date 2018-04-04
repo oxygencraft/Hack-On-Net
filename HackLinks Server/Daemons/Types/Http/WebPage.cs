@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HackLinks_Server.FileSystem;
 using static HackLinksCommon.NetUtil;
 using System.Text.RegularExpressions;
+using HackLinks_Server.Files;
 
 namespace HackLinks_Server.Daemons.Types.Http
 {
@@ -27,9 +27,9 @@ namespace HackLinks_Server.Daemons.Types.Http
         public static WebPage ParseFromFile(File file)
         {
             WebPage page = new WebPage();
-            page.title = file.name;
-            page.content = file.content;
-            MatchCollection matches = Regex.Matches(file.content, "(<!interface.*>.*<\\/interface>)",RegexOptions.Multiline);
+            page.title = file.Name;
+            page.content = file.Content;
+            MatchCollection matches = Regex.Matches(file.Content, "(<!interface.*>.*<\\/interface>)",RegexOptions.Multiline);
             foreach(Match match in matches)
             {
                 var newInterface = WebInterface.ParseFromTag(match.Value, file);
