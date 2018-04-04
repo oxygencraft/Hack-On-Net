@@ -63,8 +63,8 @@ namespace HackLinks_Server.Database
             " `specialType` int(11) DEFAULT NULL," +
             " `content` text," +
             " `computerId` int(11) DEFAULT NULL," +
-            " `writePrivilege` int(11) DEFAULT NULL," +
-            " `readPrivilege` int(11) DEFAULT NULL," +
+            " `groupId` int(11) DEFAULT NULL," +
+            " `permissions` int(11) DEFAULT NULL," +
             " PRIMARY KEY (`id`)," +
             " UNIQUE KEY `uniquefiles` (`name`,`parentFile`,`computerId`)" +
             ") ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1",
@@ -74,7 +74,7 @@ namespace HackLinks_Server.Database
             //
             "LOCK TABLES `files` WRITE",
             "/*!40000 ALTER TABLE `files` DISABLE KEYS */",
-            "INSERT INTO `files` VALUES (1,'daemons',6,1,0,'',1,3,3),(2,'autorun',1,0,0,'irc',1,3,3),(3,'irc',1,0,1,'IRC',1,3,3),(5,'daemons',7,1,0,'',2,3,3),(6,'',0,1,0,'',1,3,3),(7,'',0,1,0,'',2,3,3)",
+            "INSERT INTO `files` VALUES (1,'daemons',6,1,0,'',1,3,770),(2,'autorun',1,0,0,'irc',1,3,770),(3,'irc',1,0,1,'IRC',1,3,770),(5,'daemons',7,1,0,'',2,3,770),(6,'',0,1,0,'',1,3,770),(7,'',0,1,0,'',2,3,770)",
             "/*!40000 ALTER TABLE `files` ENABLE KEYS */",
             "UNLOCK TABLES",
         };

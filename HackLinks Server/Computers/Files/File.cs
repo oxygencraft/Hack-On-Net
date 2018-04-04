@@ -13,6 +13,7 @@ namespace HackLinks_Server.Files
     class File
     {
 
+        /// <summary>FilType determines how a file will be handled by the system</summary>
         public enum FileType
         {
             NORMAL,
@@ -25,8 +26,7 @@ namespace HackLinks_Server.Files
         public readonly int id;
 
         private string name;
-        private Group writePriv = Group.ROOT;
-        private Group readPriv = Group.ROOT;
+        private Group group;
         private string content = "";
 
         private File parent;
@@ -36,9 +36,13 @@ namespace HackLinks_Server.Files
         private FileType type = FileType.NORMAL;
 
         public bool Dirty { get; set; }
+
         public string Name { get => name; set { name = value; Dirty = true; } }
-        public Group WritePriv { get => writePriv; set { writePriv = value; Dirty = true; } }
-        public Group ReadPriv { get => readPriv; set { readPriv = value; Dirty = true; } }
+
+        public FilePermissions Permissions { get; set; }
+
+        public Group Group { get => group; set { group = value; Dirty = true; } }
+
         public string Content { get => content; set { content = value; Dirty = true;  } }
 
         public int ParentId { get => parentId; set { parentId = value; Dirty = true; } }
@@ -75,6 +79,7 @@ namespace HackLinks_Server.Files
             {
                 this.Parent.children.Add(this);
             }
+            Permissions = new FilePermissions(this);
         }
 
         /// <summary>
@@ -121,12 +126,12 @@ namespace HackLinks_Server.Files
 
         public bool HasWritePermission(Group priv)
         {
-            return priv <= writePriv;
+            return this.Group == priv ? Permissions.CheckPermission(FilePermissions.PermissionType.Group, false, true, false) : false;
         }
 
         public bool HasReadPermission(Group priv)
         {
-            return priv <= ReadPriv;
+            return this.Group == priv ? Permissions.CheckPermission(FilePermissions.PermissionType.Group, false, false, true) : false;
         }
 
         virtual public bool IsFolder()

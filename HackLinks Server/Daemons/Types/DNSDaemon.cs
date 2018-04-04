@@ -105,15 +105,15 @@ namespace HackLinks_Server.Daemons.Types
                     if (dnsEntries == null)
                     {
                         dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
-                        dnsEntries.WritePriv = Group.ADMIN;
-                        dnsEntries.ReadPriv = Group.ADMIN;
+                        dnsEntries.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+                        dnsEntries.Group = Group.ADMIN;
                     }
                     else if (dnsEntries.IsFolder())
                     {
                         dnsEntries.RemoveFile();
                         dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
-                        dnsEntries.WritePriv = Group.ADMIN;
-                        dnsEntries.ReadPriv = Group.ADMIN;
+                        dnsEntries.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+                        dnsEntries.Group = Group.ADMIN;
                     }
                     foreach (DNSEntry entry in daemon.entries)
                     {

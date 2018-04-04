@@ -333,8 +333,9 @@ namespace HackLinks_Server
                         return true;
                     }
                     client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[0] + " permissions changed.");
-                    fileC.WritePriv = writeLevel;
-                    fileC.ReadPriv = readLevel;
+                    fileC.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, false);
+                    fileC.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, false);
+                    fileC.Group = client.activeSession.group;
                     return true;
                 }
             }
@@ -449,7 +450,7 @@ namespace HackLinks_Server
                 {
                     if (command[1] == file.Name)
                     {
-                        client.Send(NetUtil.PacketType.MESSG, "File " + file.Name + " > Permissions " + file.ReadPriv + "" + file.WritePriv);
+                        client.Send(NetUtil.PacketType.MESSG, "File " + file.Name + " > Permissions " + file.Permissions.PermissionValue);
                         return true;
                     }
                 }
@@ -466,6 +467,10 @@ namespace HackLinks_Server
                         fileList.AddRange(new string[] {
                                 file.Name, (file.IsFolder() ? "d" : "f"), (file.HasWritePermission(client.activeSession.group) ? "w" : "-")
                             });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Group {client.activeSession.group} doesn't have permission for {file.Name} {file.Group} {file.Permissions.PermissionValue}");
                     }
                 }
                 client.Send(NetUtil.PacketType.KERNL, fileList.ToArray());
@@ -548,8 +553,9 @@ namespace HackLinks_Server
             }
 
             var file = session.connectedNode.fileSystem.CreateFile(client.activeSession.connectedNode, activeDirectory, command[1]);
-            file.WritePriv = client.activeSession.group;
-            file.ReadPriv = client.activeSession.group;
+            file.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, false);
+            file.Permissions.SetPermission(FilePermissions.PermissionType.Group ,true, true, false);
+            file.Group = session.group;
 
             client.Send(NetUtil.PacketType.MESSG, "File " + command[1]);
             return true;
@@ -621,9 +627,9 @@ namespace HackLinks_Server
             }
 
             var file = session.connectedNode.fileSystem.CreateFile(client.activeSession.connectedNode, activeDirectory, command[1]);
-            file.isFolder = true;
-            file.WritePriv = client.activeSession.group;
-            file.ReadPriv = client.activeSession.group;
+            file.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, false);
+            file.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, false);
+            file.Group = session.group;
             return true;
         }
 
