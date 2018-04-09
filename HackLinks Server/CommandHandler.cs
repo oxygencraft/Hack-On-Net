@@ -563,6 +563,11 @@ namespace HackLinks_Server
                         client.Send(NetUtil.PacketType.MESSG, "You cannot change active directory to a file.");
                         return true;
                     }
+                    if (!file.HasExecutePermission(client.activeSession.currentUsername, client.activeSession.group))
+                    {
+                        client.Send(NetUtil.PacketType.MESSG, "You do not have permission to do this. You must have execute permission to access a directory.");
+                        return true;
+                    }
                     session.activeDirectory = file;
                     client.Send(NetUtil.PacketType.KERNL, "cd", file.Name);
                     return true;

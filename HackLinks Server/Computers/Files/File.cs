@@ -122,6 +122,11 @@ namespace HackLinks_Server.Files
             return newFile;
         }
 
+        public bool HasExecutePermission(string username, Group priv)
+        {
+            return HasPermission(username, priv, true, false, false);
+        }
+
         public bool HasWritePermission(string username, Group priv)
         {
             return HasPermission(username, priv, false, true, false);
