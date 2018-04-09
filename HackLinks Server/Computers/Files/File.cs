@@ -26,6 +26,7 @@ namespace HackLinks_Server.Files
         public readonly int id;
 
         private string name;
+        private string ownerUsername;
         private Group group;
         private string content = "";
 
@@ -40,6 +41,8 @@ namespace HackLinks_Server.Files
         public string Name { get => name; set { name = value; Dirty = true; } }
 
         public FilePermissions Permissions { get; set; }
+
+        public string OwnerUsername { get => ownerUsername; set { ownerUsername = value; Dirty = true; } }
 
         public Group Group { get => group; set { group = value; Dirty = true; } }
 
@@ -119,19 +122,35 @@ namespace HackLinks_Server.Files
             return newFile;
         }
 
-        public bool HasWritePermission(Session session)
+        public bool HasWritePermission(string username, Group priv)
         {
-            return HasWritePermission(session.group);
+            return HasPermission(username, priv, false, true, false);
         }
 
-        public bool HasWritePermission(Group priv)
+        public bool HasReadPermission(string username, Group priv)
         {
-            return this.Group == priv ? Permissions.CheckPermission(FilePermissions.PermissionType.Group, false, true, false) : false;
+            return HasPermission(username, priv, false, false, true);
         }
 
-        public bool HasReadPermission(Group priv)
+        public bool HasPermission(string username, Group priv, bool execute, bool write, bool read)
         {
-            return this.Group == priv ? Permissions.CheckPermission(FilePermissions.PermissionType.Group, false, false, true) : false;
+            if (this.Group == priv)
+            {
+                if (Permissions.CheckPermission(FilePermissions.PermissionType.Group, execute, write, read))
+                {
+                    return true;
+                }
+            }
+
+            if (OwnerUsername == username)
+            {
+                if (Permissions.CheckPermission(FilePermissions.PermissionType.User, execute, write, read))
+                {
+                    return true;
+                }
+            }
+
+            return Permissions.CheckPermission(FilePermissions.PermissionType.Others, execute, write, read);
         }
 
         virtual public bool IsFolder()

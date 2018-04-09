@@ -77,19 +77,17 @@ namespace HackLinks_Server
             owner.Send(PacketType.KERNL, daemonTx.ToArray());
         }
 
-        public void Login(string level, string username)
+        public void Login(Group level, string username)
         {
-            if (level == "root")
-                group = Group.ROOT;
-            else if (level == "admin")
-                group = Group.ADMIN;
-            else if (level == "user")
-                group = Group.USER;
-            else if (level == "guest")
-                group = Group.GUEST;
+            if (level == Group.INVALID)
+            {
+                throw new InvalidOperationException($"Can't set user {username} to {level.ToString()} group");
+            }
+
+            group = level;
             currentUsername = username;
 
-            owner.Send(PacketType.KERNL, "login", group.ToString(), username);
+            owner.Send(PacketType.KERNL, "login", ((int) group).ToString(), username);
         }
 
         public bool HandleSessionCommand(GameClient client, string[] command)

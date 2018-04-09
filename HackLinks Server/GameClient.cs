@@ -1,4 +1,5 @@
 ﻿using HackLinks_Server.Computers;
+using HackLinks_Server.Computers.Permissions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -34,6 +35,8 @@ namespace HackLinks_Server
 
         public PlayerStatus status = PlayerStatus.ONLINE;
 
+        public int UserId { get; internal set; }
+
         public GameClient(Socket client, Server server)
         {
             this.client = client;
@@ -45,7 +48,7 @@ namespace HackLinks_Server
             Send(PacketType.KERNL, "connect", "succ", node.ip, "3");
             if (node == homeComputer)
             {
-                activeSession.Login("root", username);
+                activeSession.Login(Group.ROOT, username);
             }
             else
             {

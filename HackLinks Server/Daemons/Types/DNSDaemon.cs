@@ -94,6 +94,7 @@ namespace HackLinks_Server.Daemons.Types
                     if (dnsFolder == null)
                     {
                         dnsFolder = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, daemon.node.fileSystem.rootFile, "dns");
+                        dnsFolder.OwnerUsername = "root"; // root
                         dnsFolder.isFolder = true;
                     }
                     else
@@ -105,6 +106,7 @@ namespace HackLinks_Server.Daemons.Types
                     if (dnsEntries == null)
                     {
                         dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
+                        dnsEntries.OwnerUsername = "root"; // root
                         dnsEntries.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
                         dnsEntries.Group = Group.ADMIN;
                     }
@@ -112,6 +114,7 @@ namespace HackLinks_Server.Daemons.Types
                     {
                         dnsEntries.RemoveFile();
                         dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
+                        dnsEntries.OwnerUsername = "root"; // root
                         dnsEntries.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
                         dnsEntries.Group = Group.ADMIN;
                     }

@@ -85,6 +85,7 @@ namespace HackLinks_Server.Database
                                             newFile.isFolder = fileType == 1;
 
                                             newFile.ParentId = fileReader.GetInt32(2);
+                                            newFile.OwnerUsername = fileReader.GetString(9);
                                             newFile.Group = (Group)fileReader.GetInt32(7);
                                             newFile.Permissions.PermissionValue = fileReader.GetInt32(8);
                                             newFile.Content = fileReader.GetString(5);
@@ -215,16 +216,17 @@ namespace HackLinks_Server.Database
         {
             MySqlCommand fileCommand = new MySqlCommand(
                 "INSERT INTO files" +
-                " (id, name, parentFile, type, specialType, content, computerId, groupId, permissions)" +
+                " (id, name, parentFile, type, specialType, content, computerId, owner, groupId, permissions)" +
                 " VALUES" +
-                " (@id, @name, @parentFile, @type, @specialType, @content, @computerId, @groupId, @permissions)" +
+                " (@id, @name, @parentFile, @type, @specialType, @content, @computerId, @owner, @groupId, @permissions)" +
                 " ON DUPLICATE KEY UPDATE" +
                 " name = @name," +
                 " parentFile = @parentFile," +
                 " specialType = @specialType," +
                 " content = @content," +
                 " groupId = @groupId," +
-                " permissions = @permissions"
+                " permissions = @permissions," +
+                " owner = @owner"
                 , conn);
             fileCommand.Parameters.AddRange(new MySqlParameter[] {
                         new MySqlParameter("id", child.id),
@@ -236,6 +238,7 @@ namespace HackLinks_Server.Database
                         new MySqlParameter("computerId", child.computerId),
                         new MySqlParameter("groupId", child.Group),
                         new MySqlParameter("permissions", child.Permissions.PermissionValue),
+                        new MySqlParameter("owner", child.OwnerUsername),
                     });
 
             int res = fileCommand.ExecuteNonQuery();
