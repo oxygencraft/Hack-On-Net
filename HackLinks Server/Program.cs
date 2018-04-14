@@ -21,6 +21,7 @@ namespace HackLinks_Server
         {
 
             bool showHelp = false;
+            bool rebuildDB = false;
             bool writeConfig = false;
             bool overwriteConfig = false;
             string writeConfigPath = null;
@@ -85,6 +86,7 @@ namespace HackLinks_Server
                         overwriteConfig = true;
                     }
                 },
+                { "r|rebuild",  "rebuild the database (WARNING: this will delete all data).", v => rebuildDB = v != null },
                 { "h|help",  "show this message and exit.", v => showHelp = v != null },
             };
 
@@ -121,28 +123,18 @@ namespace HackLinks_Server
                 return;
             }
 
-            //Apply Config to Server
-            Server.Instance.MySQLServer = configData.MySQLServer;
-            Server.Instance.Database = configData.Database;
-            Server.Instance.UserID = configData.UserID;
-            Server.Instance.Password = configData.Password;
-
             IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, configData.Port);
           
             Socket listener = new Socket(AddressFamily.InterNetwork,
                 SocketType.Stream, ProtocolType.Tcp);
 
-            try
+            Server.Instance.Initalize(configData);
+            //If we're going to rebuild the DB we need to do it before data is loaded but after the server has the mysql config
+            if (rebuildDB)
             {
-                Server.Instance.StartServer();
-            } catch(MySql.Data.MySqlClient.MySqlException e)
-            {
-                Console.WriteLine(e.Message);
-
-                Console.WriteLine("\nHit enter to continue...");
-                Console.Read();
-                return;
+                Server.Instance.DatabaseLink.RebuildDatabase();
             }
+            Server.Instance.StartServer();
 
             try
             {
@@ -169,7 +161,7 @@ namespace HackLinks_Server
                     if(DateTimeOffset.UtcNow.ToUnixTimeSeconds() - previousUploadTime > configData.SaveFrequency)
                     {
                         previousUploadTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                        Server.Instance.GetComputerManager().UploadDatabase();
+                        Server.Instance.SaveDatabase();
                     }
                 }
 

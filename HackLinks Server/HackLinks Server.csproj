@@ -80,6 +80,8 @@
     <Compile Include="Daemons\Types\Http\WebPage.cs" />
     <Compile Include="Daemons\Types\IrcDaemon.cs" />
     <Compile Include="Daemons\Types\Irc\IrcMessage.cs" />
+    <Compile Include="Database\DatabaseDump.cs" />
+    <Compile Include="Database\DatabaseLink.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Computers\Files\File.cs" />
     <Compile Include="GameClient.cs" />
