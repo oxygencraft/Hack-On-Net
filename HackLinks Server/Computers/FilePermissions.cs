@@ -51,12 +51,12 @@ namespace HackLinks_Server.Computers
             SetPermission(type, CalculatePermissionDigit(read, write, execute));
         }
 
-        private void SetPermission(PermissionType type, int value)
+        public void SetPermission(PermissionType type, int value)
         {
             permissionValue = (PermissionValue % (int)type) + ((PermissionValue / ((int)type * 10)) * ((int)type * 10) + ((int)type * value));
         }
 
-        private int GetPermissionDigit(PermissionType type)
+        public int GetPermissionDigit(PermissionType type)
         {
             return PermissionValue / (int)type % 10;
         }
