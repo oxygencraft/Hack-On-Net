@@ -55,7 +55,7 @@ namespace HackLinks_Server.Daemons.Types
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs[0] == "update")
                 {
-                    if(session.group > Group.ADMIN)
+                    if(!session.Groups.Contains(Group.ADMIN))
                     {
                         session.owner.Send(PacketType.MESSG, "Permission denied");
                         return true;
@@ -80,7 +80,7 @@ namespace HackLinks_Server.Daemons.Types
                 }
                 if (cmdArgs[0] == "assign")
                 {
-                    if (client.activeSession.group > Group.ADMIN)
+                    if(!session.Groups.Contains(Group.ADMIN))
                     {
                         session.owner.Send(PacketType.MESSG, "Insufficient permission.");
                         return true;

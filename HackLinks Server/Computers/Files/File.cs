@@ -137,9 +137,29 @@ namespace HackLinks_Server.Files
             return HasPermission(username, priv, false, false, true);
         }
 
+        public bool HasExecutePermission(string username, List<Group> privs)
+        {
+            return HasPermission(username, privs, true, false, false);
+        }
+
+        public bool HasWritePermission(string username, List<Group> privs)
+        {
+            return HasPermission(username, privs, false, true, false);
+        }
+
+        public bool HasReadPermission(string username, List<Group> privs)
+        {
+            return HasPermission(username, privs, false, false, true);
+        }
+
         public bool HasPermission(string username, Group priv, bool execute, bool write, bool read)
         {
-            if (this.Group == priv)
+            return HasPermission(username,new List<Group> { priv }, execute, read, write);
+        }
+
+        public bool HasPermission(string username, List<Group> privs, bool execute, bool write, bool read)
+        {
+            if (privs.Contains(Group))
             {
                 if (Permissions.CheckPermission(FilePermissions.PermissionType.Group, execute, write, read))
                 {

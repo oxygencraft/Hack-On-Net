@@ -111,19 +111,33 @@ namespace HackLinks_Server.Computers
             var accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             foreach(var account in accounts)
             {
-                var accountData = account.Split(new char[] { ',', '=' });
-                if (accountData[1] == username && accountData[2] == password)
+                string[] accountData = account.Split('=');
+                string accountPassword = accountData[1];
+                // Update temporary holding array
+                accountData = accountData[0].Split(',');
+                string accountUsername = accountData[accountData.Length - 1];
+
+                if (accountUsername == username && accountPassword == password)
                 {
-                    Group loginGroup = PermissionHelper.GetGroupFromString(accountData[0]);
-                    if(loginGroup != Group.INVALID)
+                    // Remove the last value, this is now our list of groups
+                    string[] accountGroups = accountData.Take(accountData.Length - 1).ToArray();
+
+                    List<Group> loginGroups = new List<Group>();
+                    for(int i = 0; i < accountGroups.Length; i++)
                     {
-                        client.activeSession.Login(loginGroup, username);
-                        client.Send(NetUtil.PacketType.MESSG, "Logged as : " + username);
+                        Group loginGroup = PermissionHelper.GetGroupFromString(accountGroups[i]);
+                        if (loginGroup != Group.INVALID)
+                        {
+                            loginGroups.Add(loginGroup);
+                        }
+                        else
+                        {
+                            client.Send(NetUtil.PacketType.MESSG, $"Can't login as {username} {accountGroups[i]} is not a valid group");
+                        }
                     }
-                    else
-                    {
-                        client.Send(NetUtil.PacketType.MESSG, $"Can't login as {username} {accountData[0]} is not a valid group");
-                    }
+
+                    client.activeSession.Login(loginGroups, username);
+                    client.Send(NetUtil.PacketType.MESSG, "Logged as : " + username);
 
                     return;
                 }

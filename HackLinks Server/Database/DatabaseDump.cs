@@ -28,7 +28,7 @@ namespace HackLinks_Server.Database
             //
             "LOCK TABLES `accounts` WRITE",
             "/*!40000 ALTER TABLE `accounts` DISABLE KEYS */",
-            "INSERT INTO `accounts` VALUES (1,'root','','root@hnmp.net',1),(2,'test','da39a3ee5e6b4b0d3255bfef95601890afd80709','test@hnmp.net',1)",
+            "INSERT INTO `accounts` VALUES (1,'test','da39a3ee5e6b4b0d3255bfef95601890afd80709','test@hnmp.net',1)",
             "/*!40000 ALTER TABLE `accounts` ENABLE KEYS */",
             "UNLOCK TABLES",
             "/*!40101 SET character_set_client = @saved_cs_client */",
@@ -84,7 +84,7 @@ namespace HackLinks_Server.Database
             "(6,'',0,1,0,'',2,0,774,'root')," +
             "(7,'cfg',5,1,0,'',1,1,774,'root')," +
             "(8,'users.cfg',7,0,0," +
-            "'root,root=potato\r\n" +
+            "'root,admin,user,guest,root=potato\r\n" +
             "user,jaber=potato\r\n'" +
             ",1,1,774,'root')",
             "/*!40000 ALTER TABLE `files` ENABLE KEYS */",

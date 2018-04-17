@@ -63,7 +63,14 @@ namespace HackLinks_Server.Daemons
 
         public bool CanBeAccessedBy(Session session)
         {
-            return session.group <= this.accessLevel;
+            foreach(Group group in session.Groups)
+            {
+                if(group <= accessLevel)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public virtual string GetSSHDisplayName()
