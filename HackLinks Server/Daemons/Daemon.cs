@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Daemons
 {
-    abstract class Daemon
+    public abstract class Daemon
     {
         protected Node node;
         protected List<Session> connectedSessions = new List<Session>();

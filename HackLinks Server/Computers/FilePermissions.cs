@@ -3,7 +3,7 @@ using System;
 
 namespace HackLinks_Server.Computers
 {
-    class FilePermissions {
+    public class FilePermissions {
 
         public FilePermissions(File file)
         {

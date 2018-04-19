@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server
 {
-    static class CommandHandler
+    public static class CommandHandler
     {
         public delegate bool Command(GameClient client, string[] command);
 
@@ -55,7 +55,7 @@ namespace HackLinks_Server
             return false;
         }
 
-         public static bool TreatKernelCommands(GameClient client, string[] command)
+        public static bool TreatKernelCommands(GameClient client, string[] command)
         {
             bool result = false;
             if (commands.ContainsKey(command[0]))

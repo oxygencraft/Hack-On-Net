@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Computers
 {
-    class Node
+    public class Node
     {
         public static string SERVER_CONFIG_PATH = "/cfg/server.cfg";
 

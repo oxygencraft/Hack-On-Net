@@ -10,7 +10,7 @@ using MySql.Data.MySqlClient;
 
 namespace HackLinks_Server.Files
 {
-    class File
+    public class File
     {
 
         /// <summary>FilType determines how a file will be handled by the system</summary>

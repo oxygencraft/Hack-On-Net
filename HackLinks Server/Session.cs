@@ -10,7 +10,7 @@ using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
-    class Session
+    public class Session
     {
         public float trace = 100;
 

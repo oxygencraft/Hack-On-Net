@@ -14,7 +14,7 @@ using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
-    class GameClient
+    public class GameClient
     {
 
         public Socket client;

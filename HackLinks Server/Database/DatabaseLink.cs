@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Database
 {
-    class DatabaseLink
+    public class DatabaseLink
     {
         private MySqlConnectionStringBuilder connectionStringBuilder = new MySqlConnectionStringBuilder();
 

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Computers
 {
-    class ComputerManager
+    public class ComputerManager
     {
         Server server;
 

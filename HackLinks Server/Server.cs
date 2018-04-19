@@ -14,7 +14,7 @@ using HackLinks_Server.Database;
 
 namespace HackLinks_Server
 {
-    class Server
+    public class Server
     {
         public static readonly Server Instance = new Server();
 
