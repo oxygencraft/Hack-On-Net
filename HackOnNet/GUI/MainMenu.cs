@@ -273,7 +273,7 @@ namespace HackOnNet.GUI
 
         private static string Hash(string input)
         {
-            var hash = (new SHA1Managed()).ComputeHash(Encoding.UTF8.GetBytes(input));
+            var hash = (new SHA256Managed()).ComputeHash(Encoding.UTF8.GetBytes(input));
             return string.Join("", hash.Select(b => b.ToString("x2")).ToArray());
         }
 
