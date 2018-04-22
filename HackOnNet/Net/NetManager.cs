@@ -58,7 +58,7 @@ namespace HackOnNet.Net
         {
             clientSocket.Close();
             if(isInGame)
-                userScreen.quitGame(this, "Connection Lost");
+                userScreen.quitGame(this, "Connection Lost or you were kicked from the server");
         }
 
         public void Init()

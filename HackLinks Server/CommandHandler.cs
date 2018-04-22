@@ -34,7 +34,9 @@ namespace HackLinks_Server
             { "chmod", new Tuple<string, Command>("chmod [mode] [file]\n    Change the required user level for read and write operations on the given file.\n", ChMod) },
             { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
-            { "trace", new Tuple<string, Command>("trace [over/start]\n    DEBUG COMMAND", TraceDebug) }
+            { "trace", new Tuple<string, Command>("trace [over/start]\n    DEBUG COMMAND", TraceDebug) },
+            { "giveperms", new Tuple<string, Command>("giveperms [admin/kick/ban/]\n    DEBUG COMMAND", GivePermissions) },
+            { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) }
         };
 
         public static bool TreatCommand(GameClient client, string command)
@@ -751,6 +753,58 @@ namespace HackLinks_Server
                 if (client.activeSession != null)
                     client.activeSession.SetTraceLevel(-5);
             }
+            return true;
+        }
+
+        public static bool GivePermissions(GameClient client, string[] command)
+        {
+            if (command[1] == "admin")
+            {
+                client.permissions.Add(Permissions.Admin);
+            }
+            if (command[1] == "kick")
+            {
+                client.permissions.Add(Permissions.Kick);
+            }
+            if (command[1] == "ban")
+            {
+                client.permissions.Add(Permissions.Ban);
+            }
+            return true;
+        }
+
+        public static bool Kick(GameClient client, string[] command)
+        {
+            if (client.permissions.Contains(Permissions.Admin) == false && client.permissions.Contains(Permissions.Kick) == false)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Insufficent Privileges");
+            }
+            GameClient targetClient = null;
+            foreach (var client2 in Server.Instance.clients)
+            {
+                if (client2.username == command[1])
+                {
+                    targetClient = client2;
+                    break;
+                }
+            }
+
+            if (targetClient == null)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "The player isn't in the server");
+            }
+
+            try
+            {
+                //targetClient.Send(NetUtil.PacketType.DSCON, "You have been kicked from the server"); // Don't have long until I had to go so I just left it out for now
+                // It's supposed to notify the kicked user that they were kicked instead of displaying connection lost but I changed it to connection lost or kicked for now
+                targetClient.netDisconnect();
+            }
+            catch(Exception e)
+            {
+                client.Send(NetUtil.PacketType.MESSG, e.ToString());
+            }
+
             return true;
         }
     }

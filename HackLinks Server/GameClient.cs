@@ -23,6 +23,7 @@ namespace HackLinks_Server
         public string username = "";
 
         public Session activeSession;
+        public List<Permissions> permissions =  new List<Permissions>();
         public Node homeComputer;
 
         public string buffer = "";
