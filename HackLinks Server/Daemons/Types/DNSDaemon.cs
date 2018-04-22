@@ -55,7 +55,7 @@ namespace HackLinks_Server.Daemons.Types
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs[0] == "update")
                 {
-                    if(session.group > Group.ADMIN)
+                    if(!session.Groups.Contains(Group.ADMIN))
                     {
                         session.owner.Send(PacketType.MESSG, "Permission denied");
                         return true;
@@ -80,7 +80,7 @@ namespace HackLinks_Server.Daemons.Types
                 }
                 if (cmdArgs[0] == "assign")
                 {
-                    if (client.activeSession.group > Group.ADMIN)
+                    if(!session.Groups.Contains(Group.ADMIN))
                     {
                         session.owner.Send(PacketType.MESSG, "Insufficient permission.");
                         return true;
@@ -94,6 +94,7 @@ namespace HackLinks_Server.Daemons.Types
                     if (dnsFolder == null)
                     {
                         dnsFolder = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, daemon.node.fileSystem.rootFile, "dns");
+                        dnsFolder.OwnerUsername = "root"; // root
                         dnsFolder.isFolder = true;
                     }
                     else
@@ -105,15 +106,17 @@ namespace HackLinks_Server.Daemons.Types
                     if (dnsEntries == null)
                     {
                         dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
-                        dnsEntries.WritePriv = Group.ADMIN;
-                        dnsEntries.ReadPriv = Group.ADMIN;
+                        dnsEntries.OwnerUsername = "root"; // root
+                        dnsEntries.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+                        dnsEntries.Group = Group.ADMIN;
                     }
                     else if (dnsEntries.IsFolder())
                     {
                         dnsEntries.RemoveFile();
                         dnsEntries = daemon.node.fileSystem.CreateFile(client.activeSession.connectedNode, dnsFolder, "entries.db");
-                        dnsEntries.WritePriv = Group.ADMIN;
-                        dnsEntries.ReadPriv = Group.ADMIN;
+                        dnsEntries.OwnerUsername = "root"; // root
+                        dnsEntries.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+                        dnsEntries.Group = Group.ADMIN;
                     }
                     foreach (DNSEntry entry in daemon.entries)
                     {

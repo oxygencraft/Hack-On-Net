@@ -52,8 +52,12 @@ namespace HackLinks_Server
 
         public File activeDirectory;
 
-        public Group group = Group.GUEST;
-        public string currentUsername = "Guest";
+        public List<Group> Groups { get; private set; } = new List<Group>()
+        {
+                    Group.GUEST,
+        };
+
+    public string currentUsername = "Guest";
 
         public Session(GameClient client, Node node)
         {
@@ -77,19 +81,30 @@ namespace HackLinks_Server
             owner.Send(PacketType.KERNL, daemonTx.ToArray());
         }
 
-        public void Login(string level, string username)
+        public void Login(Group level, string username)
         {
-            if (level == "root")
-                group = Group.ROOT;
-            else if (level == "admin")
-                group = Group.ADMIN;
-            else if (level == "user")
-                group = Group.USER;
-            else if (level == "guest")
-                group = Group.GUEST;
+            Login(new List<Group> {level}, username);
+        }
+
+        public void Login(List<Group> levels, string username)
+        {
+            if (levels.Contains(Group.INVALID))
+            {
+                throw new InvalidOperationException($"Can't set user {username} to invalid group");
+            }
+
+            Groups = levels;
             currentUsername = username;
 
-            owner.Send(PacketType.KERNL, "login", group.ToString(), username);
+            Group highestGroup = Group.GUEST;
+            foreach(Group group in Groups)
+            {
+                if(group < highestGroup)
+                {
+                    highestGroup = group;
+                }
+            }
+            owner.Send(PacketType.KERNL, "login", ((int)highestGroup).ToString(), username);
         }
 
         public bool HandleSessionCommand(GameClient client, string[] command)

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace HackLinks_Server
@@ -29,7 +30,8 @@ namespace HackLinks_Server
             { "mkdir", new Tuple<string, Command>("mkdir [dir]\n    Create the given directory if it doesn't already exist.", MkDir) },
             { "rm", new Tuple<string, Command>("rm [file]\n    Remove the given file.", Remove) },
             { "login", new Tuple<string, Command>("login [username] [password]\n    Login to the current connected system using the given username and password.", Login) },
-            { "chmod", new Tuple<string, Command>("chmod [file] [readLevel] [writeLevel]\n    Change the required user level for read and write operations on the given file.", ChMod) },
+            { "chown", new Tuple<string, Command>("chmod [file] [username]\n    Change the required user level for read and write operations on the given file.", ChOwn) },
+            { "chmod", new Tuple<string, Command>("chmod [mode] [file]\n    Change the required user level for read and write operations on the given file.\n", ChMod) },
             { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
             { "trace", new Tuple<string, Command>("trace [over/start]\n    DEBUG COMMAND", TraceDebug) }
@@ -95,7 +97,7 @@ namespace HackLinks_Server
                     client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[1] + " not found.");
                     return true;
                 }
-                if (!file.HasWritePermission(client.activeSession))
+                if (!file.HasWritePermission(client.activeSession.currentUsername, client.activeSession.Groups))
                 {
                     client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                     return true;
@@ -118,7 +120,7 @@ namespace HackLinks_Server
                     client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[1] + " not found.");
                     return true;
                 }
-                if (!file.HasWritePermission(client.activeSession))
+                if (!file.HasWritePermission(client.activeSession.currentUsername, client.activeSession.Groups))
                 {
                     client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                     return true;
@@ -148,7 +150,7 @@ namespace HackLinks_Server
                     client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[1] + " not found.");
                     return true;
                 }
-                if (!file.HasWritePermission(client.activeSession))
+                if (!file.HasWritePermission(client.activeSession.currentUsername, client.activeSession.Groups))
                 {
                     client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                     return true;
@@ -177,7 +179,7 @@ namespace HackLinks_Server
                     client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[1] + " not found.");
                     return true;
                 }
-                if (!file.HasWritePermission(client.activeSession))
+                if (!file.HasWritePermission(client.activeSession.currentUsername, client.activeSession.Groups))
                 {
                     client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                     return true;
@@ -226,7 +228,7 @@ namespace HackLinks_Server
                 client.Send(NetUtil.PacketType.MESSG, "You cannot display a directory.");
                 return true;
             }
-            if(!file.HasReadPermission(client.activeSession.group))
+            if(!file.HasReadPermission(client.activeSession.currentUsername, client.activeSession.Groups))
             {
                 client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                 return true;
@@ -291,6 +293,80 @@ namespace HackLinks_Server
             return true;
         }
 
+        public static bool ChOwn(GameClient client, string[] command)
+        {
+            if (client.activeSession == null || client.activeSession.connectedNode == null)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "You are not connected to a node.");
+                return true;
+            }
+            if (command.Length < 2)
+            {
+                client.Send(NetUtil.PacketType.MESSG, commands[command[0]].Item1);
+                return true;
+            }
+
+            var cmdArgs = command[1].Split(' ');
+
+            if (cmdArgs.Length < 2)
+            {
+                client.Send(NetUtil.PacketType.MESSG, commands[command[0]].Item1);
+                return true;
+            }
+            int pos = cmdArgs[1].IndexOf(':');
+
+            string username;
+            Computers.Permissions.Group? group;
+
+            if (pos != -1)
+            {
+                username = cmdArgs[1].Substring(0, pos);
+                string groupString = cmdArgs[1].Substring(pos + 1);
+                group = PermissionHelper.GetGroupFromString(groupString);
+                if(group == Computers.Permissions.Group.INVALID)
+                {
+                    client.Send(NetUtil.PacketType.MESSG, $"Invalid group '{groupString}' specified");
+                    return true;
+                }
+            } else
+            {
+                username = cmdArgs[1];
+                group = null;
+            }
+
+            if (!client.activeSession.connectedNode.HasUser(username))
+            {
+                client.Send(NetUtil.PacketType.MESSG, $"User {username} does not exist!");
+                return true;
+            }
+
+            var activeDirectory = client.activeSession.activeDirectory;
+            foreach (var file in activeDirectory.children)
+            {
+                if (file.Name == cmdArgs[0])
+                {
+                    if (file.OwnerUsername != client.activeSession.currentUsername)
+                    {
+                        client.Send(NetUtil.PacketType.MESSG, "Permission denied. Only the current file owner may change file permissions.");
+                        return true;
+                    }
+                    file.OwnerUsername = username;
+                    string message;
+                    if (group.HasValue)
+                    {
+                        message = $"File {file.Name} owner changed to {username} and group set to {group}";
+                    } else
+                    {
+                        message = $"File {file.Name} owner changed to {username}";
+                    }
+                    client.Send(NetUtil.PacketType.MESSG, message);
+                    return true;
+                }
+            }
+
+            return true;
+        }
+
         public static bool ChMod(GameClient client, string[] command)
         {
             if (client.activeSession == null || client.activeSession.connectedNode == null)
@@ -300,45 +376,40 @@ namespace HackLinks_Server
             }
             if (command.Length < 2)
             {
-                client.Send(NetUtil.PacketType.MESSG, "Usage : chmod [file] [readLevel] [writeLevel]");
+                client.Send(NetUtil.PacketType.MESSG, commands[command[0]].Item1);
                 return true;
             }
             var cmdArgs = command[1].Split(' ');
-            if(cmdArgs.Length != 3)
+            if(cmdArgs.Length != 2)
             {
-                client.Send(NetUtil.PacketType.MESSG, "Usage : chmod [file] [readLevel] [writeLevel]");
+                client.Send(NetUtil.PacketType.MESSG, commands[command[0]].Item1);
                 return true;
             }
-            Group writeLevel = PermissionHelper.GetGroupFromString(cmdArgs[2]);
-            Group readLevel = PermissionHelper.GetGroupFromString(cmdArgs[1]);
-            var activePriv = client.activeSession.group;
-            if(writeLevel == Group.INVALID || readLevel == Group.INVALID)
-            {
-                client.Send(NetUtil.PacketType.MESSG, "Input valid writeLevel or readLevel");
-                return true;
-            }
-            if(writeLevel < activePriv || readLevel < activePriv)
-            {
-                client.Send(NetUtil.PacketType.MESSG, "You cannot change to a higher permission than your current level.");
-                return true;
-            }
+            var activePrivs = client.activeSession.Groups;
+
             var activeDirectory = client.activeSession.activeDirectory;
             foreach (var fileC in activeDirectory.children)
             {
-                if (fileC.Name == cmdArgs[0])
+                if (fileC.Name == cmdArgs[1])
                 {
-                    if (!fileC.HasWritePermission(client.activeSession.group))
+                    if (client.activeSession.currentUsername != fileC.OwnerUsername)
                     {
                         client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                         return true;
                     }
-                    client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[0] + " permissions changed.");
-                    fileC.WritePriv = writeLevel;
-                    fileC.ReadPriv = readLevel;
+
+                    if (!PermissionHelper.ApplyModifiers(cmdArgs[0], fileC.Permissions))
+                    {
+                        client.Send(NetUtil.PacketType.MESSG, $"Invalid mode '{cmdArgs[0]}'\r\nUsage : chmod [permissions] [file]");
+                        return true;
+                    }
+
+                    client.Send(NetUtil.PacketType.MESSG, $"File {fileC.Name} permissions changed. to {fileC.Permissions.PermissionValue}");
+
                     return true;
                 }
             }
-            client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[0] + " was not found.");
+            client.Send(NetUtil.PacketType.MESSG, "File " + cmdArgs[1] + " was not found.");
             return true;
         }
 
@@ -449,7 +520,7 @@ namespace HackLinks_Server
                 {
                     if (command[1] == file.Name)
                     {
-                        client.Send(NetUtil.PacketType.MESSG, "File " + file.Name + " > Permissions " + file.ReadPriv + "" + file.WritePriv);
+                        client.Send(NetUtil.PacketType.MESSG, $"File {file.Name} > Owner '{file.OwnerUsername}' Group '{file.Group}' Permissions '{PermissionHelper.PermissionToDisplayString(file.Permissions)}'");
                         return true;
                     }
                 }
@@ -461,11 +532,15 @@ namespace HackLinks_Server
                 List<string> fileList = new List<string>(new string[] { "ls", session.activeDirectory.Name});
                 foreach (File file in session.activeDirectory.children)
                 {
-                    if (file.HasReadPermission(client.activeSession.group))
+                    if (file.HasReadPermission(client.activeSession.currentUsername, client.activeSession.Groups))
                     {
                         fileList.AddRange(new string[] {
-                                file.Name, (file.IsFolder() ? "d" : "f"), (file.HasWritePermission(client.activeSession.group) ? "w" : "-")
+                                file.Name, (file.IsFolder() ? "d" : "f"), (file.HasWritePermission(client.activeSession.currentUsername, client.activeSession.Groups) ? "w" : "-")
                             });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Group {client.activeSession.Groups} doesn't have permission for {file.Name} {file.Group} {file.Permissions.PermissionValue}");
                     }
                 }
                 client.Send(NetUtil.PacketType.KERNL, fileList.ToArray());
@@ -509,6 +584,11 @@ namespace HackLinks_Server
                         client.Send(NetUtil.PacketType.MESSG, "You cannot change active directory to a file.");
                         return true;
                     }
+                    if (!file.HasExecutePermission(client.activeSession.currentUsername, client.activeSession.Groups))
+                    {
+                        client.Send(NetUtil.PacketType.MESSG, "You do not have permission to do this. You must have execute permission to access a directory.");
+                        return true;
+                    }
                     session.activeDirectory = file;
                     client.Send(NetUtil.PacketType.KERNL, "cd", file.Name);
                     return true;
@@ -541,15 +621,17 @@ namespace HackLinks_Server
                     return true;
                 }
             }
-            if(!activeDirectory.HasWritePermission(client.activeSession.group))
+            if(!activeDirectory.HasWritePermission(client.activeSession.currentUsername, client.activeSession.Groups))
             {
                 client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                 return true;
             }
 
             var file = session.connectedNode.fileSystem.CreateFile(client.activeSession.connectedNode, activeDirectory, command[1]);
-            file.WritePriv = client.activeSession.group;
-            file.ReadPriv = client.activeSession.group;
+            file.OwnerUsername = client.activeSession.currentUsername;
+            file.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, false);
+            file.Permissions.SetPermission(FilePermissions.PermissionType.Group ,true, true, false);
+            file.Group = file.Parent.Group;
 
             client.Send(NetUtil.PacketType.MESSG, "File " + command[1]);
             return true;
@@ -572,7 +654,7 @@ namespace HackLinks_Server
             {
                 if (fileC.Name == command[1])
                 {
-                    if (!fileC.HasWritePermission(client.activeSession.group))
+                    if (!fileC.HasWritePermission(client.activeSession.currentUsername, client.activeSession.Groups))
                     {
                         client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                         return true;
@@ -614,16 +696,27 @@ namespace HackLinks_Server
                 }
             }
 
-            if (!activeDirectory.HasWritePermission(client.activeSession.group))
+            bool passed = false;
+            foreach (Computers.Permissions.Group group in client.activeSession.Groups)
+            {
+                if (activeDirectory.HasWritePermission(client.activeSession.currentUsername, group))
+                {
+                    passed = true;
+                    break;
+                }
+            }
+
+            if(!passed)
             {
                 client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                 return true;
             }
 
             var file = session.connectedNode.fileSystem.CreateFile(client.activeSession.connectedNode, activeDirectory, command[1]);
-            file.isFolder = true;
-            file.WritePriv = client.activeSession.group;
-            file.ReadPriv = client.activeSession.group;
+            file.OwnerUsername = client.activeSession.currentUsername;
+            file.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, false);
+            file.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, false);
+            file.Group = file.Parent.Group;
             return true;
         }
 

@@ -13,6 +13,7 @@ namespace HackLinks_Server.Files
     class File
     {
 
+        /// <summary>FilType determines how a file will be handled by the system</summary>
         public enum FileType
         {
             NORMAL,
@@ -25,8 +26,8 @@ namespace HackLinks_Server.Files
         public readonly int id;
 
         private string name;
-        private Group writePriv = Group.ROOT;
-        private Group readPriv = Group.ROOT;
+        private string ownerUsername;
+        private Group group;
         private string content = "";
 
         private File parent;
@@ -36,9 +37,15 @@ namespace HackLinks_Server.Files
         private FileType type = FileType.NORMAL;
 
         public bool Dirty { get; set; }
+
         public string Name { get => name; set { name = value; Dirty = true; } }
-        public Group WritePriv { get => writePriv; set { writePriv = value; Dirty = true; } }
-        public Group ReadPriv { get => readPriv; set { readPriv = value; Dirty = true; } }
+
+        public FilePermissions Permissions { get; set; }
+
+        public string OwnerUsername { get => ownerUsername; set { ownerUsername = value; Dirty = true; } }
+
+        public Group Group { get => group; set { group = value; Dirty = true; } }
+
         public string Content { get => content; set { content = value; Dirty = true;  } }
 
         public int ParentId { get => parentId; set { parentId = value; Dirty = true; } }
@@ -75,6 +82,7 @@ namespace HackLinks_Server.Files
             {
                 this.Parent.children.Add(this);
             }
+            Permissions = new FilePermissions(this);
         }
 
         /// <summary>
@@ -114,19 +122,60 @@ namespace HackLinks_Server.Files
             return newFile;
         }
 
-        public bool HasWritePermission(Session session)
+        public bool HasExecutePermission(string username, Group priv)
         {
-            return HasWritePermission(session.group);
+            return HasPermission(username, priv, true, false, false);
         }
 
-        public bool HasWritePermission(Group priv)
+        public bool HasWritePermission(string username, Group priv)
         {
-            return priv <= writePriv;
+            return HasPermission(username, priv, false, true, false);
         }
 
-        public bool HasReadPermission(Group priv)
+        public bool HasReadPermission(string username, Group priv)
         {
-            return priv <= ReadPriv;
+            return HasPermission(username, priv, false, false, true);
+        }
+
+        public bool HasExecutePermission(string username, List<Group> privs)
+        {
+            return HasPermission(username, privs, true, false, false);
+        }
+
+        public bool HasWritePermission(string username, List<Group> privs)
+        {
+            return HasPermission(username, privs, false, true, false);
+        }
+
+        public bool HasReadPermission(string username, List<Group> privs)
+        {
+            return HasPermission(username, privs, false, false, true);
+        }
+
+        public bool HasPermission(string username, Group priv, bool execute, bool write, bool read)
+        {
+            return HasPermission(username,new List<Group> { priv }, execute, read, write);
+        }
+
+        public bool HasPermission(string username, List<Group> privs, bool execute, bool write, bool read)
+        {
+            if (privs.Contains(Group))
+            {
+                if (Permissions.CheckPermission(FilePermissions.PermissionType.Group, execute, write, read))
+                {
+                    return true;
+                }
+            }
+
+            if (OwnerUsername == username)
+            {
+                if (Permissions.CheckPermission(FilePermissions.PermissionType.User, execute, write, read))
+                {
+                    return true;
+                }
+            }
+
+            return Permissions.CheckPermission(FilePermissions.PermissionType.Others, execute, write, read);
         }
 
         virtual public bool IsFolder()

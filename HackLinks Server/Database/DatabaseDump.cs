@@ -38,7 +38,7 @@ namespace HackLinks_Server.Database
             "CREATE TABLE `computers` (" +
             " `id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
             " `ip` varchar(15) NOT NULL," +
-            " `ownerId` int(11) NOT NULL," +
+            " `owner` varchar(64) NOT NULL," +
             " `type` int(11) NOT NULL," +
             " PRIMARY KEY (`id`)," +
             " UNIQUE KEY `ip` (`ip`)" +
@@ -57,14 +57,15 @@ namespace HackLinks_Server.Database
             "DROP TABLE IF EXISTS `files`",
             "CREATE TABLE `files` (" +
             " `id` int(11) NOT NULL AUTO_INCREMENT," +
-            " `name` varchar(255) DEFAULT NULL," +
-            " `parentFile` int(11) DEFAULT NULL," +
+            " `name` varchar(255) NOT NULL," +
+            " `parentFile` int(11) NOT NULL," +
             " `type` tinyint(4) NOT NULL," +
-            " `specialType` int(11) DEFAULT NULL," +
+            " `specialType` int(11) NOT NULL," +
             " `content` text," +
-            " `computerId` int(11) DEFAULT NULL," +
-            " `writePrivilege` int(11) DEFAULT NULL," +
-            " `readPrivilege` int(11) DEFAULT NULL," +
+            " `computerId` int(11) NOT NULL," +
+            " `groupId` int(11) NOT NULL," +
+            " `permissions` int(11) NOT NULL," +
+            " `owner` varchar(64) NOT NULL," +
             " PRIMARY KEY (`id`)," +
             " UNIQUE KEY `uniquefiles` (`name`,`parentFile`,`computerId`)" +
             ") ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1",
@@ -74,7 +75,18 @@ namespace HackLinks_Server.Database
             //
             "LOCK TABLES `files` WRITE",
             "/*!40000 ALTER TABLE `files` DISABLE KEYS */",
-            "INSERT INTO `files` VALUES (1,'daemons',6,1,0,'',1,3,3),(2,'autorun',1,0,0,'irc',1,3,3),(3,'irc',1,0,1,'IRC',1,3,3),(5,'daemons',7,1,0,'',2,3,3),(6,'',0,1,0,'',1,3,3),(7,'',0,1,0,'',2,3,3)",
+            "INSERT INTO `files` VALUES " +
+            "(1,'daemons',5,1,0,'',1,1,774,'root')," +
+            "(2,'autorun',1,0,0,'irc',1,1,774,'root')," +
+            "(3,'irc',1,0,1,'IRC',1,1,774,'root')," +
+            "(4,'daemons',6,1,0,'',2,1,774,'root')," +
+            "(5,'',0,1,0,'',1,0,774,'root')," +
+            "(6,'',0,1,0,'',2,0,774,'root')," +
+            "(7,'cfg',5,1,0,'',1,1,774,'root')," +
+            "(8,'users.cfg',7,0,0," +
+            "'root,admin,user,guest,root=potato\r\n" +
+            "user,jaber=potato\r\n'" +
+            ",1,1,774,'root')",
             "/*!40000 ALTER TABLE `files` ENABLE KEYS */",
             "UNLOCK TABLES",
         };
