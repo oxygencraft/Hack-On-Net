@@ -51,7 +51,7 @@ namespace HackLinks_Server.Database
             //
             "LOCK TABLES `computers` WRITE",
             "/*!40000 ALTER TABLE `computers` DISABLE KEYS */",
-            "INSERT INTO `computers` VALUES (1,'8.8.8.8',1,4),(2,'2.2.2.2',1,4)",
+            "INSERT INTO `computers` VALUES (1,'8.8.8.8',1,4)",
             "/*!40000 ALTER TABLE `computers` ENABLE KEYS */",
             "UNLOCK TABLES",
             "/*!40101 SET character_set_client = @saved_cs_client */",
@@ -82,9 +82,7 @@ namespace HackLinks_Server.Database
             "(1,'daemons',5,1,0,'',1,1,774,'root')," +
             "(2,'autorun',1,0,0,'irc',1,1,774,'root')," +
             "(3,'irc',1,0,1,'IRC',1,1,774,'root')," +
-            "(4,'daemons',6,1,0,'',2,1,774,'root')," +
             "(5,'',0,1,0,'',1,0,774,'root')," +
-            "(6,'',0,1,0,'',2,0,774,'root')," +
             "(7,'cfg',5,1,0,'',1,1,774,'root')," +
             "(8,'users.cfg',7,0,0," +
             "'root,admin,user,guest,root=potato\r\n" +
