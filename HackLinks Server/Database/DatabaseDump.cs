@@ -28,7 +28,7 @@ namespace HackLinks_Server.Database
             //
             "LOCK TABLES `accounts` WRITE",
             "/*!40000 ALTER TABLE `accounts` DISABLE KEYS */",
-            "INSERT INTO `accounts` VALUES (1,'test','da39a3ee5e6b4b0d3255bfef95601890afd80709','test@hnmp.net',1)",
+            "INSERT INTO `accounts` VALUES (1,'test','e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855','test@hnmp.net',1)",
             "/*!40000 ALTER TABLE `accounts` ENABLE KEYS */",
             "UNLOCK TABLES",
             "/*!40101 SET character_set_client = @saved_cs_client */",

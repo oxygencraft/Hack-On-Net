@@ -158,7 +158,7 @@ namespace HackLinks_Server
                     stopWatch.Restart();
                     Server.Instance.MainLoop(dT);
 
-                    if(DateTimeOffset.UtcNow.ToUnixTimeSeconds() - previousUploadTime > configData.SaveFrequency)
+                    if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - previousUploadTime > configData.SaveFrequency)
                     {
                         previousUploadTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                         Server.Instance.SaveDatabase();
@@ -203,7 +203,12 @@ namespace HackLinks_Server
             Server.Instance.AddClient(handler);
         }
 
-        
+        public static void AcceptCmdInput(byte[] commandBytes)
+        {
+            string command = Encoding.ASCII.GetString(commandBytes);
+
+            Console.WriteLine("There are no commands yet, they are still to be implemented");
+        }
 
     }
 }
