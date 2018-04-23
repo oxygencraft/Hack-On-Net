@@ -333,6 +333,8 @@ namespace HackOnNet.GUI
 
         public static void ResetForLogin()
         {
+            InPasswordMode = false;
+            Hacknet.Gui.TextBox.MaskingText = false;
             promptIndex = 0;
             IsReady = false;
             PromptSequence.Clear();
