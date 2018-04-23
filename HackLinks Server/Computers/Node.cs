@@ -97,43 +97,54 @@ namespace HackLinks_Server.Computers
 
         public void Login(GameClient client, string username, string password)
         {
-            var configFolder = fileSystem.rootFile.GetFile("cfg");
+            var configFolder = fileSystem.rootFile.GetFile("etc");
             if (configFolder == null || !configFolder.IsFolder())
             {
-                client.Send(NetUtil.PacketType.MESSG, "No config folder was found !");
+                client.Send(NetUtil.PacketType.MESSG, "No config folder was found!");
                 return;
             }
-            var usersFile = configFolder.GetFile("users.cfg");
+            File usersFile = configFolder.GetFile("passwd");
             if (usersFile == null)
             {
-                client.Send(NetUtil.PacketType.MESSG, "No config file was found !");
+                client.Send(NetUtil.PacketType.MESSG, "No passwd file was found!");
                 return;
             }
-            var accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            foreach(var account in accounts)
+            File groupFile = configFolder.GetFile("group");
+            if (usersFile == null)
             {
-                string[] accountData = account.Split('=');
+                client.Send(NetUtil.PacketType.MESSG, "No group file was found!");
+                return;
+            }
+            string[] accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] groups = groupFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string account in accounts)
+            {
+                string[] accountData = account.Split(':');
+                string accountUsername = accountData[0];
                 string accountPassword = accountData[1];
-                // Update temporary holding array
-                accountData = accountData[0].Split(',');
-                string accountUsername = accountData[accountData.Length - 1];
+                string accountGroupId = accountData[3];
 
                 if (accountUsername == username && accountPassword == password)
                 {
-                    // Remove the last value, this is now our list of groups
-                    string[] accountGroups = accountData.Take(accountData.Length - 1).ToArray();
-
                     List<Group> loginGroups = new List<Group>();
-                    for(int i = 0; i < accountGroups.Length; i++)
+                    foreach(string group in groups)
                     {
-                        Group loginGroup = PermissionHelper.GetGroupFromString(accountGroups[i]);
-                        if (loginGroup != Group.INVALID)
+                        string[] groupData = group.Split(':');
+                        string groupName = groupData[0];
+                        string groupId = groupData[2];
+                        string[] groupUsers = groupData[3].Split(',');
+                        if (groupUsers.Contains(username) || accountGroupId.Equals(groupId))
                         {
-                            loginGroups.Add(loginGroup);
-                        }
-                        else
-                        {
-                            client.Send(NetUtil.PacketType.MESSG, $"Can't login as {username} {accountGroups[i]} is not a valid group");
+                            Group loginGroup = PermissionHelper.GetGroupFromString(groupId);
+                            if (loginGroup != Group.INVALID)
+                            {
+                                loginGroups.Add(loginGroup);
+                            }
+                            else
+                            {
+                                client.Send(NetUtil.PacketType.MESSG, $"Can't login as {username} {groupName} is not a valid group");
+                            }
                         }
                     }
 

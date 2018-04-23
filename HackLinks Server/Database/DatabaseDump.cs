@@ -79,15 +79,23 @@ namespace HackLinks_Server.Database
             "LOCK TABLES `files` WRITE",
             "/*!40000 ALTER TABLE `files` DISABLE KEYS */",
             "INSERT INTO `files` VALUES " +
-            "(1,'daemons',5,1,0,'',1,1,774,'root')," +
-            "(2,'autorun',1,0,0,'irc',1,1,774,'root')," +
-            "(3,'irc',1,0,1,'IRC',1,1,774,'root')," +
-            "(5,'',0,1,0,'',1,0,774,'root')," +
-            "(7,'cfg',5,1,0,'',1,1,774,'root')," +
-            "(8,'users.cfg',7,0,0," +
-            "'root,admin,user,guest,root=potato\r\n" +
-            "user,jaber=potato\r\n'" +
-            ",1,1,774,'root')",
+            "(1,'',0,1,0,'',1,0,774,'root')," +
+            "(2,'daemons',1,1,0,'',1,1,774,'root')," +
+            "(3,'autorun',2,0,0,'irc',1,1,774,'root')," +
+            "(4,'irc',2,0,1,'IRC',1,1,774,'root')," +
+            "(5,'etc',1,1,0,'',1,1,774,'root')," +
+            "(6,'passwd',5,0,0,'" +
+            "root:x:0:0:root:/root:/bin/hash\r\n" +
+            "admin:x:1:1:root:/root:/bin/hash\r\n" +
+            "user:x:2:2:root:/root:/bin/hash\r\n" +
+            "guest:x:3:3:root:/root:/bin/hash\r\n" +
+            "',1,1,774,'root'),"+
+            "(7,'group',5,0,0,'" +
+            "root:x:0:\r\n" +
+            "admin:x:1:root,admin\r\n" +
+            "user:x:2:root,admin,user\r\n" +
+            "guest:x:3:root,admin,user,guest\r\n" +
+            "',1,1,774,'root')",
             "/*!40000 ALTER TABLE `files` ENABLE KEYS */",
             "UNLOCK TABLES",
         };
