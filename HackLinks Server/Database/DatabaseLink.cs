@@ -50,20 +50,12 @@ namespace HackLinks_Server.Database
                         {
                             while (reader.Read())
                             {
-                                Node newNode = null;
-                                int type = reader.GetInt32(3);
-                                if (type == 4)
+                                Node newNode = new Node
                                 {
-                                    newNode = new PlayerTerminal();
-                                    ((PlayerTerminal)newNode).ownerId = reader.GetInt32(2);
-                                }
-                                else
-                                {
-                                    newNode = new Node();
-                                }
-                                newNode.id = reader.GetInt32(0);
-                                newNode.ip = reader.GetString(1);
-                                newNode.ownerId = reader.GetInt32(2);
+                                    id = reader.GetInt32(0),
+                                    ip = reader.GetString(1),
+                                    ownerId = reader.GetInt32(2)
+                                };
 
                                 MySqlCommand fileCommand = new MySqlCommand("SELECT * FROM files WHERE computerId = @0", cn1);
                                 fileCommand.Parameters.Add(new MySqlParameter("0", newNode.id));
