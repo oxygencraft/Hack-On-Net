@@ -35,7 +35,7 @@ namespace HackLinks_Server
             { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
             { "trace", new Tuple<string, Command>("trace [over/start]\n    DEBUG COMMAND", TraceDebug) },
-            { "giveperms", new Tuple<string, Command>("giveperms [admin/kick/ban/]\n    DEBUG COMMAND", GivePermissions) },
+            { "giveperms", new Tuple<string, Command>("giveperms [username] [admin/kick/ban/]\n    Gives user permissions", GivePermissions) },
             { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) },
             { "ban", new Tuple<string, Command>("ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]\n    Bans user for a specified amount of time", Ban) },
             { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) }
@@ -758,21 +758,47 @@ namespace HackLinks_Server
             return true;
         }
 
-        public static bool GivePermissions(GameClient client, string[] command)
+        public static bool GivePermissions(GameClient client, string[] commandUnsplit)
         {
-            if (command[1] == "admin")
+            if (client.permissions.Contains(Permissions.Admin) == false && client.permissions.Contains(Permissions.GivePerms) == false)
             {
-                client.permissions.Add(Permissions.Admin);
+                client.Send(NetUtil.PacketType.MESSG, "Insufficent Privileges");
+                return true;
             }
-            if (command[1] == "kick")
+
+            List<string> command = new List<string>();
+            command.Add("giveperms");
+            command.AddRange(commandUnsplit[1].Split());
+            if (!Server.Instance.DatabaseLink.GetUsersInDatabase().ContainsValue(command[1]))
             {
-                client.permissions.Add(Permissions.Kick);
+                client.Send(NetUtil.PacketType.MESSG, "User does not exist in the user database");
+                return true;
             }
-            if (command[1] == "ban")
+
+            List<Permissions> permissions = Server.Instance.DatabaseLink.GetUserPermissions()[command[1]];
+
+
+            if (command[2] == "admin")
             {
-                client.permissions.Add(Permissions.Ban);
+                permissions.Add(Permissions.Admin);
             }
-            Server.Instance.DatabaseLink.SetUserPermissions(client.username, client.permissions);
+            if (command[2] == "kick")
+            {
+                permissions.Add(Permissions.Kick);
+            }
+            if (command[2] == "ban")
+            {
+                permissions.Add(Permissions.Ban);
+            }
+            Server.Instance.DatabaseLink.SetUserPermissions(command[1], permissions);
+            foreach (var client2 in Server.Instance.clients)
+            {
+                if (client2.username == command[1])
+                {
+                    client = client2;
+                }
+            }
+            client.permissions = permissions
             return true;
         }
 

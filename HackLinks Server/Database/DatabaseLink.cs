@@ -289,6 +289,10 @@ namespace HackLinks_Server.Database
                         {
                             permissions.Add(Permissions.Ban);
                         }
+                        if (permissionsString.Contains("giveperms"))
+                        {
+                            permissions.Add(Permissions.Ban);
+                        }
                         permissionsDictionary.Add(reader.GetString("username"), permissions);
                     }
                 }
@@ -300,12 +304,47 @@ namespace HackLinks_Server.Database
         public void SetUserPermissions(string user, List<Permissions> permissions)
         {
             string permissionsString = "";
+            bool firstItem = true;
             if (permissions.Contains(Permissions.Admin))
-                permissionsString = "admin";
+            {
+                if (firstItem)
+                {
+                    permissionsString = "admin";
+                    firstItem = false;
+                }
+                else
+                    permissionsString = permissionsString + ",admin";
+            }
             if (permissions.Contains(Permissions.Kick))
-                permissionsString = permissionsString + ",kick";
+            {
+                if (firstItem)
+                {
+                    permissionsString = "kick";
+                    firstItem = false;
+                }
+                else
+                    permissionsString = permissionsString + ",kick";
+            }
             if (permissions.Contains(Permissions.Ban))
-                permissionsString = permissionsString + ",ban";
+            {
+                if (firstItem)
+                {
+                    permissionsString = "ban";
+                    firstItem = false;
+                }
+                else
+                    permissionsString = permissionsString + ",ban";
+            }
+            if (permissions.Contains(Permissions.GivePerms))
+            {
+                if (firstItem)
+                {
+                    permissionsString = "giveperms";
+                    firstItem = false;
+                }
+                else
+                    permissionsString = permissionsString + ",giveperms";
+            }
 
             using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
             {

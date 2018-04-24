@@ -11,6 +11,7 @@ namespace HackLinks_Server
         Admin,
         Ban,
         Kick,
+        GivePerms,
         CreateFile,
         CreateFolder,
         CreateComputer
