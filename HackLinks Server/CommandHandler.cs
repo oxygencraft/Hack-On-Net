@@ -36,7 +36,9 @@ namespace HackLinks_Server
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
             { "trace", new Tuple<string, Command>("trace [over/start]\n    DEBUG COMMAND", TraceDebug) },
             { "giveperms", new Tuple<string, Command>("giveperms [admin/kick/ban/]\n    DEBUG COMMAND", GivePermissions) },
-            { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) }
+            { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) },
+            { "ban", new Tuple<string, Command>("ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]\n    Bans user for a specified amount of time", Ban) },
+            { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) }
         };
 
         public static bool TreatCommand(GameClient client, string command)
@@ -778,6 +780,12 @@ namespace HackLinks_Server
             if (client.permissions.Contains(Permissions.Admin) == false && client.permissions.Contains(Permissions.Kick) == false)
             {
                 client.Send(NetUtil.PacketType.MESSG, "Insufficent Privileges");
+                return true;
+            }
+            if (command.Length < 2)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: kick [username]");
+                return true;
             }
             GameClient targetClient = null;
             foreach (var client2 in Server.Instance.clients)
@@ -792,19 +800,51 @@ namespace HackLinks_Server
             if (targetClient == null)
             {
                 client.Send(NetUtil.PacketType.MESSG, "The player isn't in the server");
+                return true;
             }
 
-            try
-            {
-                //targetClient.Send(NetUtil.PacketType.DSCON, "You have been kicked from the server"); // Don't have long until I had to go so I just left it out for now
-                // It's supposed to notify the kicked user that they were kicked instead of displaying connection lost but I changed it to connection lost or kicked for now
-                targetClient.netDisconnect();
-            }
-            catch(Exception e)
-            {
-                client.Send(NetUtil.PacketType.MESSG, e.ToString());
-            }
+            targetClient.Send(NetUtil.PacketType.DSCON, "You have been kicked from the server");
+            targetClient.netDisconnect();
 
+            return true;
+        }
+
+        public static bool Ban(GameClient client, string[] commandUnsplit)
+        {
+            List<string> command = new List<string>();
+            command.Add("ban");
+            command.AddRange(commandUnsplit[1].Split());
+
+            if (client.permissions.Contains(Permissions.Admin) == false && client.permissions.Contains(Permissions.Ban) == false)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Insufficent Privileges");
+                return true;
+            }
+            if (command.Count < 3)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]");
+                return true;
+            }
+            if (command.Count < 4)
+            {
+                Server.Instance.DatabaseLink.SetUserBanStatus(command[1], 0, false, command[3] == "t" ? true : false);
+                return true;
+            }
+            int days = Convert.ToInt32(command[4]);
+            int hours = command.Count <= 6 ? Convert.ToInt32(command[5]) : 0;
+            int minutes = command.Count <= 7 ? Convert.ToInt32(command[6]) : 0;
+            days = days * 86400;
+            hours = hours * 3600;
+            minutes = minutes * 60;
+            int banExpiry = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds() + days + hours + minutes;
+            
+            Server.Instance.DatabaseLink.SetUserBanStatus(command[1], banExpiry, false, false);
+            return true;
+        }
+
+        public static bool Unban(GameClient client, string[] command)
+        {
+            Server.Instance.DatabaseLink.SetUserBanStatus(command[1], 0, true, false);
             return true;
         }
     }

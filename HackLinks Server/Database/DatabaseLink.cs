@@ -140,6 +140,163 @@ namespace HackLinks_Server.Database
             return correctUser;
         }
 
+        public Dictionary<int, string> GetUsersInDatabase()
+        {
+            Dictionary<int, string> users = new Dictionary<int, string>();
+
+            using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand command = new MySqlCommand("SELECT id, username FROM accounts", conn);
+
+                using (MySqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        users.Add(reader.GetInt32("id"), reader.GetString("username"));
+                    }
+                }
+            }
+
+            return users;
+        }
+
+        public bool SetUserBanStatus(string user, int banExpiry, bool unban, bool permBan)
+        {
+            List<string> users = GetUsersInDatabase().Values.ToList();
+            int userIndex = users.Count + 1; // The list is in inverted order for some reason idk of which is why we're subtracting from element count
+
+            if (users.Contains(user) == false)
+                return false;
+            foreach (var user2 in users)
+            {
+                userIndex--;
+                if (user2 == user)
+                    break;
+            }
+            GameClient client = null;
+            foreach (var client2 in Server.Instance.clients)
+            {
+                if (client2.username == user)
+                {
+                    client = client2;
+                    break;
+                }
+            }
+            try
+            {
+                client.Send(HackLinksCommon.NetUtil.PacketType.DSCON, "You have been banned from the server");
+                client.netDisconnect();
+            }
+            catch (Exception) { }
+
+            using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand command = new MySqlCommand($"UPDATE accounts SET banned = {banExpiry} WHERE id = {userIndex}", conn);
+                if (unban)
+                {
+                    command.CommandText = $"UPDATE accounts SET banned = NULL, permBan = 0 WHERE id = {userIndex}";
+                    command.ExecuteNonQuery();
+                    return true;
+                }
+                if (permBan)
+                {
+                    command.CommandText = $"UPDATE accounts SET permBan = 1 WHERE id = {userIndex}";
+                    command.ExecuteNonQuery();
+                    return true;
+                }
+                command.ExecuteNonQuery();
+                return true;
+            }
+        }
+
+        public bool CheckUserBanStatus(string user, out int banExpiry)
+        {
+            Dictionary<string, int> bans = new Dictionary<string, int>();
+            Dictionary<string, bool> permBans = new Dictionary<string, bool>();
+
+            using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand command = new MySqlCommand("SELECT username, banned, permBan FROM accounts", conn);
+                using (MySqlDataReader reader =  command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.IsDBNull(1))
+                        {
+                            if (reader.GetBoolean("permBan"))
+                                permBans.Add(reader.GetString("username"), true);
+                            continue;
+                        }
+                        bans.Add(reader.GetString("username"), reader.GetInt32("banned"));
+                        permBans.Add(reader.GetString("username"), reader.GetBoolean("permBan"));
+                    }
+                }
+            }
+
+            try
+            {
+                if (permBans[user])
+                {
+                    banExpiry = 0;
+                    return true;
+                }
+            }
+            catch (Exception) { }
+
+            try
+            {
+                if (bans[user] > DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+                {
+                    banExpiry = bans[user];
+                    return true;
+                }
+                if (bans[user] <= DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+                    SetUserBanStatus(user, 0, true, false);
+            }
+            catch (Exception) { }
+
+            banExpiry = 0;
+            return false;
+        }
+
+        public Dictionary<string, List<Permissions>> GetUserPermissions()
+        {
+            Dictionary<string, List<Permissions>> permissionsDictionary = new Dictionary<string, List<Permissions>>();
+
+            using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand command = new MySqlCommand("SELECT username, permissions FROM accounts", conn);
+
+                using (MySqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        List<Permissions> permissions = new List<Permissions>();
+                        string[] permissionsString = reader.GetString("permissions").Split(',');
+                        if (permissionsString.Contains("admin"))
+                        {
+                            permissions.Add(Permissions.Admin);
+                        }
+                        if (permissionsString.Contains("kick"))
+                        {
+                            permissions.Add(Permissions.Kick);
+                        }
+                        if (permissionsString.Contains("ban"))
+                        {
+                            permissions.Add(Permissions.Ban);
+                        }
+                        permissionsDictionary.Add(reader.GetString("username"), permissions);
+                    }
+                }
+            }
+
+            return permissionsDictionary;
+        }
+
         public static IEnumerable<T> Traverse<T>(IEnumerable<T> items,
         Func<T, IEnumerable<T>> childSelector)
         {
