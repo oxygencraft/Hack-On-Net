@@ -16,7 +16,7 @@ namespace HackLinks_Server.Database
             "CREATE TABLE `accounts` (" +
             " `id` int(11) NOT NULL AUTO_INCREMENT," +
             " `username` varchar(64) NOT NULL," +
-            " `pass` char(40) DEFAULT NULL," +
+            " `pass` text DEFAULT NULL," +
             " `mailaddress` varchar(64) DEFAULT NULL," +
             " `homeComputer` int(11) DEFAULT NULL," +
             " PRIMARY KEY (`id`)," +

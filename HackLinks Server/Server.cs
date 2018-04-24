@@ -81,7 +81,10 @@ namespace HackLinks_Server
                         var homeNode = computerManager.GetNodeById(homeId);
                         var ip = "none";
                         if (homeNode != null)
+                        {
                             ip = homeNode.ip;
+                            client.homeComputer = homeNode;
+                        }
                         client.Send(PacketType.START, ip);
                     }
                     else
