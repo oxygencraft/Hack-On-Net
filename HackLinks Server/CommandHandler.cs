@@ -772,6 +772,7 @@ namespace HackLinks_Server
             {
                 client.permissions.Add(Permissions.Ban);
             }
+            Server.Instance.DatabaseLink.SetUserPermissions(client.username, client.permissions);
             return true;
         }
 
@@ -837,8 +838,9 @@ namespace HackLinks_Server
             hours = hours * 3600;
             minutes = minutes * 60;
             int banExpiry = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds() + days + hours + minutes;
-            
-            Server.Instance.DatabaseLink.SetUserBanStatus(command[1], banExpiry, false, false);
+
+            if (!Server.Instance.DatabaseLink.SetUserBanStatus(command[1], banExpiry, false, false))
+                client.Send(NetUtil.PacketType.MESSG, "The user does not exist in the user database");
             return true;
         }
 

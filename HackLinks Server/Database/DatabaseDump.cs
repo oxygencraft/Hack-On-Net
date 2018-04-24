@@ -19,6 +19,7 @@ namespace HackLinks_Server.Database
             " `pass` char(40) DEFAULT NULL," +
             " `mailaddress` varchar(64) DEFAULT NULL," +
             " `homeComputer` int(11) DEFAULT NULL," +
+            " `permissions TEXT NOT NULL`" +
             " `banned` INT DEFAULT NULL" +
             " `permBanned` BOOLEAN NOT NULL DEFAULT FALSE" +
             " PRIMARY KEY (`id`)," +

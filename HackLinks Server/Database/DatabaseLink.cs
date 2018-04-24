@@ -297,6 +297,24 @@ namespace HackLinks_Server.Database
             return permissionsDictionary;
         }
 
+        public void SetUserPermissions(string user, List<Permissions> permissions)
+        {
+            string permissionsString = "";
+            if (permissions.Contains(Permissions.Admin))
+                permissionsString = "admin";
+            if (permissions.Contains(Permissions.Kick))
+                permissionsString = permissionsString + ",kick";
+            if (permissions.Contains(Permissions.Ban))
+                permissionsString = permissionsString + ",ban";
+
+            using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand command = new MySqlCommand($"UPDATE accounts SET permissions = {permissions} WHERE username = {user}", conn);
+                command.ExecuteNonQuery();
+            }
+        }
+
         public static IEnumerable<T> Traverse<T>(IEnumerable<T> items,
         Func<T, IEnumerable<T>> childSelector)
         {
