@@ -798,7 +798,7 @@ namespace HackLinks_Server
                     client = client2;
                 }
             }
-            client.permissions = permissions
+            client.permissions = permissions;
             return true;
         }
 
