@@ -231,7 +231,7 @@ namespace HackLinks_Server.Database
                             continue;
                         }
                         bans.Add(reader.GetString("username"), reader.GetInt32("banned"));
-                        permBans.Add(reader.GetString("username"), reader.GetBoolean("permBan"));
+                        permBans.Add(reader.GetString("username"), reader.GetBoolean("permBanned"));
                     }
                 }
             }
