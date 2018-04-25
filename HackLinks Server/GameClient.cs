@@ -118,6 +118,7 @@ namespace HackLinks_Server
             catch(Exception ex)
             {
                 Console.WriteLine(ex.ToString());
+                Send(PacketType.DSCON, "An exception occured: " + ex.ToString());
                 netDisconnect();
             }
         }

@@ -202,13 +202,5 @@ namespace HackLinks_Server
 
             Server.Instance.AddClient(handler);
         }
-
-        public static void AcceptCmdInput(byte[] commandBytes)
-        {
-            string command = Encoding.ASCII.GetString(commandBytes);
-
-            Console.WriteLine("There are no commands yet, they are still to be implemented");
-        }
-
     }
 }

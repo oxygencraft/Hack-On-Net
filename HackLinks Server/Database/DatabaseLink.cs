@@ -349,7 +349,7 @@ namespace HackLinks_Server.Database
             using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
             {
                 conn.Open();
-                MySqlCommand command = new MySqlCommand($"UPDATE accounts SET permissions = {permissions} WHERE username = {user}", conn);
+                MySqlCommand command = new MySqlCommand($"UPDATE accounts SET permissions = '{permissionsString}' WHERE '{user}' = `username`", conn);
                 command.ExecuteNonQuery();
             }
         }
