@@ -20,9 +20,10 @@ namespace HackOnNet.GUI
     {
         public enum MenuState { OG_MENU, MAIN_MENU, LOGIN }
 
-        public enum LoginState { MENU, LOGGED_IN, INVALID, UNAVAILABLE, LOGGED, LOGGING_IN }
+        public enum LoginState { MENU, LOGGED_IN, INVALID, UNAVAILABLE, LOGGED, LOGGING_IN, SERVER_REJECTED }
 
         public static LoginState loginState = LoginState.MENU;
+        public static string serverRejectReason = "";
         private static MenuState currentState = MenuState.OG_MENU;
 
         private static Color CancelColor = new Color(125, 82, 82);
@@ -260,6 +261,12 @@ namespace HackOnNet.GUI
             else if (loginState == LoginState.UNAVAILABLE)
             {
                 loginMessage = "The server is unavailable.";
+            }
+            else if (loginState == LoginState.SERVER_REJECTED)
+            {
+                string reason = string.IsNullOrWhiteSpace(serverRejectReason) ? "Server did not provide reason for rejection" : serverRejectReason;
+                loginMessage = "The server rejected the connection: " + reason;
+                serverRejectReason = "";
             }
 
             loginState = LoginState.MENU;

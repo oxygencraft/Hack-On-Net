@@ -30,6 +30,7 @@ namespace HackOnNet.Net
             new ManualResetEvent(false);
 
         private static String response = String.Empty;
+        private static bool disconnectHandled = false;
 
         public UserScreen userScreen;
 
@@ -51,14 +52,18 @@ namespace HackOnNet.Net
                 }
             }
             connectDone.Set();
-            Disconnect(isInGame);
+            Disconnect(isInGame, "Connection Lost");
         }
 
-        public void Disconnect(bool isInGame)
+        public void Disconnect(bool isInGame, string reason)
         {
-            clientSocket.Close();
-            if(isInGame)
-                userScreen.quitGame(this, "Connection Lost or you were kicked from the server");
+            if (!disconnectHandled)
+            {
+                reason = string.IsNullOrWhiteSpace(reason) ? "The server or client did not provide a reason for disconnection" : reason;
+                clientSocket.Close();
+                if (isInGame)
+                    userScreen.quitGame(this, reason);
+            }
         }
 
         public void Init()
@@ -206,6 +211,12 @@ namespace HackOnNet.Net
                             MainMenu.loginState = MainMenu.LoginState.LOGGED;
                         else if (messages[0] == "1") // LOGRE:1 = Invalid account
                             MainMenu.loginState = MainMenu.LoginState.INVALID;
+                        else if (messages[0] == "2") // LOGRE:2 = The server rejected your connection for some reason (ban?)
+                        {
+                            if (string.IsNullOrWhiteSpace(messages[1]) == false)
+                                MainMenu.serverRejectReason = messages[1];
+                            MainMenu.loginState = MainMenu.LoginState.SERVER_REJECTED;
+                        } 
                     }
                     break;
                 case NetUtil.PacketType.START:
@@ -215,6 +226,10 @@ namespace HackOnNet.Net
                     break;
                 case NetUtil.PacketType.FX:
                     userScreen.HandleFX(messages);
+                    break;
+                case NetUtil.PacketType.DSCON:
+                    Disconnect(true, messages[0]);
+                    disconnectHandled = true;
                     break;
                 default:
                     throw new InvalidOperationException($"Netmanager attempted treat message with invalid type { type.ToString() }");

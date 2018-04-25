@@ -35,8 +35,10 @@ namespace HackLinks_Server
             { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
             { "trace", new Tuple<string, Command>("trace [over/start]\n    DEBUG COMMAND", TraceDebug) },
-            { "giveperms", new Tuple<string, Command>("giveperms [admin/kick/ban/]\n    DEBUG COMMAND", GivePermissions) },
-            { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) }
+            { "giveperms", new Tuple<string, Command>("giveperms [username] [admin/kick/ban/giveperms]\n    Gives user permissions", GivePermissions) },
+            { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) },
+            { "ban", new Tuple<string, Command>("ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]\n    Bans user for a specified amount of time", Ban) },
+            { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) }
         };
 
         public static bool TreatCommand(GameClient client, string command)
@@ -756,20 +758,56 @@ namespace HackLinks_Server
             return true;
         }
 
-        public static bool GivePermissions(GameClient client, string[] command)
+        public static bool GivePermissions(GameClient client, string[] commandUnsplit)
         {
-            if (command[1] == "admin")
+            if (client.permissions.Contains(Permissions.Admin) == false && client.permissions.Contains(Permissions.GivePerms) == false)
             {
-                client.permissions.Add(Permissions.Admin);
+                client.Send(NetUtil.PacketType.MESSG, "Insufficent Privileges");
+                return true;
             }
-            if (command[1] == "kick")
+
+            List<string> command = new List<string>();
+            command.Add("giveperms");
+            command.AddRange(commandUnsplit[1].Split(' '));
+            if (command.Count < 3)
             {
-                client.permissions.Add(Permissions.Kick);
+                client.Send(NetUtil.PacketType.MESSG, "Usage: giveperms [username] [admin/kick/ban/giveperms]");
+                return true;
             }
-            if (command[1] == "ban")
+            if (!Server.Instance.DatabaseLink.GetUsersInDatabase().ContainsValue(command[1]))
             {
-                client.permissions.Add(Permissions.Ban);
+                client.Send(NetUtil.PacketType.MESSG, "User does not exist in the user database");
+                return true;
             }
+
+            List<Permissions> permissions = Server.Instance.DatabaseLink.GetUserPermissions()[command[1]];
+
+
+            if (command[2] == "admin")
+            {
+                permissions.Add(Permissions.Admin);
+            }
+            if (command[2] == "kick")
+            {
+                permissions.Add(Permissions.Kick);
+            }
+            if (command[2] == "ban")
+            {
+                permissions.Add(Permissions.Ban);
+            }
+            if (command[2] == "giveperms")
+            {
+                permissions.Add(Permissions.GivePerms);
+            }
+            Server.Instance.DatabaseLink.SetUserPermissions(command[1], permissions);
+            foreach (var client2 in Server.Instance.clients)
+            {
+                if (client2.username == command[1])
+                {
+                    client = client2;
+                }
+            }
+            client.permissions = permissions;
             return true;
         }
 
@@ -778,6 +816,12 @@ namespace HackLinks_Server
             if (client.permissions.Contains(Permissions.Admin) == false && client.permissions.Contains(Permissions.Kick) == false)
             {
                 client.Send(NetUtil.PacketType.MESSG, "Insufficent Privileges");
+                return true;
+            }
+            if (command.Length < 2)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: kick [username]");
+                return true;
             }
             GameClient targetClient = null;
             foreach (var client2 in Server.Instance.clients)
@@ -792,19 +836,52 @@ namespace HackLinks_Server
             if (targetClient == null)
             {
                 client.Send(NetUtil.PacketType.MESSG, "The player isn't in the server");
+                return true;
             }
 
-            try
-            {
-                //targetClient.Send(NetUtil.PacketType.DSCON, "You have been kicked from the server"); // Don't have long until I had to go so I just left it out for now
-                // It's supposed to notify the kicked user that they were kicked instead of displaying connection lost but I changed it to connection lost or kicked for now
-                targetClient.netDisconnect();
-            }
-            catch(Exception e)
-            {
-                client.Send(NetUtil.PacketType.MESSG, e.ToString());
-            }
+            targetClient.Send(NetUtil.PacketType.DSCON, "You have been kicked from the server");
+            targetClient.netDisconnect();
 
+            return true;
+        }
+
+        public static bool Ban(GameClient client, string[] commandUnsplit)
+        {
+            List<string> command = new List<string>();
+            command.Add("ban");
+            command.AddRange(commandUnsplit[1].Split());
+
+            if (client.permissions.Contains(Permissions.Admin) == false && client.permissions.Contains(Permissions.Ban) == false)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Insufficent Privileges");
+                return true;
+            }
+            if (command.Count < 3)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]");
+                return true;
+            }
+            if (command.Count < 4)
+            {
+                Server.Instance.DatabaseLink.SetUserBanStatus(command[1], 0, false, command[3] == "t" ? true : false);
+                return true;
+            }
+            int days = Convert.ToInt32(command[4]);
+            int hours = command.Count <= 6 ? Convert.ToInt32(command[5]) : 0;
+            int minutes = command.Count <= 7 ? Convert.ToInt32(command[6]) : 0;
+            days = days * 86400;
+            hours = hours * 3600;
+            minutes = minutes * 60;
+            int banExpiry = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds() + days + hours + minutes;
+
+            if (!Server.Instance.DatabaseLink.SetUserBanStatus(command[1], banExpiry, false, false))
+                client.Send(NetUtil.PacketType.MESSG, "The user does not exist in the user database");
+            return true;
+        }
+
+        public static bool Unban(GameClient client, string[] command)
+        {
+            Server.Instance.DatabaseLink.SetUserBanStatus(command[1], 0, true, false);
             return true;
         }
     }

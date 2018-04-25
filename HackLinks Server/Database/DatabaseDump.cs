@@ -19,6 +19,9 @@ namespace HackLinks_Server.Database
             " `pass` text DEFAULT NULL," +
             " `mailaddress` varchar(64) DEFAULT NULL," +
             " `homeComputer` int(11) DEFAULT NULL," +
+            " `permissions TEXT NOT NULL`" +
+            " `banned` INT DEFAULT NULL" +
+            " `permBanned` BOOLEAN NOT NULL DEFAULT FALSE" +
             " PRIMARY KEY (`id`)," +
             " UNIQUE KEY `username` (`username`)," +
             " UNIQUE KEY `mailaddress` (`mailaddress`)" +
@@ -28,7 +31,7 @@ namespace HackLinks_Server.Database
             //
             "LOCK TABLES `accounts` WRITE",
             "/*!40000 ALTER TABLE `accounts` DISABLE KEYS */",
-            "INSERT INTO `accounts` VALUES (1,'test','e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855','test@hnmp.net',1)",
+            "INSERT INTO `accounts` VALUES (1,'test','e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855','test@hnmp.net',1,'admin')",
             "/*!40000 ALTER TABLE `accounts` ENABLE KEYS */",
             "UNLOCK TABLES",
             "/*!40101 SET character_set_client = @saved_cs_client */",

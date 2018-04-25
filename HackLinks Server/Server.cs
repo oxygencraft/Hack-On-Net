@@ -73,10 +73,23 @@ namespace HackLinks_Server
 
                     string tempUsername = messages[0];
                     string tempPass = messages[1];
+                    int banExpiry;
 
                     if (DatabaseLink.TryLogin(client, tempUsername, tempPass, out int homeId))
                     {
                         client.username = tempUsername;
+                        if (DatabaseLink.CheckUserBanStatus(client.username, out banExpiry))
+                        {
+                            if (banExpiry == 0)
+                            {
+                                client.Send(PacketType.LOGRE, "2", "You have been banned permanently");
+                                client.Disconnect();
+                                break;
+                            }
+                            client.Send(PacketType.LOGRE, "2", $"You have been banned until {DateTimeOffset.FromUnixTimeSeconds(banExpiry).ToString()} UTC");
+                            client.Disconnect();
+                            break;
+                        }
                         client.Send(PacketType.LOGRE, "0"); // Good account*/
                         var homeNode = computerManager.GetNodeById(homeId);
                         var ip = "none";
@@ -85,6 +98,7 @@ namespace HackLinks_Server
                             ip = homeNode.ip;
                             client.homeComputer = homeNode;
                         }
+                        client.permissions = DatabaseLink.GetUserPermissions()[client.username];
                         client.Send(PacketType.START, ip);
                     }
                     else
