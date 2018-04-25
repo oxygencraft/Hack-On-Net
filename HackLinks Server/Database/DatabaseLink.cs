@@ -226,7 +226,7 @@ namespace HackLinks_Server.Database
                     {
                         if (reader.IsDBNull(1))
                         {
-                            if (reader.GetBoolean("permBan"))
+                            if (reader.GetBoolean("permBanned"))
                                 permBans.Add(reader.GetString("username"), true);
                             continue;
                         }
