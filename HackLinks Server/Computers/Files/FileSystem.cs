@@ -30,5 +30,10 @@ namespace HackLinks_Server.Computers.Files
         {
             return File.CreateNewFile(id, fileSystemManager, computer, parent, fileName);
         }
+
+        public File CreateFolder(Node computer, File parent, string fileName)
+        {
+            return File.CreateNewFolder(fileSystemManager, computer, parent, fileName);
+        }
     }
 }

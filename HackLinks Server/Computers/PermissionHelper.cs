@@ -119,9 +119,12 @@ namespace HackLinks_Server.Computers.Permissions
                     output.Append(", ");
                 }
                 output.Append("U=");
-                if ((permissions.Owner & (int) FilePermissions.Permission.Read) == (int) FilePermissions.Permission.Read) output.Append('R');
+                if ((permissions.Owner & (int)FilePermissions.Permission.Read) == (int)FilePermissions.Permission.Read) output.Append('R');
+                else output.Append('-');
                 if ((permissions.Owner & (int) FilePermissions.Permission.Write) == (int) FilePermissions.Permission.Write) output.Append('W');
+                else output.Append('-');
                 if ((permissions.Owner & (int) FilePermissions.Permission.Execute) == (int) FilePermissions.Permission.Execute) output.Append('X');
+                else output.Append('-');
             }
 
             if (permissions.Group != (int)FilePermissions.Permission.None)
@@ -132,8 +135,11 @@ namespace HackLinks_Server.Computers.Permissions
                 }
                 output.Append("G=");
                 if ((permissions.Group & (int)FilePermissions.Permission.Read) == (int)FilePermissions.Permission.Read) output.Append('R');
+                else output.Append('-');
                 if ((permissions.Group & (int)FilePermissions.Permission.Write) == (int)FilePermissions.Permission.Write) output.Append('W');
+                else output.Append('-');
                 if ((permissions.Group & (int)FilePermissions.Permission.Execute) == (int)FilePermissions.Permission.Execute) output.Append('X');
+                else output.Append('-');
             }
 
             if (permissions.Others != (int)FilePermissions.Permission.None)
@@ -144,8 +150,11 @@ namespace HackLinks_Server.Computers.Permissions
                 }
                 output.Append("O=");
                 if ((permissions.Others & (int)FilePermissions.Permission.Read) == (int)FilePermissions.Permission.Read) output.Append('R');
+                else output.Append('-');
                 if ((permissions.Others & (int)FilePermissions.Permission.Write) == (int)FilePermissions.Permission.Write) output.Append('W');
+                else output.Append('-');
                 if ((permissions.Others & (int)FilePermissions.Permission.Execute) == (int)FilePermissions.Permission.Execute) output.Append('X');
+                else output.Append('-');
             }
 
             return output.ToString();
