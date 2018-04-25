@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using HackLinks_Server.Computers.Processes;
 
 namespace HackLinks_Server.Computers.Permissions
 {
@@ -105,6 +106,28 @@ namespace HackLinks_Server.Computers.Permissions
                 return true;
             }
 
+            return false;
+        }
+
+        public static bool CheckCredentials(Credentials credentials, int UserId, Group targetGroup)
+        {
+            if(credentials.UserId == UserId)
+            {
+                return CheckCredentials(credentials, targetGroup);
+            }
+            return false;
+        }
+
+        public static bool CheckCredentials(Credentials credentials, Group targetGroup)
+        {
+            if (credentials.Group.Equals(targetGroup))
+            {
+                return true;
+            }
+            else if (credentials.Groups.Contains(targetGroup))
+            {
+                return true;
+            }
             return false;
         }
 

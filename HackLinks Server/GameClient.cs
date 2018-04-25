@@ -1,5 +1,6 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -49,13 +50,11 @@ namespace HackLinks_Server
             Send(PacketType.KERNL, "connect", "succ", node.ip, "3");
             if (node == homeComputer)
             {
-                activeSession = new Session(this, node);
-
-                activeSession.Login(Group.ROOT, username);
+                activeSession = new Session(this, node, new HASH(node.NextPID, 0, input => Send(PacketType.MESSG, input), node, new Credentials(node.GetUserId("root"), Group.ROOT)));
             }
             else
             {
-                activeSession = new Session(this, node);
+                activeSession = new Session(this, node, new HASH(node.NextPID, 0, input => Send(PacketType.MESSG, input), node, new Credentials(node.GetUserId("guest"), Group.GUEST)));
             }
         }
 

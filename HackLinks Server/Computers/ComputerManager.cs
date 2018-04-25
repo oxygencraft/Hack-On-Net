@@ -41,7 +41,9 @@ namespace HackLinks_Server.Computers
                     var daemonFile = daemonsFolder.GetFile(line);
                     if (daemonFile == null)
                         continue;
-                    if (daemonFile.Type != File.FileType.DAEMON)
+                    if (daemonFile.OwnerId != 0 || daemonFile.Group != Group.ROOT)
+                        continue;
+                    if (daemonFile.HasExecutePermission(0, Group.ROOT))
                         continue;
                     node.LaunchDaemon(daemonFile);
                 }

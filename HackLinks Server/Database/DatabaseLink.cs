@@ -77,7 +77,7 @@ namespace HackLinks_Server.Database
                                             newFile.isFolder = fileType == 1;
 
                                             newFile.ParentId = fileReader.GetInt32(2);
-                                            newFile.OwnerUsername = fileReader.GetString(9);
+                                            newFile.OwnerId = fileReader.GetInt32(9);
                                             newFile.Group = (Group)fileReader.GetInt32(7);
                                             newFile.Permissions.PermissionValue = fileReader.GetInt32(8);
                                             newFile.Content = fileReader.GetString(5);
@@ -497,7 +497,7 @@ namespace HackLinks_Server.Database
                         new MySqlParameter("computerId", child.computerId),
                         new MySqlParameter("groupId", child.Group),
                         new MySqlParameter("permissions", child.Permissions.PermissionValue),
-                        new MySqlParameter("owner", child.OwnerUsername),
+                        new MySqlParameter("owner", child.OwnerId),
                     });
 
             int res = fileCommand.ExecuteNonQuery();

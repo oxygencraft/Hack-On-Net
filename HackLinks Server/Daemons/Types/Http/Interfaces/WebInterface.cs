@@ -50,7 +50,9 @@ namespace HackLinks_Server.Daemons.Types.Http.Interfaces
             var interfaceFile = pageFile.Parent.GetFile(interfaceFileName);
             if (interfaceFile == null)
                 return null;
-            if (interfaceFile.Type != File.FileType.EXE)
+            if (interfaceFile.Type != File.FileType.Regular)
+                return null;
+            if (interfaceFile.HasExecutePermission(0, Computers.Permissions.Group.ROOT))
                 return null;
             var lines = interfaceFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.None);
             string intId = lines[0];

@@ -62,10 +62,15 @@ namespace HackLinks_Server
             switch (type)
             {
                 case PacketType.COMND:
+                    //TODO fix cludge
+                    if(client.activeSession == null)
+                        client.ConnectTo(client.homeComputer);
                     if (client.status == GameClient.PlayerStatus.TERMINATED)
                         break;
-                    if (!CommandHandler.TreatCommand(client, messages[0]))
-                        client.Send(PacketType.OSMSG, "ERR:0"); // OSMSG:ERR:0 = La commande est introuvable
+                    //TODO fixup
+                    // if (!CommandHandler.TreatCommand(client, messages[0]))
+                    //    client.Send(PacketType.OSMSG, "ERR:0"); // OSMSG:ERR:0 = La commande est introuvable
+                    client.activeSession.WriteInput(messages[0]);
                     break;
                 case PacketType.LOGIN:
                     if (messages.Length < 2)

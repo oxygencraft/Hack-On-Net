@@ -61,7 +61,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandHandler.cs" />
+    <Compile Include="Computers\Processes\CommandProcess.cs" />
+    <Compile Include="Computers\Processes\Credentials.cs" />
+    <Compile Include="Computers\Processes\Hackybox.cs" />
+    <Compile Include="Computers\Processes\HASH.cs" />
+    <Compile Include="Computers\Processes\Process.cs" />
     <Compile Include="Computers\Groups.cs" />
     <Compile Include="Computers\FilePermissions.cs" />
     <Compile Include="Computers\ComputerManager.cs" />

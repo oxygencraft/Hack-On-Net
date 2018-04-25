@@ -1,5 +1,6 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 using HackLinks_Server.Daemons;
 using HackLinks_Server.Files;
 using System;
@@ -18,6 +19,8 @@ namespace HackLinks_Server
 
         public float traceUpdtCooldown = 0;
 
+        // TODO implement process for this
+        /*
         private SortedDictionary<string, Tuple<string, CommandHandler.Command>> sessionCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
         {
             { "daemon", new Tuple<string, CommandHandler.Command>("daemon [daemon name]\n    If it's available we'll launch the given daemon.", Daemon) },
@@ -45,29 +48,28 @@ namespace HackLinks_Server
                 }
             }
         }
+        */
 
         public GameClient owner;
         public Node connectedNode;
         public Daemon activeDaemon;
+        private Process attachedProcess;
 
-        public File activeDirectory;
-
-        public List<Group> Groups { get; private set; } = new List<Group>()
-        {
-            Group.GUEST,
-        };
-
-        public string currentUsername = "Guest";
         public int sessionId;
 
-        public Session(GameClient client, Node node)
+        public Session(GameClient client, Node node, Process process)
         {
             this.connectedNode = node;
-            this.activeDirectory = node.fileSystem.rootFile;
             this.owner = client;
             this.sessionId = GenerateSessionId(node);
+            this.attachedProcess = process;
             node.sessions.Add(this);
             SendNodeInfo();
+        }
+
+        public void WriteInput(string inputData)
+        {
+            attachedProcess.WriteInput(inputData);
         }
 
         public void SendNodeInfo()
@@ -82,24 +84,18 @@ namespace HackLinks_Server
             }
             owner.Send(PacketType.KERNL, daemonTx.ToArray());
         }
-
-        public void Login(Group level, string username)
+   
+        public void Login(List<Group> groups, string username)
         {
-            Login(new List<Group> {level}, username);
-        }
-
-        public void Login(List<Group> levels, string username)
-        {
-            if (levels.Contains(Group.INVALID))
+            if (groups.Contains(Group.INVALID))
             {
                 throw new InvalidOperationException($"Can't set user {username} to invalid group");
             }
 
-            Groups = levels;
-            currentUsername = username;
+
 
             Group highestGroup = Group.GUEST;
-            foreach(Group group in Groups)
+            foreach(Group group in groups)
             {
                 if(group < highestGroup)
                 {
@@ -109,14 +105,7 @@ namespace HackLinks_Server
             owner.Send(PacketType.KERNL, "login", ((int)highestGroup).ToString(), username);
         }
 
-        public bool HandleSessionCommand(GameClient client, string[] command)
-        {
-            if (Commands.ContainsKey(command[0]))
-                return Commands[command[0]].Item2(client, command);
-
-            return false;
-        }
-
+        // TODO relocate to process
         private static bool Daemon(GameClient client, string[] command)
         {
             Session activeSession = client.activeSession;
