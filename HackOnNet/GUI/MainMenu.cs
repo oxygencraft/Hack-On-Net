@@ -25,6 +25,7 @@ namespace HackOnNet.GUI
         public static LoginState loginState = LoginState.MENU;
         public static string serverRejectReason = "";
         private static MenuState currentState = MenuState.OG_MENU;
+        private static bool autoLoadLogin = false;
 
         private static Color CancelColor = new Color(125, 82, 82);
         private static string terminalString = "";
@@ -77,6 +78,19 @@ namespace HackOnNet.GUI
                 bMenu = e.MainMenu;
             if (currentState == MenuState.OG_MENU)
             {
+                string[] cmdArgs = Environment.GetCommandLineArgs();
+                if (cmdArgs.Contains("-hackonnet") && cmdArgs.Contains("-username") && cmdArgs.Contains("-password") && !autoLoadLogin)
+                {
+                    ResetForLogin();
+                    ChangeState(MenuState.LOGIN);
+                    MainMenu.StartGame(cmdArgs[3], cmdArgs[5]);
+                }
+                else if (cmdArgs.Contains("-hackonnet") && !autoLoadLogin)
+                {
+                    ResetForLogin();
+                    ChangeState(MenuState.LOGIN);
+                }
+                autoLoadLogin = true;
                 return;
             }
             e.IsCancelled = true;
