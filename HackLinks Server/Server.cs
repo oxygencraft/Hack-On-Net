@@ -95,6 +95,7 @@ namespace HackLinks_Server
                         var ip = "none";
                         if (homeNode != null)
                             ip = homeNode.ip;
+                        client.homeComputer = homeNode;
                         client.permissions = DatabaseLink.GetUserPermissions()[client.username];
                         client.Send(PacketType.START, ip);
                     }
