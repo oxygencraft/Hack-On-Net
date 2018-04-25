@@ -120,16 +120,33 @@ namespace HackOnNet.Modules
             return result;
         }
 
-        public void DiscoverNode(string ip)
+        public void DiscoverNode(string ip, bool updateDb)
         {
-            foreach(var node in nodeList)
+            Vector2 pos = generatePos();
+            foreach (var node in nodeList)
             {
                 if(node.ip == ip)
                 {
                     return;
                 }
             }
-            nodeList.Add(new NodeCircle(ip, generatePos()));
+            nodeList.Add(new NodeCircle(ip, pos));
+            if (updateDb)
+                userScreen.Execute("netmap " + ip + " " + pos.X.ToString() + " " + pos.Y.ToString());
+        }
+
+        public void DiscoverNode(string ip, Vector2 pos, bool updateDb)
+        {
+            foreach (var node in nodeList)
+            {
+                if (node.ip == ip)
+                {
+                    return;
+                }
+            }
+            nodeList.Add(new NodeCircle(ip, pos));
+            if (updateDb)
+                userScreen.Execute("netmap " + ip + " " + pos.X.ToString() + " " + pos.Y.ToString());
         }
 
         private Vector2 generatePos()

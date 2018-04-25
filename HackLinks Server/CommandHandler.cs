@@ -38,7 +38,8 @@ namespace HackLinks_Server
             { "giveperms", new Tuple<string, Command>("giveperms [username] [admin/kick/ban/giveperms]\n    Gives user permissions", GivePermissions) },
             { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) },
             { "ban", new Tuple<string, Command>("ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]\n    Bans user for a specified amount of time", Ban) },
-            { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) }
+            { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) },
+            { "netmap", new Tuple<string, Command>("netmap [ip] [x] [y]\n    Adds a node to the network map", Unban) }
         };
 
         public static bool TreatCommand(GameClient client, string command)
@@ -496,7 +497,10 @@ namespace HackLinks_Server
             }
             var connectingToNode = compManager.GetNodeByIp(resultIP ?? command[1]);
             if(connectingToNode != null)
+            {
                 client.ConnectTo(connectingToNode);
+                client.Send(NetUtil.PacketType.KERNL, "nmap");
+            }
             else
                 client.Send(NetUtil.PacketType.KERNL, "connect", "fail", "0");
             return true;
@@ -881,7 +885,26 @@ namespace HackLinks_Server
 
         public static bool Unban(GameClient client, string[] command)
         {
+            if (command.Length < 2)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: unban [username]");
+                return true;
+            }
             Server.Instance.DatabaseLink.SetUserBanStatus(command[1], 0, true, false);
+            return true;
+        }
+
+        public static bool AddToNetMap(GameClient client, string[] commandUnsplit)
+        {
+            List<string> command = new List<string>();
+            command.Add("netmap");
+            command.AddRange(commandUnsplit[1].Split());
+            if (command.Count < 4)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: netmap [ip] [x] [y]");
+                return true;
+            }
+            Server.Instance.DatabaseLink.AddUserNode(client.username, command[1], command[2] + "," + command[3]);
             return true;
         }
     }

@@ -378,7 +378,7 @@ namespace HackOnNet.Screens
                 }
                 int privilege;
                 int.TryParse(command[3], out privilege);
-                this.netMap.DiscoverNode(command[2]);
+                this.netMap.DiscoverNode(command[2], true);
                 string currentIP;
                 currentIP = command[2];
                 display.state = DisplayState.SSH_SESSION;
