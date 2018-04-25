@@ -122,6 +122,14 @@ namespace HackLinks_Server.Files
             return newFile;
         }
 
+        public static File CreateNewFolder(FileSystemManager manager, Node computer, File parent, string name)
+        {
+            File newFile = new File(manager.GetNewFileId(), computer, parent, name);
+            newFile.isFolder = true;
+            manager.RegisterNewFile(newFile);
+            return newFile;
+        }
+
         public bool HasExecutePermission(string username, Group priv)
         {
             return HasPermission(username, priv, true, false, false);

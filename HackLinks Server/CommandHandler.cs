@@ -720,10 +720,10 @@ namespace HackLinks_Server
                 return true;
             }
 
-            var file = session.connectedNode.fileSystem.CreateFile(client.activeSession.connectedNode, activeDirectory, command[1]);
+            var file = session.connectedNode.fileSystem.CreateFolder(client.activeSession.connectedNode, activeDirectory, command[1]);
             file.OwnerUsername = client.activeSession.currentUsername;
-            file.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, false);
-            file.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, false);
+            file.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
+            file.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
             file.Group = file.Parent.Group;
             return true;
         }
