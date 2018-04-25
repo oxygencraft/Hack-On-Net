@@ -35,7 +35,7 @@ namespace HackLinks_Server
             { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
             { "trace", new Tuple<string, Command>("trace [over/start]\n    DEBUG COMMAND", TraceDebug) },
-            { "giveperms", new Tuple<string, Command>("giveperms [username] [admin/kick/ban/]\n    Gives user permissions", GivePermissions) },
+            { "giveperms", new Tuple<string, Command>("giveperms [username] [admin/kick/ban]\n    Gives user permissions", GivePermissions) },
             { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) },
             { "ban", new Tuple<string, Command>("ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]\n    Bans user for a specified amount of time", Ban) },
             { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) }
@@ -768,7 +768,12 @@ namespace HackLinks_Server
 
             List<string> command = new List<string>();
             command.Add("giveperms");
-            command.AddRange(commandUnsplit[1].Split());
+            command.AddRange(commandUnsplit[1].Split(' '));
+            if (command.Count < 3)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: giveperms [username] [admin/kick/ban]");
+                return true;
+            }
             if (!Server.Instance.DatabaseLink.GetUsersInDatabase().ContainsValue(command[1]))
             {
                 client.Send(NetUtil.PacketType.MESSG, "User does not exist in the user database");
