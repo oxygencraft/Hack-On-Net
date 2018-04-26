@@ -270,7 +270,7 @@ namespace HackLinks_Server.Database
             using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
             {
                 conn.Open();
-                MySqlCommand command = new MySqlCommand("SELECT netmap FROM accounts", conn);
+                MySqlCommand command = new MySqlCommand($"SELECT `netmap` FROM `accounts` WHERE `username` = '{user}'", conn);
                 using (MySqlDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
@@ -283,7 +283,10 @@ namespace HackLinks_Server.Database
             foreach (var node in nodes)
             {
                 if (nodesString == "")
+                {
                     nodesString = node;
+                    continue;
+                }
                 nodesString = nodesString + "," + node;
             }
 

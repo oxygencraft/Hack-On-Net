@@ -39,7 +39,7 @@ namespace HackLinks_Server
             { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) },
             { "ban", new Tuple<string, Command>("ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]\n    Bans user for a specified amount of time", Ban) },
             { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) },
-            { "netmap", new Tuple<string, Command>("netmap [ip] [x] [y]\n    Adds a node to the network map", Unban) }
+            { "netmap", new Tuple<string, Command>("netmap [ip] [x] [y]\n    Adds a node to the network map", AddToNetMap) }
         };
 
         public static bool TreatCommand(GameClient client, string command)
@@ -904,7 +904,7 @@ namespace HackLinks_Server
                 client.Send(NetUtil.PacketType.MESSG, "Usage: netmap [ip] [x] [y]");
                 return true;
             }
-            Server.Instance.DatabaseLink.AddUserNode(client.username, command[1], command[2] + "," + command[3]);
+            Server.Instance.DatabaseLink.AddUserNode(client.username, command[1], command[2] + ":" + command[3]);
             return true;
         }
     }
