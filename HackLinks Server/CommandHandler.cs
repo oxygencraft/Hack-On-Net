@@ -497,10 +497,7 @@ namespace HackLinks_Server
             }
             var connectingToNode = compManager.GetNodeByIp(resultIP ?? command[1]);
             if(connectingToNode != null)
-            {
                 client.ConnectTo(connectingToNode);
-                client.Send(NetUtil.PacketType.KERNL, "nmap");
-            }
             else
                 client.Send(NetUtil.PacketType.KERNL, "connect", "fail", "0");
             return true;
