@@ -99,7 +99,7 @@ namespace HackLinks_Server
                             client.homeComputer = homeNode;
                         }
                         client.permissions = DatabaseLink.GetUserPermissions()[client.username];
-                        client.Send(PacketType.START, ip);
+                        client.Send(PacketType.START, ip, DatabaseLink.GetUserNodes(client.username));
                     }
                     else
                     {

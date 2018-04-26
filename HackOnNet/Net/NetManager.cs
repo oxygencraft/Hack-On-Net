@@ -221,6 +221,17 @@ namespace HackOnNet.Net
                     break;
                 case NetUtil.PacketType.START:
                     userScreen.homeIP = messages[0];
+                    try
+                    {
+                        string[] nodes = messages[1].Split(',');
+                        foreach (var node in nodes)
+                        {
+                            string[] ippos = node.Split(new char[] { ':' }, 2);
+                            string[] pos = ippos[1].Split(':');
+                             userScreen.netMap.DiscoverNode(ippos[0], new Microsoft.Xna.Framework.Vector2(float.Parse(pos[0]), float.Parse(pos[1])), false);
+                        }
+                    }
+                    catch (Exception e) { }
                     break;
                 case NetUtil.PacketType.OSMSG:
                     break;

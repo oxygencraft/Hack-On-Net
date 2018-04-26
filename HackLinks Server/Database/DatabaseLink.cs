@@ -262,6 +262,58 @@ namespace HackLinks_Server.Database
             return false;
         }
 
+        public string GetUserNodes(string user)
+        {
+            List<string> nodes = new List<string>();
+            string nodesString = "";
+
+            using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand command = new MySqlCommand($"SELECT `netmap` FROM `accounts` WHERE `username` = '{user}'", conn);
+                using (MySqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        nodes.Add(reader.GetString("netmap"));
+                    }
+                }
+            }
+
+            foreach (var node in nodes)
+            {
+                if (nodesString == "")
+                {
+                    nodesString = node;
+                    continue;
+                }
+                nodesString = nodesString + "," + node;
+            }
+
+            return nodesString;
+        }
+
+        public void AddUserNode(string user, string ip, string pos)
+        {
+            string nodes = GetUserNodes(user);
+
+            if (nodes == "")
+            {
+                nodes = ip + ":" + pos;
+            }
+            else
+            {
+                nodes = nodes + "," + ip + ":" + pos;
+            }
+
+            using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand command = new MySqlCommand($"UPDATE accounts SET netmap = '{nodes}' WHERE '{user}' = `username`", conn);
+                command.ExecuteNonQuery();
+            }
+        }
+
         public Dictionary<string, List<Permissions>> GetUserPermissions()
         {
             Dictionary<string, List<Permissions>> permissionsDictionary = new Dictionary<string, List<Permissions>>();

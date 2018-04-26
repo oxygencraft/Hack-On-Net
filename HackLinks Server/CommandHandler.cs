@@ -30,7 +30,7 @@ namespace HackLinks_Server
             { "mkdir", new Tuple<string, Command>("mkdir [dir]\n    Create the given directory if it doesn't already exist.", MkDir) },
             { "rm", new Tuple<string, Command>("rm [file]\n    Remove the given file.", Remove) },
             { "login", new Tuple<string, Command>("login [username] [password]\n    Login to the current connected system using the given username and password.", Login) },
-            { "chown", new Tuple<string, Command>("chmod [file] [username]\n    Change the required user level for read and write operations on the given file.", ChOwn) },
+            { "chown", new Tuple<string, Command>("chown [file] [username]\n    Change the required user level for read and write operations on the given file.", ChOwn) },
             { "chmod", new Tuple<string, Command>("chmod [mode] [file]\n    Change the required user level for read and write operations on the given file.\n", ChMod) },
             { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
@@ -38,7 +38,8 @@ namespace HackLinks_Server
             { "giveperms", new Tuple<string, Command>("giveperms [username] [admin/kick/ban/giveperms]\n    Gives user permissions", GivePermissions) },
             { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) },
             { "ban", new Tuple<string, Command>("ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]\n    Bans user for a specified amount of time", Ban) },
-            { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) }
+            { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) },
+            { "netmap", new Tuple<string, Command>("netmap [ip] [x] [y]\n    Adds a node to the network map", AddToNetMap) }
         };
 
         public static bool TreatCommand(GameClient client, string command)
@@ -881,7 +882,26 @@ namespace HackLinks_Server
 
         public static bool Unban(GameClient client, string[] command)
         {
+            if (command.Length < 2)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: unban [username]");
+                return true;
+            }
             Server.Instance.DatabaseLink.SetUserBanStatus(command[1], 0, true, false);
+            return true;
+        }
+
+        public static bool AddToNetMap(GameClient client, string[] commandUnsplit)
+        {
+            List<string> command = new List<string>();
+            command.Add("netmap");
+            command.AddRange(commandUnsplit[1].Split());
+            if (command.Count < 4)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: netmap [ip] [x] [y]");
+                return true;
+            }
+            Server.Instance.DatabaseLink.AddUserNode(client.username, command[1], command[2] + ":" + command[3]);
             return true;
         }
     }
