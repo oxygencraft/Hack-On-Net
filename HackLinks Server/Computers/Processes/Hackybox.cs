@@ -214,8 +214,8 @@ namespace HackLinks_Server.Computers.Processes
                 process.Print("Permission denied.");
                 return true;
             }
-            // TODO view
-            //client.Send(NetUtil.PacketType.KERNL, "state", "view", file.Name, file.Content);
+
+            process.computer.Kernel.Display(process, "view", file.Name, file.Content);
             return true;
         }
 
@@ -313,7 +313,6 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Permission denied. Only the current file owner may change file permissions.");
                         return true;
                     }
-                    //TODO get userid
                     file.OwnerId = process.computer.GetUserId(username);
                     string message;
                     if (group.HasValue)
@@ -386,8 +385,7 @@ namespace HackLinks_Server.Computers.Processes
                 process.Print("Usage : login [username] [password]");
                 return true;
             }
-            //TODO login
-            //process.computer.Login(client, args[0], args[1]);
+            process.computer.Kernel.Login(process, args[0], args[1]);
             return true;
         }
 
@@ -417,58 +415,25 @@ namespace HackLinks_Server.Computers.Processes
                 process.Print("Usage : command [ip]");
                 return true;
             }
-            //TODO connect
-            //if (client.activeSession != null)
-            //    client.activeSession.DisconnectSession();
-            //var compManager = client.server.GetComputerManager();
-            //string resultIP = null;
 
-            //if (client.homeComputer != null)
-            //{
-            //    if (command[1] == "localhost" || command[1] == "127.0.0.1")
-            //        resultIP = client.homeComputer.ip;
-            //    else
-            //    {
-            //        var DNSConfigFile = client.homeComputer.fileSystem.rootFile.GetFileAtPath("/cfg/dns.cfg");
-            //        if (DNSConfigFile != null)
-            //        {
-            //            foreach (string ip in DNSConfigFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
-            //            {
-            //                var DNSNode = compManager.GetNodeByIp(ip);
-            //                if (DNSNode == null)
-            //                    continue;
-            //                var daemon = (DNSDaemon)DNSNode.GetDaemon("dns");
-            //                if (daemon == null)
-            //                    continue;
-            //                resultIP = daemon.LookUp(command[1]);
-            //                if (resultIP != null)
-            //                    break;
-            //            }
-            //        }
-            //    }
-            //}
-            //var connectingToNode = compManager.GetNodeByIp(resultIP ?? command[1]);
-            //if (connectingToNode != null)
-            //    client.ConnectTo(connectingToNode);
-            //else
-            //    client.Send(NetUtil.PacketType.KERNL, "connect", "fail", "0");
+            process.computer.Kernel.Connect(process, command[1]);
+
             return true;
         }
 
         public static bool Disconnect(CommandProcess process, string[] command)
         {
-            //TODO disconnect
-            //client.Disconnect();
+            process.computer.Kernel.Disconnect(process);
 
             return true;
         }
 
         public static bool Ls(CommandProcess process, string[] command)
         {
-            var root = process.computer.fileSystem.rootFile;
+            File root = process.computer.fileSystem.rootFile;
             if (command.Length == 2)
             {
-                foreach (var file in process.ActiveDirectory.children)
+                foreach (File file in process.ActiveDirectory.children)
                 {
                     if (command[1] == file.Name)
                     {
@@ -481,7 +446,7 @@ namespace HackLinks_Server.Computers.Processes
             }
             else
             {
-                List<string> fileList = new List<string>(new string[] { "ls", process.ActiveDirectory.Name });
+                List<string> fileList = new List<string>(new string[] { process.ActiveDirectory.Name });
                 foreach (File file in process.ActiveDirectory.children)
                 {
                     if (file.HasReadPermission(process.Credentials))
@@ -492,11 +457,10 @@ namespace HackLinks_Server.Computers.Processes
                     }
                     else
                     {
-                        Console.WriteLine($"Group {process.Credentials.Groups} doesn't have permission for {file.Name} {file.Group} {file.Permissions.PermissionValue}");
+                        Console.WriteLine($"User {process.computer.GetUsername(process.Credentials.UserId)} doesn't have permission for {file.Name} {file.Group} {file.Permissions.PermissionValue}");
                     }
                 }
-                //TODO file list
-                //client.Send(NetUtil.PacketType.KERNL, fileList.ToArray());
+                process.computer.Kernel.LS(process, fileList.ToArray());
                 return true;
             }
         }
@@ -536,8 +500,7 @@ namespace HackLinks_Server.Computers.Processes
                         return true;
                     }
                     process.ActiveDirectory = file;
-                    //TODO send CD
-                    //client.Send(NetUtil.PacketType.KERNL, "cd", file.Name);
+                    process.computer.Kernel.CD(process, file.Name);
                     return true;
                 }
             }
@@ -585,20 +548,18 @@ namespace HackLinks_Server.Computers.Processes
                 process.Print("Usage : rm [fileName]");
             }
             var activeDirectory = process.ActiveDirectory;
-            foreach (var fileC in activeDirectory.children)
+            foreach (var file in activeDirectory.children)
             {
-                if (fileC.Name == command[1])
+                if (file.Name == command[1])
                 {
-                    if (!fileC.HasWritePermission(process.Credentials))
+                    if (!file.HasWritePermission(process.Credentials))
                     {
                         process.Print("Permission denied.");
                         return true;
                     }
                     process.Print("File " + command[1] + " removed.");
-                    fileC.RemoveFile();
-                
-                    //TODO add to delete
-                    //client.server.GetComputerManager().AddToDelete(fileC);
+
+                    process.computer.Kernel.RemoveFile(process, file);
                     return true;
                 }
             }
@@ -839,8 +800,7 @@ namespace HackLinks_Server.Computers.Processes
                 process.Print("Usage: music [file ((DLC\\)Music\\NameOfFile)] [playimmediately (0/1)]");
                 return true;
             }
-            //TODO kernel
-            //client.Send(NetUtil.PacketType.MUSIC, command[1], command[2]);
+            process.computer.Kernel.PlayMusic(process, command[1], command[2]);
             return true;
         }
     }

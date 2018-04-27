@@ -47,6 +47,8 @@ namespace HackLinks_Server.Computers.Processes
             Credentials = credentials;
 
             CurrentState = State.New;
+
+            computer.processes.Add(this);
         }
 
         /// <summary>

@@ -19,6 +19,11 @@ namespace HackLinks_Server
 
         public float traceUpdtCooldown = 0;
 
+        public GameClient owner;
+        public Node connectedNode;
+        public Daemon activeDaemon;
+        private Process attachedProcess;
+
         // TODO implement process for this
         /*
         private SortedDictionary<string, Tuple<string, CommandHandler.Command>> sessionCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
@@ -50,10 +55,10 @@ namespace HackLinks_Server
         }
         */
 
-        public GameClient owner;
-        public Node connectedNode;
-        public Daemon activeDaemon;
-        private Process attachedProcess;
+        public bool HasProcessId(long pid)
+        {
+            return attachedProcess.ProcessId == pid;
+        }
 
         public int sessionId;
 
@@ -83,26 +88,6 @@ namespace HackLinks_Server
                 daemonTx.AddRange(new string[] { $"daemon { daemon.StrType }", daemonDisplay });
             }
             owner.Send(PacketType.KERNL, daemonTx.ToArray());
-        }
-   
-        public void Login(List<Group> groups, string username)
-        {
-            if (groups.Contains(Group.INVALID))
-            {
-                throw new InvalidOperationException($"Can't set user {username} to invalid group");
-            }
-
-
-
-            Group highestGroup = Group.GUEST;
-            foreach(Group group in groups)
-            {
-                if(group < highestGroup)
-                {
-                    highestGroup = group;
-                }
-            }
-            owner.Send(PacketType.KERNL, "login", ((int)highestGroup).ToString(), username);
         }
 
         // TODO relocate to process

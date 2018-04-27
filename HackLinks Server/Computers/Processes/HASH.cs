@@ -15,7 +15,11 @@ namespace HackLinks_Server.Computers.Processes
 
         public override void WriteInput(string inputData)
         {
-            Print(inputData);
+            if(inputData != null)
+            {
+                Process child = computer.Kernel.StartProcess(this, "Hackybox");
+                child.Run(inputData);
+            }
         }
     }
 }

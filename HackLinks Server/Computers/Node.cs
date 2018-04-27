@@ -28,11 +28,37 @@ namespace HackLinks_Server.Computers
         public List<Daemon> daemons = new List<Daemon>();
         public List<Log> logs = new List<Log>();
 
+        public Kernel Kernel { get; set; }
+
+        // TODO cleanup dead processes
         public List<Process> processes = new List<Process>();
         public Stack<int> freedPIDs = new Stack<int>();
 
         private int nextPID = 1;
         public int NextPID => freedPIDs.Count > 0 ? freedPIDs.Pop() : nextPID++;
+
+        public Node()
+        {
+             Kernel = new Kernel(this);
+        }
+
+        public Session GetSession(long processId)
+        {
+            do
+            {
+                foreach (Session session in sessions)
+                {
+                    if(session.HasProcessId(processId))
+                    {
+                        return session;
+                    }
+                }
+                processId = processes[(int) processId - 1].ParentProcessId;
+            } while (processId != 0);
+
+
+            return null;
+        }
 
         public string GetDisplayName()
         {
@@ -186,25 +212,27 @@ namespace HackLinks_Server.Computers
             return -1;
         }
 
-        public void Login(GameClient client, string username, string password)
+        // TODO no prints
+        // TODO Log Errors to log file?
+        public Credentials Login(GameClient client, string username, string password)
         {
             var configFolder = fileSystem.rootFile.GetFile("etc");
             if (configFolder == null || !configFolder.IsFolder())
             {
                 client.Send(NetUtil.PacketType.MESSG, "No config folder was found!");
-                return;
+                return null;
             }
             File usersFile = configFolder.GetFile("passwd");
             if (usersFile == null)
             {
                 client.Send(NetUtil.PacketType.MESSG, "No passwd file was found!");
-                return;
+                return null;
             }
             File groupFile = configFolder.GetFile("group");
             if (usersFile == null)
             {
                 client.Send(NetUtil.PacketType.MESSG, "No group file was found!");
-                return;
+                return null;
             }
             string[] accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             string[] groups = groupFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -218,6 +246,12 @@ namespace HackLinks_Server.Computers
 
                 if (accountUsername == username && accountPassword == password)
                 {
+                    Group primaryGroup = PermissionHelper.GetGroupFromString(accountGroupId);
+                    if (primaryGroup == Group.INVALID)
+                    {
+                        client.Send(NetUtil.PacketType.MESSG, $"Can't login as {username}, '{accountGroupId}' is not a valid accountGroupId");
+                        break;
+                    }
                     List<Group> loginGroups = new List<Group>();
                     foreach(string group in groups)
                     {
@@ -235,18 +269,14 @@ namespace HackLinks_Server.Computers
                             else
                             {
                                 client.Send(NetUtil.PacketType.MESSG, $"Can't login as {username} {groupName} is not a valid group");
+                                break;
                             }
                         }
                     }
-
-                    client.activeSession.Login(loginGroups, username);
-                    client.Send(NetUtil.PacketType.MESSG, "Logged as : " + username);
-                    Log(Computers.Log.LogEvents.Login, logs.Count + 1 + " " + client.homeComputer.ip + " logged in as " + username, client.activeSession.sessionId, client.homeComputer.ip);
-
-                    return;
+                    return new Credentials(GetUserId(username), primaryGroup, loginGroups);
                 }
             }
-            client.Send(NetUtil.PacketType.MESSG, "Wrong identificants.");
+            return null;
         }
 
         public void Log(Log.LogEvents logEvent, string message, int sessionId, string ip)
