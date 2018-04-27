@@ -20,7 +20,7 @@ namespace HackLinks_Server.Daemons.Types
 
         public Dictionary<Session, HTTPSession> httpSessions = new Dictionary<Session, HTTPSession>();
 
-        public HTTPDaemon(long pid, long ppid, Printer printer, Node computer, Credentials credentials) : base(pid, ppid, printer, computer, credentials)
+        public HTTPDaemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
 
         }

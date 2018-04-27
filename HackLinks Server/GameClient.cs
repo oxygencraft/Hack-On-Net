@@ -57,24 +57,24 @@ namespace HackLinks_Server
             Send(PacketType.KERNL, "login", ((int)credentials.Group).ToString(), username);
 
             // TODO query passwd for shell
-            Process process = CreateProcess(node, "HASH", 0, credentials, (Process.Printer)(input => Send(PacketType.MESSG, input)));
+            Process process = CreateProcess(node, "HASH", credentials, (Process.Printer)(input => Send(PacketType.MESSG, input)));
             activeSession = new Session(this, node, process);
         }
 
         public Process CreateProcess(Node node, string type, Process parent)
         {
-            return CreateProcess(node, type, parent.ProcessId, parent.Credentials, parent.Print);
+            return CreateProcess(node, type, parent.Credentials, parent.Print);
         }
 
-        private Process CreateProcess(Node node, string type, long parentProcessId, Credentials credentials, Process.Printer printer)
+        private Process CreateProcess(Node node, string type, Credentials credentials, Process.Printer printer)
         {
-            return CreateProcess(node, Type.GetType($"HackLinks_Server.Computers.Processes.{type}"), parentProcessId, credentials, printer);
+            return CreateProcess(node, Type.GetType($"HackLinks_Server.Computers.Processes.{type}"), credentials, printer);
         }
 
-        private Process CreateProcess(Node node, Type type, long parentProcessId, Credentials credentials, Process.Printer printer)
+        private Process CreateProcess(Node node, Type type, Credentials credentials, Process.Printer printer)
         {
             Console.WriteLine(type);
-            return (Process)Activator.CreateInstance(type, new object[] { node.NextPID, parentProcessId, printer, node, credentials });
+            return (Process)Activator.CreateInstance(type, new object[] { node.NextPID, printer, node, credentials });
         }
 
         public void Disconnect()

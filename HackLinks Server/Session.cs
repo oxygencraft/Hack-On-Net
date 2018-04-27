@@ -55,7 +55,7 @@ namespace HackLinks_Server
         }
         */
 
-        public bool HasProcessId(long pid)
+        public bool HasProcessId(int pid)
         {
             return attachedProcess.ProcessId == pid;
         }

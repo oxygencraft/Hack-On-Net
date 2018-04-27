@@ -8,7 +8,7 @@ namespace HackLinks_Server.Computers.Processes
 {
     class HASH : Process
     {
-        public HASH(long pid, long ppid, Printer printer, Node computer, Credentials credentials) : base(pid, ppid, printer, computer, credentials)
+        public HASH(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
             // left empty because we don't do anything special to initalize this Process
         }

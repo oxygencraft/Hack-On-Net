@@ -20,7 +20,7 @@ namespace HackLinks_Server.Daemons
             get;
         }
 
-        public Daemon(long pid, long ppid, Printer printer, Node computer, Credentials credentials) : base(pid, ppid, printer, computer, credentials)
+        public Daemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
             node = computer;
             OnStartUp();

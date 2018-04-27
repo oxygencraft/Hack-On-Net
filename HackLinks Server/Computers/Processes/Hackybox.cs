@@ -35,7 +35,7 @@ namespace HackLinks_Server.Computers.Processes
 
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
 
-        public Hackybox(long pid, long ppid, Printer printer, Node computer, Credentials credentials) : base(pid, ppid, printer, computer, credentials)
+        public Hackybox(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
         }
 

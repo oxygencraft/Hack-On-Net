@@ -16,7 +16,7 @@ namespace HackLinks_Server.Daemons.Types
     {
         public static string DEFAULT_CONFIG_PATH = "/dns/entries.db";
 
-        public DNSDaemon(long pid, long ppid, Printer printer, Node computer, Credentials credentials) : base(pid, ppid, printer, computer, credentials)
+        public DNSDaemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
             this.accessLevel = Group.GUEST;
         }

@@ -20,8 +20,7 @@ namespace HackLinks_Server.Computers.Processes
             Dead // Dead and waiting for it's exit code to be retrieived so that it may be cleared from the process table
         }
 
-        public readonly long ProcessId;
-        public long ParentProcessId;
+        public readonly int ProcessId;
         public Node computer;
 
         public File ActiveDirectory { get; set; }
@@ -37,10 +36,9 @@ namespace HackLinks_Server.Computers.Processes
 
         public Printer Print => printer;
 
-        public Process(long pid, long ppid, Printer printer, Node computer, Credentials credentials)
+        public Process(int pid, Printer printer, Node computer, Credentials credentials)
         {
             ProcessId = pid;
-            ParentProcessId = ppid;
             this.printer = printer ?? delegate { };
             this.computer = computer;
             ActiveDirectory = computer.fileSystem.rootFile;

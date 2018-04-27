@@ -35,6 +35,10 @@ namespace HackLinks_Server.Computers
         public Stack<int> freedPIDs = new Stack<int>();
 
         private int nextPID = 1;
+        private Dictionary<int, int> parents = new Dictionary<int, int>();
+        private Dictionary<int, List<int>> children = new Dictionary<int, List<int>>();
+
+
         public int NextPID => freedPIDs.Count > 0 ? freedPIDs.Pop() : nextPID++;
 
         public Node()
@@ -42,7 +46,7 @@ namespace HackLinks_Server.Computers
              Kernel = new Kernel(this);
         }
 
-        public Session GetSession(long processId)
+        public Session GetSession(int processId)
         {
             do
             {
@@ -53,7 +57,7 @@ namespace HackLinks_Server.Computers
                         return session;
                     }
                 }
-                processId = processes[(int) processId - 1].ParentProcessId;
+                processId = parents.ContainsKey(processId) ? parents[processId] : 0;
             } while (processId != 0);
 
 
@@ -80,19 +84,19 @@ namespace HackLinks_Server.Computers
             if(lines[0] == "IRC")
             {
                 //TODO credentials
-                var newDaemon = new IrcDaemon(NextPID, 0, null, this, null);
+                var newDaemon = new IrcDaemon(NextPID, null, this, null);
                 daemons.Add(newDaemon);
             }
             else if(lines[0] == "DNS")
             {
                 //TODO credentials
-                var newDaemon = new DNSDaemon(NextPID, 0, null, this, null);
+                var newDaemon = new DNSDaemon(NextPID, null, this, null);
                 daemons.Add(newDaemon);
             }
             else if(lines[0] == "HTTP")
             {
                 //TODO credentials
-                var newDaemon = new HTTPDaemon(NextPID, 0, null, this, null);
+                var newDaemon = new HTTPDaemon(NextPID, null, this, null);
                 daemons.Add(newDaemon);
             }
         }
@@ -142,6 +146,20 @@ namespace HackLinks_Server.Computers
                 }
             }
             return "";
+        }
+
+        public void SetChildProcess(Process process, Process child)
+        {
+            if(parents.ContainsKey(child.ProcessId))
+            {
+                children[parents[child.ProcessId]].Remove(child.ProcessId);
+            }
+            if(!children.ContainsKey(process.ProcessId))
+            {
+                children.Add(process.ProcessId, new List<int>());
+            }
+            parents.Add(child.ProcessId, process.ProcessId);
+            children[process.ProcessId].Add(child.ProcessId);
         }
 
         public string GetUsername(int userId)

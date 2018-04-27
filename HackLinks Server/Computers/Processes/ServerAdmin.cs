@@ -23,7 +23,7 @@ namespace HackLinks_Server.Computers.Processes
 
         private GameClient client;
 
-        public ServerAdmin(long pid, long ppid, Printer printer, Node computer, Credentials credentials, GameClient client) : base(pid, ppid, printer, computer, credentials)
+        public ServerAdmin(int pid, Printer printer, Node computer, Credentials credentials, GameClient client) : base(pid, printer, computer, credentials)
         {
             this.client = client;
         }

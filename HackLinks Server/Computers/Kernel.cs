@@ -121,7 +121,9 @@ namespace HackLinks_Server.Computers
         public Process StartProcess(Process process, string type)
         {
             // TODO clone credentials OR make sure they're imutable
-            return GetClient(process).CreateProcess(node, type, process);
+            Process child = GetClient(process).CreateProcess(node, type, process);
+            process.computer.SetChildProcess(process, child);
+            return child;
         }
 
         public void PlayMusic(Process process, string song, string playimmediately)

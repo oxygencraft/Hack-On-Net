@@ -27,7 +27,7 @@ namespace HackLinks_Server.Daemons.Types
 
         public override string StrType => "irc";
 
-        public IrcDaemon(long pid, long ppid, Printer printer, Node computer, Credentials credentials) : base(pid, ppid, printer, computer, credentials)
+        public IrcDaemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
             this.accessLevel = Group.GUEST;
         }

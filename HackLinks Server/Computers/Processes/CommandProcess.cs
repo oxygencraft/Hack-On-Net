@@ -12,7 +12,7 @@ namespace HackLinks_Server.Computers.Processes
 
         public abstract SortedDictionary<string, Tuple<string, Command>> Commands { get; }
 
-        public CommandProcess(long pid, long ppid, Printer printer, Node computer, Credentials credentials) : base(pid, ppid, printer, computer, credentials)
+        public CommandProcess(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
         }
 
