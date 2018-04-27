@@ -30,6 +30,7 @@ namespace HackOnNet.Modules
         private Texture2D assetServerNodeOverlay;
 
         private string label;
+        private bool isNodesInSync = false;
 
         private Vector2 circleOrigin;
 
@@ -94,6 +95,16 @@ namespace HackOnNet.Modules
                     this.nodes[i].bootupTick(t);
                 }
             }*/
+            if (!isNodesInSync && userScreen.netManager.gotNodes)
+            {
+                string[] nodes = userScreen.netManager.nodesToSync.Split(',');
+                foreach (var node in nodes)
+                {
+                    string[] ippos = node.Split(new char[] { ':' }, 2);
+                    string[] pos = ippos[1].Split(':');
+                    userScreen.netMap.DiscoverNode(ippos[0], new Vector2(float.Parse(pos[0]), float.Parse(pos[1])), false);
+                }
+            }
         }
 
         public override void Draw(float t)
