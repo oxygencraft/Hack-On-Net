@@ -107,6 +107,11 @@ namespace HackLinks_Server
                     client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                     return true;
                 }
+                if (client.activeSession.activeDirectory.Type == File.FileType.LOG)
+                {
+                    client.Send(NetUtil.PacketType.MESSG, "Permission denied. (Logs may not be modified to balance the game)");
+                    return true;
+                }
 
                 file.Content += '\n' + cmdArgs.JoinWords(" ", 2);
                 client.Send(NetUtil.PacketType.MESSG, "Content appended.");
@@ -128,6 +133,11 @@ namespace HackLinks_Server
                 if (!file.HasWritePermission(client.activeSession.currentUsername, client.activeSession.Groups))
                 {
                     client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
+                    return true;
+                }
+                if (client.activeSession.activeDirectory.Type == File.FileType.LOG)
+                {
+                    client.Send(NetUtil.PacketType.MESSG, "Permission denied. (Logs may not be modified to balance the game)");
                     return true;
                 }
                 int n;
@@ -160,6 +170,11 @@ namespace HackLinks_Server
                     client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
                     return true;
                 }
+                if (client.activeSession.activeDirectory.Type == File.FileType.LOG)
+                {
+                    client.Send(NetUtil.PacketType.MESSG, "Permission denied. (Logs may not be modified to balance the game)");
+                    return true;
+                }
                 int n;
                 if (!int.TryParse(cmdArgs[2], out n))
                 {
@@ -187,6 +202,11 @@ namespace HackLinks_Server
                 if (!file.HasWritePermission(client.activeSession.currentUsername, client.activeSession.Groups))
                 {
                     client.Send(NetUtil.PacketType.MESSG, "Permission denied.");
+                    return true;
+                }
+                if (client.activeSession.activeDirectory.Type == File.FileType.LOG)
+                {
+                    client.Send(NetUtil.PacketType.MESSG, "Permission denied. (Logs may not be modified to balance the game)");
                     return true;
                 }
                 int n;
@@ -625,6 +645,11 @@ namespace HackLinks_Server
                     fileC.Dirty = true;
                     return true;
                 }
+            }
+            if (activeDirectory.Type == File.FileType.LOG)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Permission denied. (Logs may not be created to balance the game)");
+                return true;
             }
             if(!activeDirectory.HasWritePermission(client.activeSession.currentUsername, client.activeSession.Groups))
             {

@@ -102,6 +102,7 @@ namespace HackLinks_Server.Database
                                 }
 
                                 ComputerManager.FixFolder(computerFiles, newNode.fileSystem.rootFile);
+                                newNode.ParseLogs();
                                 nodeList.Add(newNode);
                             }
                         }

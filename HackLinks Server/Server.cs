@@ -115,8 +115,12 @@ namespace HackLinks_Server
 
         public void RemoveClient(GameClient client)
         {
-            if(client.activeSession != null)
-                client.activeSession.DisconnectSession();
+            try
+            {
+                if (client.activeSession != null)
+                    client.activeSession.DisconnectSession();
+            }
+            catch (Exception e) { Console.WriteLine("Failed to disconnect session from disconnected client"); }
             Console.WriteLine(client.username + " disconnected from server.");
             clients.Remove(client);
         }

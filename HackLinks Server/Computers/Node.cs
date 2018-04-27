@@ -25,6 +25,7 @@ namespace HackLinks_Server.Computers
 
         public List<Session> sessions = new List<Session>();
         public List<Daemon> daemons = new List<Daemon>();
+        public List<Log> logs = new List<Log>();
 
         public string GetDisplayName()
         {
@@ -138,11 +139,139 @@ namespace HackLinks_Server.Computers
 
                     client.activeSession.Login(loginGroups, username);
                     client.Send(NetUtil.PacketType.MESSG, "Logged as : " + username);
+                    Log(Computers.Log.LogEvents.Login, logs.Count + 1 + " " + client.homeComputer.ip + " logged in as " + username, client.activeSession.sessionId, client.homeComputer.ip);
 
                     return;
                 }
             }
             client.Send(NetUtil.PacketType.MESSG, "Wrong identificants.");
+        }
+
+        public void Log(Log.LogEvents logEvent, string message, int sessionId, string ip)
+        {
+            File logsFolder = null;
+            foreach (var file in fileSystem.rootFile.children)
+            {
+                if (file.Name == "logs")
+                {
+                    logsFolder = file;
+                    break;
+                }
+            }
+            if (logsFolder == null)
+            {
+                logsFolder = File.CreateNewFolder(fileSystem.fileSystemManager, this, fileSystem.rootFile, "logs");
+                logsFolder.OwnerUsername = "root";
+                logsFolder.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
+                logsFolder.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+                logsFolder.Group = logsFolder.Parent.Group;
+                logsFolder.Type = File.FileType.LOG;
+            }
+            message = message.Replace(' ', '_');
+            File logFile = File.CreateNewFile(fileSystem.fileSystemManager, this, logsFolder, message);
+            logFile.OwnerUsername = "root";
+            logFile.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
+            logFile.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+            logFile.Group = logsFolder.Parent.Group;
+            logFile.Type = File.FileType.LOG;
+            logs.Add(new Log(logFile, sessionId, ip, logEvent, message));
+        }
+
+        public void Log(Log.LogEvents logEvent, string message, string messageExtended, int sessionId, string ip)
+        {
+            File logsFolder = null;
+            foreach (var file in fileSystem.rootFile.children)
+            {
+                if (file.Name == "logs")
+                {
+                    logsFolder = file;
+                    break;
+                }
+            }
+            if (logsFolder == null)
+            {
+                logsFolder = File.CreateNewFolder(fileSystem.fileSystemManager, this, fileSystem.rootFile, "logs");
+                logsFolder.OwnerUsername = "root";
+                logsFolder.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
+                logsFolder.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+                logsFolder.Group = logsFolder.Parent.Group;
+                logsFolder.Type = File.FileType.LOG;
+            }
+            File logFile = File.CreateNewFile(fileSystem.fileSystemManager, this, logsFolder, message);
+            logFile.OwnerUsername = "root";
+            logFile.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
+            logFile.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+            logFile.Group = logsFolder.Parent.Group;
+            logFile.Type = File.FileType.LOG;
+            logs.Add(new Log(logFile, sessionId, ip, logEvent, message, messageExtended));
+        }
+
+        internal void ParseLogs()
+        {
+            List<Log> logs = new List<Log>();
+            File logsFolder = null;
+            foreach (var file in fileSystem.rootFile.children)
+            {
+                if (file.Name == "logs")
+                {
+                    logsFolder = file;
+                    break;
+                }
+            }
+            if (logsFolder == null)
+                return;
+
+            foreach (var log in logsFolder.children)
+            {
+                string machineReadChars = "";
+                int machineReadCharType = 0;
+                int machineReadCharsFound = 0;
+                int machineReadSplit = 0;
+                foreach (var character in log.Content)
+                {
+                    if (character == '#' && machineReadCharType == 0 && machineReadCharsFound < 4)
+                    {
+                        machineReadChars = machineReadChars + "#";
+                        machineReadCharsFound++;
+                        if (machineReadCharsFound >= 4)
+                        {
+                            machineReadCharType++;
+                            machineReadCharsFound = 0;
+                        }
+                    }
+                    else if (character == '!' && machineReadCharType == 1 && machineReadCharsFound < 2)
+                    {
+                        machineReadChars = machineReadChars + "!";
+                        machineReadCharsFound++;
+                        if (machineReadCharsFound >= 2)
+                        {
+                            machineReadCharType++;
+                            machineReadCharsFound = 0;
+                        }
+                    }
+                    else if (character == '*' && machineReadCharType == 2 && machineReadCharsFound < 1)
+                    {
+                        machineReadChars = machineReadChars + "*";
+                        machineReadCharsFound++;
+                    }
+                    else if (machineReadChars == "####!!*")
+                        break;
+                    else
+                    {
+                        machineReadChars = "";
+                        machineReadCharType = 0;
+                        machineReadCharsFound = 0;
+                    }
+                    machineReadSplit++;
+                }
+
+                machineReadSplit += 23;
+                Log logAdd = Computers.Log.Deserialize(log.Content.Substring(machineReadSplit));
+                logAdd.file = log;
+                logs.Add(logAdd);
+            }
+
+            this.logs = logs;
         }
 
         internal void SetRoot(File newFile)
