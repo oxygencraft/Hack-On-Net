@@ -75,6 +75,7 @@
     <Compile Include="Computers\Log.cs" />
     <Compile Include="Computers\Node.cs" />
     <Compile Include="Computers\PermissionHelper.cs" />
+    <Compile Include="Computers\Processes\ServerAdmin.cs" />
     <Compile Include="ConfigUtil.cs" />
     <Compile Include="Daemons\Daemon.cs" />
     <Compile Include="Daemons\Types\HTTPDaemon.cs" />
