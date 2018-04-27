@@ -132,7 +132,7 @@ namespace HackLinks_Server.Files
 
         public bool HasExecutePermission(string username, Group priv)
         {
-            return HasPermission(username, priv, true, false, false);
+            return HasPermission(username, priv, false, false, true);
         }
 
         public bool HasWritePermission(string username, Group priv)
@@ -142,12 +142,12 @@ namespace HackLinks_Server.Files
 
         public bool HasReadPermission(string username, Group priv)
         {
-            return HasPermission(username, priv, false, false, true);
+            return HasPermission(username, priv, true, false, false);
         }
 
         public bool HasExecutePermission(string username, List<Group> privs)
         {
-            return HasPermission(username, privs, true, false, false);
+            return HasPermission(username, privs, false, false, true);
         }
 
         public bool HasWritePermission(string username, List<Group> privs)
@@ -157,19 +157,19 @@ namespace HackLinks_Server.Files
 
         public bool HasReadPermission(string username, List<Group> privs)
         {
-            return HasPermission(username, privs, false, false, true);
+            return HasPermission(username, privs, true, false, false);
         }
 
-        public bool HasPermission(string username, Group priv, bool execute, bool write, bool read)
+        public bool HasPermission(string username, Group priv, bool read, bool write, bool execute)
         {
-            return HasPermission(username,new List<Group> { priv }, execute, read, write);
+            return HasPermission(username,new List<Group> { priv }, read, write, execute);
         }
 
-        public bool HasPermission(string username, List<Group> privs, bool execute, bool write, bool read)
+        public bool HasPermission(string username, List<Group> privs, bool read, bool write, bool execute)
         {
             if (privs.Contains(Group))
             {
-                if (Permissions.CheckPermission(FilePermissions.PermissionType.Group, execute, write, read))
+                if (Permissions.CheckPermission(FilePermissions.PermissionType.Group, read, write, execute))
                 {
                     return true;
                 }
@@ -177,13 +177,13 @@ namespace HackLinks_Server.Files
 
             if (OwnerUsername == username)
             {
-                if (Permissions.CheckPermission(FilePermissions.PermissionType.User, execute, write, read))
+                if (Permissions.CheckPermission(FilePermissions.PermissionType.User, read, write, execute))
                 {
                     return true;
                 }
             }
 
-            return Permissions.CheckPermission(FilePermissions.PermissionType.Others, execute, write, read);
+            return Permissions.CheckPermission(FilePermissions.PermissionType.Others, read, write, execute);
         }
 
         virtual public bool IsFolder()

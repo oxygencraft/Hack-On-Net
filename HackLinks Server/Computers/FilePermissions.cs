@@ -65,11 +65,11 @@ namespace HackLinks_Server.Computers
         /// Check if the file has permission for the given operations for the given type.
         /// </summary>
         /// <param name="type">The <see cref="PermissionType"/> to check</param>
-        /// <param name="execute">Set true if you want to check execute permission</param>
-        /// <param name="write">Set true if you want to check write permission</param>
         /// <param name="read">Set true if you want to check read permission</param>
+        /// <param name="write">Set true if you want to check write permission</param>
+        /// <param name="execute">Set true if you want to check execute permission</param>
         /// <returns>True if the type would have permission to perform the operation, false otherwise</returns>
-        public bool CheckPermission(PermissionType type, bool execute, bool write, bool read)
+        public bool CheckPermission(PermissionType type, bool read, bool write, bool execute)
         {
             return CheckPermissionDigit(type, CalculatePermissionDigit(read, write, execute));
         }
