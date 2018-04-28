@@ -49,6 +49,8 @@ namespace HackLinks_Server
             Send(PacketType.KERNL, "connect", "succ", node.ip, "3");
             if (node == homeComputer)
             {
+                activeSession = new Session(this, node);
+
                 activeSession.Login(Group.ROOT, username);
             }
             else
@@ -118,7 +120,6 @@ namespace HackLinks_Server
             catch(Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                Send(PacketType.DSCON, "An exception occured: " + ex.ToString());
                 netDisconnect();
             }
         }

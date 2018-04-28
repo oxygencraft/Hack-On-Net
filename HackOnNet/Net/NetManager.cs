@@ -33,6 +33,8 @@ namespace HackOnNet.Net
         private static bool disconnectHandled = false;
 
         public UserScreen userScreen;
+        public string nodesToSync = "";
+        public bool gotNodes = false;
 
         public NetManager(UserScreen screen)
         {
@@ -221,6 +223,8 @@ namespace HackOnNet.Net
                     break;
                 case NetUtil.PacketType.START:
                     userScreen.homeIP = messages[0];
+                    nodesToSync = messages[1];
+                    gotNodes = true;
                     break;
                 case NetUtil.PacketType.OSMSG:
                     break;

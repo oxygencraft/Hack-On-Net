@@ -13,25 +13,25 @@ namespace HackLinks_Server.Database
             "/*!40101 SET @saved_cs_client     = @@character_set_client */",
             "/*!40101 SET character_set_client = utf8 */",
             "DROP TABLE IF EXISTS `accounts`",
-            "CREATE TABLE `accounts` (" +
-            " `id` int(11) NOT NULL AUTO_INCREMENT," +
-            " `username` varchar(64) NOT NULL," +
-            " `pass` text DEFAULT NULL," +
-            " `mailaddress` varchar(64) DEFAULT NULL," +
-            " `homeComputer` int(11) DEFAULT NULL," +
-            " `permissions TEXT NOT NULL`" +
-            " `banned` INT DEFAULT NULL" +
-            " `permBanned` BOOLEAN NOT NULL DEFAULT FALSE" +
-            " PRIMARY KEY (`id`)," +
-            " UNIQUE KEY `username` (`username`)," +
-            " UNIQUE KEY `mailaddress` (`mailaddress`)" +
-            ") ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1",
+            "CREATE TABLE `accounts` ("+
+            " `id` int(11) NOT NULL AUTO_INCREMENT,"+
+            " `username` varchar(64) NOT NULL,"+
+            " `pass` text DEFAULT NULL,"+
+            " `mailaddress` varchar(64) DEFAULT NULL,"+
+            " `homeComputer` int(11) DEFAULT NULL,"+
+            " `permissions` TEXT NOT NULL,"+
+            " `banned` INT DEFAULT NULL,"+
+            " `permBanned` BOOLEAN NOT NULL DEFAULT FALSE,"+
+            " PRIMARY KEY (`id`),"+
+            " UNIQUE KEY `username` (`username`),"+
+            " UNIQUE KEY `mailaddress` (`mailaddress`)"+
+            ") ENGINE = InnoDB AUTO_INCREMENT = 2 DEFAULT CHARSET = latin1",
             //
             // Dumping data for table `accounts`
             //
             "LOCK TABLES `accounts` WRITE",
             "/*!40000 ALTER TABLE `accounts` DISABLE KEYS */",
-            "INSERT INTO `accounts` VALUES (1,'test','e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855','test@hnmp.net',1,'admin')",
+            "INSERT INTO `accounts` VALUES (1,'test','e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855','test@hnmp.net',1,'admin',false,false)",
             "/*!40000 ALTER TABLE `accounts` ENABLE KEYS */",
             "UNLOCK TABLES",
             "/*!40101 SET character_set_client = @saved_cs_client */",

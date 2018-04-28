@@ -122,6 +122,14 @@ namespace HackLinks_Server.Files
             return newFile;
         }
 
+        public static File CreateNewFolder(FileSystemManager manager, Node computer, File parent, string name)
+        {
+            File newFile = new File(manager.GetNewFileId(), computer, parent, name);
+            newFile.isFolder = true;
+            manager.RegisterNewFile(newFile);
+            return newFile;
+        }
+
         public bool HasExecutePermission(string username, Group priv)
         {
             return HasPermission(username, priv, true, false, false);
@@ -187,6 +195,19 @@ namespace HackLinks_Server.Files
         {
             Parent.children.Remove(this);
             ParentId = 0;
+            if (Type == FileType.LOG)
+            {
+                Log log = null;
+                foreach (var log2 in Server.Instance.GetComputerManager().GetNodeById(ComputerId).logs)
+                {
+                    if (log2.file == this)
+                    {
+                        log = log2;
+                        break;
+                    }
+                }
+                Server.Instance.GetComputerManager().GetNodeById(ComputerId).logs.Remove(log);
+            }
         }
 
         public void SetType(int specType)

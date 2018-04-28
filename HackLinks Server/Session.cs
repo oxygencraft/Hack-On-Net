@@ -54,16 +54,18 @@ namespace HackLinks_Server
 
         public List<Group> Groups { get; private set; } = new List<Group>()
         {
-                    Group.GUEST,
+            Group.GUEST,
         };
 
-    public string currentUsername = "Guest";
+        public string currentUsername = "Guest";
+        public int sessionId;
 
         public Session(GameClient client, Node node)
         {
             this.connectedNode = node;
             this.activeDirectory = node.fileSystem.rootFile;
             this.owner = client;
+            this.sessionId = GenerateSessionId(node);
             node.sessions.Add(this);
             SendNodeInfo();
         }
@@ -144,6 +146,26 @@ namespace HackLinks_Server
             }
 
             return true;
+        }
+
+        private int GenerateSessionId(Node node)
+        {
+            List<int> sessionIds = new List<int>();
+            foreach (var session in node.sessions)
+            {
+                sessionIds.Add(session.sessionId);
+            }
+            foreach (var log in node.logs)
+            {
+                sessionIds.Add(log.sessionId);
+            }
+            Random rand = new Random();
+            while (true)
+            {
+                int sessionId = rand.Next();
+                if (!sessionIds.Contains(sessionId))
+                    return sessionId;
+            }
         }
 
         public void DisconnectSession()

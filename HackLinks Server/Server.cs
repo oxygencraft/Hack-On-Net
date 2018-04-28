@@ -78,7 +78,7 @@ namespace HackLinks_Server
                     if (DatabaseLink.TryLogin(client, tempUsername, tempPass, out int homeId))
                     {
                         client.username = tempUsername;
-                        if (DatabaseLink.CheckUserBanStatus(client.username, out banExpiry))
+                        if (/*DatabaseLink.CheckUserBanStatus(client.username, out banExpiry)*/false)
                         {
                             if (banExpiry == 0)
                             {
@@ -99,7 +99,7 @@ namespace HackLinks_Server
                             client.homeComputer = homeNode;
                         }
                         client.permissions = DatabaseLink.GetUserPermissions()[client.username];
-                        client.Send(PacketType.START, ip);
+                        client.Send(PacketType.START, ip, DatabaseLink.GetUserNodes(client.username));
                     }
                     else
                     {
