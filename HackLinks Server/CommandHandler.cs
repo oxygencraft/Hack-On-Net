@@ -39,7 +39,8 @@ namespace HackLinks_Server
             { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) },
             { "ban", new Tuple<string, Command>("ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]\n    Bans user for a specified amount of time", Ban) },
             { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) },
-            { "netmap", new Tuple<string, Command>("netmap [ip] [x] [y]\n    Adds a node to the network map", AddToNetMap) }
+            { "netmap", new Tuple<string, Command>("netmap [ip] [x] [y]\n    Adds a node to the network map", AddToNetMap) },
+            { "music", new Tuple<string, Command>("music [file ((DLC\\)Music\\NameOfFile)] [playimmediately (0/1)] (DEBUG COMMAND)", PlayMusic) }
         };
 
         public static bool TreatCommand(GameClient client, string command)
@@ -927,6 +928,20 @@ namespace HackLinks_Server
                 return true;
             }
             Server.Instance.DatabaseLink.AddUserNode(client.username, command[1], command[2] + ":" + command[3]);
+            return true;
+        }
+
+        public static bool PlayMusic(GameClient client, string[] commandUnsplit)
+        {
+            List<string> command = new List<string>();
+            command.Add("music");
+            command.AddRange(commandUnsplit[1].Split());
+            if (command.Count < 3)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: music [file ((DLC\\)Music\\NameOfFile)] [playimmediately (0/1)]");
+                return true;
+            }
+            client.Send(NetUtil.PacketType.MUSIC, command[1], command[2]);
             return true;
         }
     }
