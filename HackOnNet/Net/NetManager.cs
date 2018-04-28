@@ -231,15 +231,6 @@ namespace HackOnNet.Net
                 case NetUtil.PacketType.FX:
                     userScreen.HandleFX(messages);
                     break;
-                case NetUtil.PacketType.MUSIC:
-                    if (messages.Length > 0)
-                    {
-                        if (messages[1] == "1")
-                            Hacknet.MusicManager.playSongImmediatley(messages[0]);
-                        else
-                            Hacknet.MusicManager.transitionToSong(messages[0]);
-                    }
-                    break;
                 case NetUtil.PacketType.DSCON:
                     Disconnect(true, messages[0]);
                     disconnectHandled = true;
