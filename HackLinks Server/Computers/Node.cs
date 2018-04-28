@@ -30,11 +30,11 @@ namespace HackLinks_Server.Computers
 
         public Kernel Kernel { get; set; }
 
-        // TODO cleanup dead processes
-        public List<Process> processes = new List<Process>();
+        private Dictionary<int, Process> processes = new Dictionary<int, Process>();
+
         public Stack<int> freedPIDs = new Stack<int>();
 
-        private int nextPID = 1;
+        private int nextPID = 2;
         private Dictionary<int, int> parents = new Dictionary<int, int>();
         private Dictionary<int, List<int>> children = new Dictionary<int, List<int>>();
 
@@ -150,16 +150,21 @@ namespace HackLinks_Server.Computers
 
         public void SetChildProcess(Process process, Process child)
         {
-            if(parents.ContainsKey(child.ProcessId))
+            SetChildProcess(process.ProcessId, child.ProcessId);
+        }
+
+        protected void SetChildProcess(int process, int child)
+        {
+            if (parents.ContainsKey(child))
             {
-                children[parents[child.ProcessId]].Remove(child.ProcessId);
+                children[parents[child]].Remove(child);
             }
-            if(!children.ContainsKey(process.ProcessId))
+            if (!children.ContainsKey(process))
             {
-                children.Add(process.ProcessId, new List<int>());
+                children.Add(process, new List<int>());
             }
-            parents.Add(child.ProcessId, process.ProcessId);
-            children[process.ProcessId].Add(child.ProcessId);
+            parents.Add(child, process);
+            children[process].Add(child);
         }
 
         public string GetUsername(int userId)
@@ -429,6 +434,42 @@ namespace HackLinks_Server.Computers
             if(fileSystem.rootFile != null)
                 throw new ArgumentException("Root file for this computer is already set.");
             fileSystem.rootFile = newFile;
+        }
+
+        internal void RegisterProcess(Process process)
+        {
+            processes[process.ProcessId] = process;
+        }
+
+        internal void NotifyProcessStateChange(int processId, Process.State newState)
+        {
+            switch (newState)
+            {
+                case Process.State.Dead:
+                    int parentId = GetParentId(processId);
+                    if (parentId > 1)
+                    {
+                        processes[parentId].NotifyDeadChild(processes[processId]);
+                        children[parentId].Remove(processId);
+                        parents.Remove(processId);
+                    }
+                    processes.Remove(processId);
+                    freedPIDs.Push(processId);
+                    // We give all the children away to (fake) init process if our process has any
+                    if (children.ContainsKey(processId))
+                    {
+                        foreach (int child in children[processId])
+                        {
+                            SetChildProcess(1, child);
+                        }
+                    }
+                    break;
+            }
+        }
+
+        public int GetParentId(int pid)
+        {
+            return parents.ContainsKey(pid) ? parents[pid] : 1;
         }
 
         /*public Folder getFolderFromPath(string path, bool createFoldersThatDontExist = false)

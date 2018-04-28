@@ -26,9 +26,8 @@ namespace HackLinks_Server.Computers.Processes
 
         public override void Run(string command)
         {
-            RunCommand(command);
-
-            // TODO set return code
+            exitCode = (byte) (RunCommand(command) ? 0 : 1);
+            CurrentState = State.Dead;
         }
     }
 }

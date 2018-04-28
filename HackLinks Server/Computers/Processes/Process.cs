@@ -12,7 +12,7 @@ namespace HackLinks_Server.Computers.Processes
     {
         public delegate void Printer(string text);
 
-        enum State
+        public enum State
         {
             New, // New and not running
             Running, // Running
@@ -27,10 +27,11 @@ namespace HackLinks_Server.Computers.Processes
         
         public Credentials Credentials { get; }
 
-        //TODO checks for invalid state on state change
-        State CurrentState { get; set; }
+        private State currentState;
+        public State CurrentState { get => currentState; protected set { computer.NotifyProcessStateChange(ProcessId, value); currentState = value; } }
 
-        byte exitCode = 0;
+        protected byte exitCode = 0;
+        public byte ExitCode => exitCode;
 
         private readonly Printer printer;
 
@@ -46,7 +47,16 @@ namespace HackLinks_Server.Computers.Processes
 
             CurrentState = State.New;
 
-            computer.processes.Add(this);
+            computer.RegisterProcess(this);
+        }
+
+        /// <summary>
+        /// Overridden to react to child death in some way, e.g. retrieve exit code.
+        /// Dead children do not receive updates and are removed from the process table following the return of this function.
+        /// </summary>
+        /// <param name="process"></param>
+        public virtual void NotifyDeadChild(Process process)
+        {
         }
 
         /// <summary>
