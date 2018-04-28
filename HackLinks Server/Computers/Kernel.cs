@@ -124,6 +124,7 @@ namespace HackLinks_Server.Computers
             // TODO clone credentials OR make sure they're imutable
             Process child = GetClient(process).CreateProcess(node, type, process);
             process.computer.SetChildProcess(process, child);
+            child.ActiveDirectory = process.ActiveDirectory;
             return child;
         }
 
