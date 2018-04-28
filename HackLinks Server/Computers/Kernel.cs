@@ -1,4 +1,5 @@
 ﻿using HackLinks_Server.Computers.Processes;
+using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
 using HackLinks_Server.Files;
 using HackLinksCommon;
@@ -129,6 +130,31 @@ namespace HackLinks_Server.Computers
         public void PlayMusic(Process process, string song, string playimmediately)
         {
             GetClient(process).Send(NetUtil.PacketType.MUSIC, song, playimmediately);
+        }
+
+        public void ExitDaemon(CommandProcess process)
+        {
+            Session activeSession = GetClient(process).activeSession;
+            if (activeSession.activeDaemon != null)
+            {
+                activeSession.activeDaemon.OnDisconnect(activeSession);
+            }
+            activeSession.activeDaemon = null;
+        }
+
+        public void OpenDaemon(CommandProcess process, string target)
+        {
+            Session activeSession = GetClient(process).activeSession;
+            foreach (Daemon daemon in activeSession.connectedNode.daemons)
+            {
+                if (daemon.IsOfType(target))
+                {
+                    if (activeSession.activeDaemon != null)
+                        activeSession.activeDaemon.OnDisconnect(activeSession);
+                    activeSession.activeDaemon = daemon;
+                    daemon.OnConnect(activeSession);
+                }
+            }
         }
     }
 }

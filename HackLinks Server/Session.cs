@@ -24,37 +24,6 @@ namespace HackLinks_Server
         public Daemon activeDaemon;
         private Process attachedProcess;
 
-        // TODO implement process for this
-        /*
-        private SortedDictionary<string, Tuple<string, CommandHandler.Command>> sessionCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
-        {
-            { "daemon", new Tuple<string, CommandHandler.Command>("daemon [daemon name]\n    If it's available we'll launch the given daemon.", Daemon) },
-        };
-
-        public SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands
-        {
-            get
-            {
-                //If we've not got a active daemon then we don't need to do a merge
-                if (activeDaemon == null)
-                {
-                    return sessionCommands;
-                }
-                else
-                {
-                    //Commands from the daemon will override commands from the session if there's a conflict.
-                    Dictionary<string, Tuple<string, CommandHandler.Command>> newCommands = sessionCommands
-                        .Union(activeDaemon.Commands)
-                        .GroupBy(k => k.Key, v => v.Value)
-                        .ToDictionary(k => k.Key, v => v.Last());
-
-                    //finally create sorted dictionary from this
-                    return new SortedDictionary<string, Tuple<string, CommandHandler.Command>>(newCommands);
-                }
-            }
-        }
-        */
-
         public bool HasProcessId(int pid)
         {
             return attachedProcess.ProcessId == pid;
@@ -88,38 +57,6 @@ namespace HackLinks_Server
                 daemonTx.AddRange(new string[] { $"daemon { daemon.StrType }", daemonDisplay });
             }
             owner.Send(PacketType.KERNL, daemonTx.ToArray());
-        }
-
-        // TODO relocate to process
-        private static bool Daemon(GameClient client, string[] command)
-        {
-            Session activeSession = client.activeSession;
-
-            if (command.Length != 2)
-            {
-                activeSession.owner.Send(PacketType.MESSG, "Usage : daemon [name of daemon]");
-                return true;
-            }
-            var target = command[1];
-            if(target == "exit")
-            {
-                activeSession.activeDaemon.OnDisconnect(activeSession);
-                activeSession.activeDaemon = null;
-                return true;
-            }
-            foreach (Daemon daemon in activeSession.connectedNode.daemons)
-            {
-                if (daemon.IsOfType(target))
-                {
-                    if(activeSession.activeDaemon != null)
-                        activeSession.activeDaemon.OnDisconnect(activeSession);
-                    activeSession.activeDaemon = daemon;
-                    daemon.OnConnect(activeSession);
-                    return true;
-                }
-            }
-
-            return true;
         }
 
         private int GenerateSessionId(Node node)

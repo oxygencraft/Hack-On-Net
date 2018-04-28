@@ -83,20 +83,17 @@ namespace HackLinks_Server.Computers
             var lines = daemonLauncher.Content.Split(new string[]{ "\r\n" }, StringSplitOptions.None);
             if(lines[0] == "IRC")
             {
-                //TODO credentials
-                var newDaemon = new IrcDaemon(NextPID, null, this, null);
+                var newDaemon = new IrcDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);
             }
             else if(lines[0] == "DNS")
             {
-                //TODO credentials
-                var newDaemon = new DNSDaemon(NextPID, null, this, null);
+                var newDaemon = new DNSDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);
             }
             else if(lines[0] == "HTTP")
             {
-                //TODO credentials
-                var newDaemon = new HTTPDaemon(NextPID, null, this, null);
+                var newDaemon = new HTTPDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);
             }
         }

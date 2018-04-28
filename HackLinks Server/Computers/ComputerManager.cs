@@ -43,7 +43,7 @@ namespace HackLinks_Server.Computers
                         continue;
                     if (daemonFile.OwnerId != 0 || daemonFile.Group != Group.ROOT)
                         continue;
-                    if (daemonFile.HasExecutePermission(0, Group.ROOT))
+                    if (!daemonFile.HasExecutePermission(0, Group.ROOT))
                         continue;
                     node.LaunchDaemon(daemonFile);
                 }
