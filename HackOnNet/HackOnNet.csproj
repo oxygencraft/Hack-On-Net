@@ -41,7 +41,6 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-
   <!-- Determine what libs to use -->
   <Choose>
     <!-- IF HackNet libs are present in lib folder -->
@@ -91,6 +90,7 @@
     <Compile Include="FileSystem\LsFileEntry.cs" />
     <Compile Include="GUI\MainMenu.cs" />
     <Compile Include="GUI\TerminalStringParser.cs" />
+    <Compile Include="GUI\Theme.cs" />
     <Compile Include="HackOnNetMod.cs" />
     <Compile Include="Modules\NodeCircle.cs" />
     <Compile Include="Modules\OnCoreModule.cs" />

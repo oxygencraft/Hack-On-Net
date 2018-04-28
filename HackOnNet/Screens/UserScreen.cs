@@ -463,8 +463,16 @@ namespace HackOnNet.Screens
                 if (activeSession != null)
                     activeSession.SetNodeInfo(command);
             }
+            else if (command[0] == "changetheme")
+            {
+                try
+                {
+                    ChangeTheme(GUI.Theme.Deserialize(command[1]));
+                }
+                catch (Exception e) { Write("Error occured while parsing theme: " + e.ToString()); }
+            }
         }
-        
+
         public void Execute(string command)
         {
             try
@@ -492,5 +500,26 @@ namespace HackOnNet.Screens
             base.ScreenManager.AddScreen(new MainMenu());
         }
 
+        public void ChangeTheme(GUI.Theme theme)
+        {
+            topBarColor = theme.topBarColor;
+            topBarTextColor = theme.topBarTextColor;
+
+            moduleColorSolid = theme.moduleColorSolid;
+            displayModuleExtraLayerBackingColor = theme.displayModuleExtraLayerBackingColor;
+            moduleColorSolidDefault = theme.moduleColorSolidDefault;
+            terminalTextColor = theme.terminalTextColor;
+            moduleColorStrong = theme.moduleColorStrong;
+            highlightColor = theme.highlightColor;
+            netmapToolTipColor = theme.netmapToolTipColor;
+            netmapToolTipBackground = theme.netmapToolTipBackground;
+            moduleColorBacking = theme.moduleColorBacking;
+            semiTransText = theme.semiTransText;
+            indentBackgroundColor = theme.indentBackgroundColor;
+            outlineColor = theme.outlineColor;
+            lockedColor = theme.lockedColor;
+            darkBackgroundColor = theme.darkBackgroundColor;
+            subtleTextColor = theme.subtleTextColor;
+        }
     }
 }

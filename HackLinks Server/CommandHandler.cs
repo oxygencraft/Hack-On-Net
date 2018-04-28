@@ -40,7 +40,8 @@ namespace HackLinks_Server
             { "ban", new Tuple<string, Command>("ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]\n    Bans user for a specified amount of time", Ban) },
             { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) },
             { "netmap", new Tuple<string, Command>("netmap [ip] [x] [y]\n    Adds a node to the network map", AddToNetMap) },
-            { "music", new Tuple<string, Command>("music [file ((DLC\\)Music\\NameOfFile)] [playimmediately (0/1)] (DEBUG COMMAND)", PlayMusic) }
+            { "music", new Tuple<string, Command>("music [file ((DLC\\)Music\\NameOfFile)] [playimmediately (0/1)] (DEBUG COMMAND)", PlayMusic) },
+            { "changetheme", new Tuple<string, Command>("changetheme [filepathtotheme] (DEBUG COMMAND)", ChangeTheme) }
         };
 
         public static bool TreatCommand(GameClient client, string command)
@@ -942,6 +943,22 @@ namespace HackLinks_Server
                 return true;
             }
             client.Send(NetUtil.PacketType.MUSIC, command[1], command[2]);
+            return true;
+        }
+
+        public static bool ChangeTheme(GameClient client, string[] command)
+        {
+            if (command.Length < 2)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "Usage: changetheme [filepathtotheme]");
+            }
+            var file = client.activeSession.activeDirectory.GetFile(command[1]);
+            if (file == null)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "File " + command[1] + " not found.");
+                return true;
+            }
+            client.Send(NetUtil.PacketType.KERNL, "changetheme", file.Content);
             return true;
         }
     }
