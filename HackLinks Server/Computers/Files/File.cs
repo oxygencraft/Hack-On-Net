@@ -195,6 +195,19 @@ namespace HackLinks_Server.Files
         {
             Parent.children.Remove(this);
             ParentId = 0;
+            if (Type == FileType.LOG)
+            {
+                Log log = null;
+                foreach (var log2 in Server.Instance.GetComputerManager().GetNodeById(ComputerId).logs)
+                {
+                    if (log2.file == this)
+                    {
+                        log = log2;
+                        break;
+                    }
+                }
+                Server.Instance.GetComputerManager().GetNodeById(ComputerId).logs.Remove(log);
+            }
         }
 
         public void SetType(int specType)
