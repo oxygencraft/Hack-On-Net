@@ -951,6 +951,7 @@ namespace HackLinks_Server
             if (command.Length < 2)
             {
                 client.Send(NetUtil.PacketType.MESSG, "Usage: changetheme [filepathtotheme]");
+                return true;
             }
             var file = client.activeSession.activeDirectory.GetFile(command[1]);
             if (file == null)
