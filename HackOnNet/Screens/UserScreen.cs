@@ -467,6 +467,7 @@ namespace HackOnNet.Screens
             {
                 try
                 {
+                    command[1] = command[1].Replace("\\r", "").Replace("\\n", "");
                     ChangeTheme(GUI.Theme.Deserialize(command[1]));
                 }
                 catch (Exception e) { Write("Error occured while parsing theme: " + e.ToString()); }
@@ -502,24 +503,24 @@ namespace HackOnNet.Screens
 
         public void ChangeTheme(GUI.Theme theme)
         {
-            topBarColor = theme.topBarColor;
-            topBarTextColor = theme.topBarTextColor;
+            topBarColor = GUI.Theme.StringToColour(theme.topBarColor);
+            topBarTextColor = GUI.Theme.StringToColour(theme.topBarTextColor);
 
-            moduleColorSolid = theme.moduleColorSolid;
-            displayModuleExtraLayerBackingColor = theme.displayModuleExtraLayerBackingColor;
-            moduleColorSolidDefault = theme.moduleColorSolidDefault;
-            terminalTextColor = theme.terminalTextColor;
-            moduleColorStrong = theme.moduleColorStrong;
-            highlightColor = theme.highlightColor;
-            netmapToolTipColor = theme.netmapToolTipColor;
-            netmapToolTipBackground = theme.netmapToolTipBackground;
-            moduleColorBacking = theme.moduleColorBacking;
-            semiTransText = theme.semiTransText;
-            indentBackgroundColor = theme.indentBackgroundColor;
-            outlineColor = theme.outlineColor;
-            lockedColor = theme.lockedColor;
-            darkBackgroundColor = theme.darkBackgroundColor;
-            subtleTextColor = theme.subtleTextColor;
+            moduleColorSolid = GUI.Theme.StringToColour(theme.moduleColorSolid);
+            displayModuleExtraLayerBackingColor = GUI.Theme.StringToColour(theme.displayModuleExtraLayerBackingColor);
+            moduleColorSolidDefault = GUI.Theme.StringToColour(theme.moduleColorSolidDefault);
+            terminalTextColor = GUI.Theme.StringToColour(theme.terminalTextColor);
+            moduleColorStrong = GUI.Theme.StringToColour(theme.moduleColorStrong);
+            highlightColor = GUI.Theme.StringToColour(theme.highlightColor);
+            netmapToolTipColor = GUI.Theme.StringToColour(theme.netmapToolTipColor);
+            netmapToolTipBackground = GUI.Theme.StringToColour(theme.netmapToolTipBackground);
+            moduleColorBacking = GUI.Theme.StringToColour(theme.moduleColorBacking);
+            semiTransText = GUI.Theme.StringToColour(theme.semiTransText);
+            indentBackgroundColor = GUI.Theme.StringToColour(theme.indentBackgroundColor);
+            outlineColor = GUI.Theme.StringToColour(theme.outlineColor);
+            lockedColor = GUI.Theme.StringToColour(theme.lockedColor);
+            darkBackgroundColor = GUI.Theme.StringToColour(theme.darkBackgroundColor);
+            subtleTextColor = GUI.Theme.StringToColour(theme.subtleTextColor);
         }
     }
 }
