@@ -19,7 +19,6 @@ namespace HackLinks_Server.Computers.Processes
             { "disconnect", new Tuple<string, Command>("disconnect \n    Terminate the current connection.", Disconnect) },
             { "dc", new Tuple<string, Command>("dc \n    Alias for disconnect.", Disconnect) },
             { "ls", new Tuple<string, Command>("ls \n    Lists all files in current directory.", Ls) },
-            { "cd", new Tuple<string, Command>("cd [dir]\n    Moves current working directory to the specified directory.", ChangeDirectory) },
             { "touch", new Tuple<string, Command>("touch [file]\n    Create the given file if it doesn't already exist.", Touch) },
             { "view", new Tuple<string, Command>("view [file]\n    Displays the given file on the Display Module.", View)},
             { "mkdir", new Tuple<string, Command>("mkdir [dir]\n    Create the given directory if it doesn't already exist.", MkDir) },
@@ -459,49 +458,6 @@ namespace HackLinks_Server.Computers.Processes
                 process.computer.Kernel.LS(process, fileList.ToArray());
                 return true;
             }
-        }
-
-        public static bool ChangeDirectory(CommandProcess process, string[] command)
-        {
-            if (command.Length < 2)
-            {
-                process.Print("Usage : cd [folder]");
-                return true;
-            }
-            if (command[1] == "..")
-            {
-                if (process.ActiveDirectory.Parent != null)
-                {
-                    process.ActiveDirectory = process.ActiveDirectory.Parent;
-                    return true;
-                }
-                else
-                {
-                    process.Print("Invalid operation.");
-                    return true;
-                }
-            }
-            foreach (var file in process.ActiveDirectory.children)
-            {
-                if (file.Name == command[1])
-                {
-                    if (!file.IsFolder())
-                    {
-                        process.Print("You cannot change active directory to a file.");
-                        return true;
-                    }
-                    if (!file.HasExecutePermission(process.Credentials))
-                    {
-                        process.Print("You do not have permission to do this. You must have execute permission to access a directory.");
-                        return true;
-                    }
-                    process.ActiveDirectory = file;
-                    process.computer.Kernel.CD(process, file.Name);
-                    return true;
-                }
-            }
-            process.Print("No such folder.");
-            return true;
         }
 
         public static bool Touch(CommandProcess process, string[] command)

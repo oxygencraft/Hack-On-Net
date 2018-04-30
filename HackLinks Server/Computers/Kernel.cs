@@ -107,10 +107,7 @@ namespace HackLinks_Server.Computers
 
         public void CD(Process process, string name)
         {
-            List<string> data = new List<string>() { "cd" };
-            data.Add(name);
-
-            GetClient(process).Send(NetUtil.PacketType.KERNL, data.ToArray());
+            GetClient(process).Send(NetUtil.PacketType.KERNL, new string[] { "cd", name});
         }
 
         public void RemoveFile(Process process, File file)
