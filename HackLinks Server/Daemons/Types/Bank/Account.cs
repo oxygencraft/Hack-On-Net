@@ -8,8 +8,15 @@ namespace HackLinks_Server.Daemons.Types.Bank
 {
     class Account
     {
-        int accountNumber;
-        string accountName;
-        int balance;
+        public string accountName;
+        public int balance;
+        public string username;
+
+        public Account(string accountName, int balance, string username)
+        {
+            this.accountName = accountName;
+            this.balance = balance;
+            this.username = username;
+        }
     }
 }
