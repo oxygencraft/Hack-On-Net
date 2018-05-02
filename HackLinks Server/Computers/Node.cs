@@ -96,6 +96,11 @@ namespace HackLinks_Server.Computers
                 var newDaemon = new HTTPDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);
             }
+            else if(lines[0] == "BANK")
+            {
+                var newDaemon = new BankDaemon(this);
+                daemons.Add(newDaemon);
+            }
         }
 
         public Daemon GetDaemon(string type)
