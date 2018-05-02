@@ -10,7 +10,7 @@ namespace HackLinks_Server.Computers.Files
     /// <summary>
     /// Contains Files for a computer
     /// </summary>
-    class FileSystem
+    public class FileSystem
     {
         public readonly FileSystemManager fileSystemManager;
 

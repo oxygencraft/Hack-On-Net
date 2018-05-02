@@ -1,5 +1,6 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 using HackLinks_Server.Daemons;
 using HackLinks_Server.Files;
 using System;
@@ -10,7 +11,7 @@ using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
-    class Session
+    public class Session
     {
         public float trace = 100;
 
@@ -18,56 +19,31 @@ namespace HackLinks_Server
 
         public float traceUpdtCooldown = 0;
 
-        private SortedDictionary<string, Tuple<string, CommandHandler.Command>> sessionCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
-        {
-            { "daemon", new Tuple<string, CommandHandler.Command>("daemon [daemon name]\n    If it's available we'll launch the given daemon.", Daemon) },
-        };
-
-        public SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands
-        {
-            get
-            {
-                //If we've not got a active daemon then we don't need to do a merge
-                if (activeDaemon == null)
-                {
-                    return sessionCommands;
-                }
-                else
-                {
-                    //Commands from the daemon will override commands from the session if there's a conflict.
-                    Dictionary<string, Tuple<string, CommandHandler.Command>> newCommands = sessionCommands
-                        .Union(activeDaemon.Commands)
-                        .GroupBy(k => k.Key, v => v.Value)
-                        .ToDictionary(k => k.Key, v => v.Last());
-
-                    //finally create sorted dictionary from this
-                    return new SortedDictionary<string, Tuple<string, CommandHandler.Command>>(newCommands);
-                }
-            }
-        }
-
         public GameClient owner;
         public Node connectedNode;
         public Daemon activeDaemon;
+        private Process attachedProcess;
 
-        public File activeDirectory;
-
-        public List<Group> Groups { get; private set; } = new List<Group>()
+        public bool HasProcessId(int pid)
         {
-            Group.GUEST,
-        };
+            return attachedProcess.ProcessId == pid;
+        }
 
-        public string currentUsername = "Guest";
         public int sessionId;
 
-        public Session(GameClient client, Node node)
+        public Session(GameClient client, Node node, Process process)
         {
             this.connectedNode = node;
-            this.activeDirectory = node.fileSystem.rootFile;
             this.owner = client;
             this.sessionId = GenerateSessionId(node);
+            this.attachedProcess = process;
             node.sessions.Add(this);
             SendNodeInfo();
+        }
+
+        public void WriteInput(string inputData)
+        {
+            attachedProcess.WriteInput(inputData);
         }
 
         public void SendNodeInfo()
@@ -81,71 +57,6 @@ namespace HackLinks_Server
                 daemonTx.AddRange(new string[] { $"daemon { daemon.StrType }", daemonDisplay });
             }
             owner.Send(PacketType.KERNL, daemonTx.ToArray());
-        }
-
-        public void Login(Group level, string username)
-        {
-            Login(new List<Group> {level}, username);
-        }
-
-        public void Login(List<Group> levels, string username)
-        {
-            if (levels.Contains(Group.INVALID))
-            {
-                throw new InvalidOperationException($"Can't set user {username} to invalid group");
-            }
-
-            Groups = levels;
-            currentUsername = username;
-
-            Group highestGroup = Group.GUEST;
-            foreach(Group group in Groups)
-            {
-                if(group < highestGroup)
-                {
-                    highestGroup = group;
-                }
-            }
-            owner.Send(PacketType.KERNL, "login", ((int)highestGroup).ToString(), username);
-        }
-
-        public bool HandleSessionCommand(GameClient client, string[] command)
-        {
-            if (Commands.ContainsKey(command[0]))
-                return Commands[command[0]].Item2(client, command);
-
-            return false;
-        }
-
-        private static bool Daemon(GameClient client, string[] command)
-        {
-            Session activeSession = client.activeSession;
-
-            if (command.Length != 2)
-            {
-                activeSession.owner.Send(PacketType.MESSG, "Usage : daemon [name of daemon]");
-                return true;
-            }
-            var target = command[1];
-            if(target == "exit")
-            {
-                activeSession.activeDaemon.OnDisconnect(activeSession);
-                activeSession.activeDaemon = null;
-                return true;
-            }
-            foreach (Daemon daemon in activeSession.connectedNode.daemons)
-            {
-                if (daemon.IsOfType(target))
-                {
-                    if(activeSession.activeDaemon != null)
-                        activeSession.activeDaemon.OnDisconnect(activeSession);
-                    activeSession.activeDaemon = daemon;
-                    daemon.OnConnect(activeSession);
-                    return true;
-                }
-            }
-
-            return true;
         }
 
         private int GenerateSessionId(Node node)

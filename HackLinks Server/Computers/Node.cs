@@ -1,5 +1,6 @@
 ﻿using HackLinks_Server.Computers.Files;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
 using HackLinks_Server.Files;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Computers
 {
-    class Node
+    public class Node
     {
         public static string SERVER_CONFIG_PATH = "/cfg/server.cfg";
 
@@ -26,6 +27,42 @@ namespace HackLinks_Server.Computers
         public List<Session> sessions = new List<Session>();
         public List<Daemon> daemons = new List<Daemon>();
         public List<Log> logs = new List<Log>();
+
+        public Kernel Kernel { get; set; }
+
+        private Dictionary<int, Process> processes = new Dictionary<int, Process>();
+
+        public Stack<int> freedPIDs = new Stack<int>();
+
+        private int nextPID = 2;
+        private Dictionary<int, int> parents = new Dictionary<int, int>();
+        private Dictionary<int, List<int>> children = new Dictionary<int, List<int>>();
+
+
+        public int NextPID => freedPIDs.Count > 0 ? freedPIDs.Pop() : nextPID++;
+
+        public Node()
+        {
+             Kernel = new Kernel(this);
+        }
+
+        public Session GetSession(int processId)
+        {
+            do
+            {
+                foreach (Session session in sessions)
+                {
+                    if(session.HasProcessId(processId))
+                    {
+                        return session;
+                    }
+                }
+                processId = parents.ContainsKey(processId) ? parents[processId] : 0;
+            } while (processId != 0);
+
+
+            return null;
+        }
 
         public string GetDisplayName()
         {
@@ -46,17 +83,17 @@ namespace HackLinks_Server.Computers
             var lines = daemonLauncher.Content.Split(new string[]{ "\r\n" }, StringSplitOptions.None);
             if(lines[0] == "IRC")
             {
-                var newDaemon = new IrcDaemon(this);
+                var newDaemon = new IrcDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);
             }
             else if(lines[0] == "DNS")
             {
-                var newDaemon = new DNSDaemon(this);
+                var newDaemon = new DNSDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);
             }
             else if(lines[0] == "HTTP")
             {
-                var newDaemon = new HTTPDaemon(this);
+                var newDaemon = new HTTPDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);
             }
         }
@@ -71,80 +108,195 @@ namespace HackLinks_Server.Computers
 
         public bool HasUser(string username)
         {
-            var configFolder = fileSystem.rootFile.GetFile("cfg");
-            if (configFolder == null || !configFolder.IsFolder())
-            {
-                return false;
-            }
-            var usersFile = configFolder.GetFile("users.cfg");
-            if (usersFile == null)
-            {
-                return false;
-            }
-
-            var accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var account in accounts)
-            {
-                var accountData = account.Split(new char[] { ',', '=' });
-                if (accountData[1] == username)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return GetUserId(username) != -1;
         }
 
-
-        public void Login(GameClient client, string username, string password)
+        public string GetUserShell(int userId)
         {
-            var configFolder = fileSystem.rootFile.GetFile("cfg");
+            File configFolder = fileSystem.rootFile.GetFile("etc");
             if (configFolder == null || !configFolder.IsFolder())
             {
-                client.Send(NetUtil.PacketType.MESSG, "No config folder was found !");
-                return;
+                return "";
             }
-            var usersFile = configFolder.GetFile("users.cfg");
+            File usersFile = configFolder.GetFile("passwd");
             if (usersFile == null)
             {
-                client.Send(NetUtil.PacketType.MESSG, "No config file was found !");
-                return;
+                return "";
             }
-            var accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            foreach(var account in accounts)
+            File groupFile = configFolder.GetFile("group");
+            if (usersFile == null)
             {
-                string[] accountData = account.Split('=');
+                return "";
+            }
+            string[] accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] groups = groupFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string account in accounts)
+            {
+                string[] accountData = account.Split(':');
+                string accountUserIdString = accountData[2];
+
+                if (userId.ToString() == accountUserIdString)
+                {
+                    string accountUserShell = accountData[6];
+                    return accountUserShell;
+                }
+            }
+            return "";
+        }
+
+        public void SetChildProcess(Process process, Process child)
+        {
+            SetChildProcess(process.ProcessId, child.ProcessId);
+        }
+
+        protected void SetChildProcess(int process, int child)
+        {
+            if (parents.ContainsKey(child))
+            {
+                children[parents[child]].Remove(child);
+            }
+            if (!children.ContainsKey(process))
+            {
+                children.Add(process, new List<int>());
+            }
+            parents.Add(child, process);
+            children[process].Add(child);
+        }
+
+        public string GetUsername(int userId)
+        {
+            File configFolder = fileSystem.rootFile.GetFile("etc");
+            if (configFolder == null || !configFolder.IsFolder())
+            {
+                return "";
+            }
+            File usersFile = configFolder.GetFile("passwd");
+            if (usersFile == null)
+            {
+                return "";
+            }
+            File groupFile = configFolder.GetFile("group");
+            if (usersFile == null)
+            {
+                return "";
+            }
+            string[] accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] groups = groupFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string account in accounts)
+            {
+                string[] accountData = account.Split(':');
+                string accountUsername = accountData[0];
+                string accountUserIdString = accountData[2];
+
+                if (userId.ToString() == accountUserIdString)
+                {
+                    return accountUsername;
+                }
+            }
+            return "";
+        }
+
+        public int GetUserId(string username)
+        {
+            File configFolder = fileSystem.rootFile.GetFile("etc");
+            if (configFolder == null || !configFolder.IsFolder())
+            {
+                return -1;
+            }
+            File usersFile = configFolder.GetFile("passwd");
+            if (usersFile == null)
+            {
+                return -1;
+            }
+            File groupFile = configFolder.GetFile("group");
+            if (usersFile == null)
+            {
+                return -1;
+            }
+            string[] accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] groups = groupFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string account in accounts)
+            {
+                string[] accountData = account.Split(':');
+                string accountUsername = accountData[0];
+                string accountUserIdString = accountData[2];
+
+                if (accountUsername == username)
+                {
+                    return int.TryParse(accountUserIdString, out int result) ? result : -1;
+                }
+            }
+            return -1;
+        }
+
+        // TODO no prints
+        // TODO Log Errors to log file?
+        public Credentials Login(GameClient client, string username, string password)
+        {
+            var configFolder = fileSystem.rootFile.GetFile("etc");
+            if (configFolder == null || !configFolder.IsFolder())
+            {
+                client.Send(NetUtil.PacketType.MESSG, "No config folder was found!");
+                return null;
+            }
+            File usersFile = configFolder.GetFile("passwd");
+            if (usersFile == null)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "No passwd file was found!");
+                return null;
+            }
+            File groupFile = configFolder.GetFile("group");
+            if (usersFile == null)
+            {
+                client.Send(NetUtil.PacketType.MESSG, "No group file was found!");
+                return null;
+            }
+            string[] accounts = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] groups = groupFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string account in accounts)
+            {
+                string[] accountData = account.Split(':');
+                string accountUsername = accountData[0];
                 string accountPassword = accountData[1];
-                // Update temporary holding array
-                accountData = accountData[0].Split(',');
-                string accountUsername = accountData[accountData.Length - 1];
+                string accountGroupId = accountData[3];
 
                 if (accountUsername == username && accountPassword == password)
                 {
-                    // Remove the last value, this is now our list of groups
-                    string[] accountGroups = accountData.Take(accountData.Length - 1).ToArray();
-
-                    List<Group> loginGroups = new List<Group>();
-                    for(int i = 0; i < accountGroups.Length; i++)
+                    Group primaryGroup = PermissionHelper.GetGroupFromString(accountGroupId);
+                    if (primaryGroup == Group.INVALID)
                     {
-                        Group loginGroup = PermissionHelper.GetGroupFromString(accountGroups[i]);
-                        if (loginGroup != Group.INVALID)
+                        client.Send(NetUtil.PacketType.MESSG, $"Can't login as {username}, '{accountGroupId}' is not a valid accountGroupId");
+                        break;
+                    }
+                    List<Group> loginGroups = new List<Group>();
+                    foreach(string group in groups)
+                    {
+                        string[] groupData = group.Split(':');
+                        string groupName = groupData[0];
+                        string groupId = groupData[2];
+                        string[] groupUsers = groupData[3].Split(',');
+                        if (groupUsers.Contains(username) || accountGroupId.Equals(groupId))
                         {
-                            loginGroups.Add(loginGroup);
-                        }
-                        else
-                        {
-                            client.Send(NetUtil.PacketType.MESSG, $"Can't login as {username} {accountGroups[i]} is not a valid group");
+                            Group loginGroup = PermissionHelper.GetGroupFromString(groupId);
+                            if (loginGroup != Group.INVALID)
+                            {
+                                loginGroups.Add(loginGroup);
+                            }
+                            else
+                            {
+                                client.Send(NetUtil.PacketType.MESSG, $"Can't login as {username} {groupName} is not a valid group");
+                                break;
+                            }
                         }
                     }
-
-                    client.activeSession.Login(loginGroups, username);
-                    client.Send(NetUtil.PacketType.MESSG, "Logged as : " + username);
-                    Log(Computers.Log.LogEvents.Login, logs.Count + 1 + " " + client.homeComputer.ip + " logged in as " + username, client.activeSession.sessionId, client.homeComputer.ip);
-
-                    return;
+                    return new Credentials(GetUserId(username), primaryGroup, loginGroups);
                 }
             }
-            client.Send(NetUtil.PacketType.MESSG, "Wrong identificants.");
+            return null;
         }
 
         public void Log(Log.LogEvents logEvent, string message, int sessionId, string ip)
@@ -161,7 +313,7 @@ namespace HackLinks_Server.Computers
             if (logsFolder == null)
             {
                 logsFolder = File.CreateNewFolder(fileSystem.fileSystemManager, this, fileSystem.rootFile, "logs");
-                logsFolder.OwnerUsername = "root";
+                logsFolder.OwnerId = 0;
                 logsFolder.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
                 logsFolder.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
                 logsFolder.Group = logsFolder.Parent.Group;
@@ -169,7 +321,7 @@ namespace HackLinks_Server.Computers
             }
             message = message.Replace(' ', '_');
             File logFile = File.CreateNewFile(fileSystem.fileSystemManager, this, logsFolder, message);
-            logFile.OwnerUsername = "root";
+            logFile.OwnerId = 0;
             logFile.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
             logFile.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
             logFile.Group = logsFolder.Parent.Group;
@@ -191,14 +343,14 @@ namespace HackLinks_Server.Computers
             if (logsFolder == null)
             {
                 logsFolder = File.CreateNewFolder(fileSystem.fileSystemManager, this, fileSystem.rootFile, "logs");
-                logsFolder.OwnerUsername = "root";
+                logsFolder.OwnerId = 0;
                 logsFolder.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
                 logsFolder.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
                 logsFolder.Group = logsFolder.Parent.Group;
                 logsFolder.Type = File.FileType.LOG;
             }
             File logFile = File.CreateNewFile(fileSystem.fileSystemManager, this, logsFolder, message);
-            logFile.OwnerUsername = "root";
+            logFile.OwnerId = 0;
             logFile.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
             logFile.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
             logFile.Group = logsFolder.Parent.Group;
@@ -279,6 +431,42 @@ namespace HackLinks_Server.Computers
             if(fileSystem.rootFile != null)
                 throw new ArgumentException("Root file for this computer is already set.");
             fileSystem.rootFile = newFile;
+        }
+
+        internal void RegisterProcess(Process process)
+        {
+            processes[process.ProcessId] = process;
+        }
+
+        internal void NotifyProcessStateChange(int processId, Process.State newState)
+        {
+            switch (newState)
+            {
+                case Process.State.Dead:
+                    int parentId = GetParentId(processId);
+                    if (parentId > 1)
+                    {
+                        processes[parentId].NotifyDeadChild(processes[processId]);
+                        children[parentId].Remove(processId);
+                        parents.Remove(processId);
+                    }
+                    processes.Remove(processId);
+                    freedPIDs.Push(processId);
+                    // We give all the children away to (fake) init process if our process has any
+                    if (children.ContainsKey(processId))
+                    {
+                        foreach (int child in children[processId])
+                        {
+                            SetChildProcess(1, child);
+                        }
+                    }
+                    break;
+            }
+        }
+
+        public int GetParentId(int pid)
+        {
+            return parents.ContainsKey(pid) ? parents[pid] : 1;
         }
 
         /*public Folder getFolderFromPath(string path, bool createFoldersThatDontExist = false)

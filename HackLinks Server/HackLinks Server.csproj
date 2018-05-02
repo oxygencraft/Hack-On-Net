@@ -61,7 +61,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandHandler.cs" />
+    <Compile Include="Computers\Kernel.cs" />
+    <Compile Include="Computers\Processes\CommandProcess.cs" />
+    <Compile Include="Computers\Processes\Credentials.cs" />
+    <Compile Include="Computers\Processes\Hackybox.cs" />
+    <Compile Include="Computers\Processes\HASH.cs" />
+    <Compile Include="Computers\Processes\Process.cs" />
     <Compile Include="Computers\Groups.cs" />
     <Compile Include="Computers\FilePermissions.cs" />
     <Compile Include="Computers\ComputerManager.cs" />
@@ -70,7 +75,7 @@
     <Compile Include="Computers\Log.cs" />
     <Compile Include="Computers\Node.cs" />
     <Compile Include="Computers\PermissionHelper.cs" />
-    <Compile Include="Computers\PlayerTerminal.cs" />
+    <Compile Include="Computers\Processes\ServerAdmin.cs" />
     <Compile Include="ConfigUtil.cs" />
     <Compile Include="Daemons\Daemon.cs" />
     <Compile Include="Daemons\Types\HTTPDaemon.cs" />

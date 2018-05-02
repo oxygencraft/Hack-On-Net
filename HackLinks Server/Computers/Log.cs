@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Computers
 {
-    class Log
+    public class Log
     {
         [JsonIgnore()]
         public File file;

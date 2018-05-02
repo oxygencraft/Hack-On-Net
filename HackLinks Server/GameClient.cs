@@ -1,11 +1,13 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -14,7 +16,7 @@ using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
-    class GameClient
+    public class GameClient
     {
 
         public Socket client;
@@ -47,16 +49,32 @@ namespace HackLinks_Server
         public void ConnectTo(Node node)
         {
             Send(PacketType.KERNL, "connect", "succ", node.ip, "3");
-            if (node == homeComputer)
-            {
-                activeSession = new Session(this, node);
+            Login(node, new Credentials(node.GetUserId("guest"), Group.GUEST));
+        }
 
-                activeSession.Login(Group.ROOT, username);
-            }
-            else
-            {
-                activeSession = new Session(this, node);
-            }
+        public void Login(Node node, Credentials credentials)
+        {
+            Send(PacketType.KERNL, "login", ((int)credentials.Group).ToString(), username);
+
+            // TODO query passwd for shell
+            Process process = CreateProcess(node, "HASH", credentials, (Process.Printer)(input => Send(PacketType.MESSG, input)));
+            activeSession = new Session(this, node, process);
+        }
+
+        public Process CreateProcess(Node node, string type, Process parent)
+        {
+            return CreateProcess(node, type, parent.Credentials, parent.Print);
+        }
+
+        private Process CreateProcess(Node node, string type, Credentials credentials, Process.Printer printer)
+        {
+            return CreateProcess(node, Type.GetType($"HackLinks_Server.Computers.Processes.{type}"), credentials, printer);
+        }
+
+        private Process CreateProcess(Node node, Type type, Credentials credentials, Process.Printer printer)
+        {
+            Console.WriteLine(type);
+            return (Process)Activator.CreateInstance(type, new object[] { node.NextPID, printer, node, credentials });
         }
 
         public void Disconnect()

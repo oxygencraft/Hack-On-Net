@@ -6,27 +6,28 @@ using System.Threading.Tasks;
 using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Files;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 using MySql.Data.MySqlClient;
 
 namespace HackLinks_Server.Files
 {
-    class File
+    public class File
     {
 
         /// <summary>FilType determines how a file will be handled by the system</summary>
         public enum FileType
         {
-            NORMAL,
-            DAEMON,
+            Regular,
+            Directory,
+            Link,
             LOG,
-            EXE,
-            CONFIG
+            // TODO other types 
         }
 
         public readonly int id;
 
         private string name;
-        private string ownerUsername;
+        private int ownerId;
         private Group group;
         private string content = "";
 
@@ -34,7 +35,7 @@ namespace HackLinks_Server.Files
         private int parentId;
         public int computerId;
 
-        private FileType type = FileType.NORMAL;
+        private FileType type = FileType.Regular;
 
         public bool Dirty { get; set; }
 
@@ -42,7 +43,7 @@ namespace HackLinks_Server.Files
 
         public FilePermissions Permissions { get; set; }
 
-        public string OwnerUsername { get => ownerUsername; set { ownerUsername = value; Dirty = true; } }
+        public int OwnerId { get => ownerId; set { ownerId = value; Dirty = true; } }
 
         public Group Group { get => group; set { group = value; Dirty = true; } }
 
@@ -130,42 +131,57 @@ namespace HackLinks_Server.Files
             return newFile;
         }
 
-        public bool HasExecutePermission(string username, Group priv)
+        public bool HasExecutePermission(Credentials credentials)
         {
-            return HasPermission(username, priv, false, false, true);
+            return HasPermission(credentials.UserId, credentials.Group, false, false, true);
         }
 
-        public bool HasWritePermission(string username, Group priv)
+        public bool HasWritePermission(Credentials credentials)
         {
-            return HasPermission(username, priv, false, true, false);
+            return HasPermission(credentials.UserId, credentials.Group, false, true, false);
         }
 
-        public bool HasReadPermission(string username, Group priv)
+        public bool HasReadPermission(Credentials credentials)
         {
-            return HasPermission(username, priv, true, false, false);
+            return HasPermission(credentials.UserId, credentials.Group, true, false, false);
         }
 
-        public bool HasExecutePermission(string username, List<Group> privs)
+        public bool HasExecutePermission(int userId, Group priv)
         {
-            return HasPermission(username, privs, false, false, true);
+            return HasPermission(userId, priv, false, false, true);
         }
 
-        public bool HasWritePermission(string username, List<Group> privs)
+        public bool HasWritePermission(int userId, Group priv)
         {
-            return HasPermission(username, privs, false, true, false);
+            return HasPermission(userId, priv, false, true, false);
         }
 
-        public bool HasReadPermission(string username, List<Group> privs)
+        public bool HasReadPermission(int userId, Group priv)
         {
-            return HasPermission(username, privs, true, false, false);
+            return HasPermission(userId, priv, true, false, false);
         }
 
-        public bool HasPermission(string username, Group priv, bool read, bool write, bool execute)
+        public bool HasExecutePermission(int userId, List<Group> privs)
         {
-            return HasPermission(username,new List<Group> { priv }, read, write, execute);
+            return HasPermission(userId, privs, false, false, true);
         }
 
-        public bool HasPermission(string username, List<Group> privs, bool read, bool write, bool execute)
+        public bool HasWritePermission(int userId, List<Group> privs)
+        {
+            return HasPermission(userId, privs, false, true, false);
+        }
+
+        public bool HasReadPermission(int userId, List<Group> privs)
+        {
+            return HasPermission(userId, privs, true, false, false);
+        }
+
+        public bool HasPermission(int userId, Group priv, bool read, bool write, bool execute)
+        {
+            return HasPermission(userId, new List<Group> { priv }, read, write, execute);
+        }
+
+        public bool HasPermission(int userId, List<Group> privs, bool read, bool write, bool execute)
         {
             if (privs.Contains(Group))
             {
@@ -175,7 +191,7 @@ namespace HackLinks_Server.Files
                 }
             }
 
-            if (OwnerUsername == username)
+            if (OwnerId == userId)
             {
                 if (Permissions.CheckPermission(FilePermissions.PermissionType.User, read, write, execute))
                 {

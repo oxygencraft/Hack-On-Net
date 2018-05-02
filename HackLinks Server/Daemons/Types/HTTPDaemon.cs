@@ -1,4 +1,5 @@
 ﻿using HackLinks_Server.Computers;
+using HackLinks_Server.Computers.Processes;
 using HackLinks_Server.Daemons.Types.Http;
 using HackLinks_Server.Files;
 using System;
@@ -19,35 +20,36 @@ namespace HackLinks_Server.Daemons.Types
 
         public Dictionary<Session, HTTPSession> httpSessions = new Dictionary<Session, HTTPSession>();
 
-        public HTTPDaemon(Node node) : base(node)
+        public HTTPDaemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
 
         }
 
-        public SortedDictionary<string, Tuple<string, CommandHandler.Command>> daemonCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
+        public SortedDictionary<string, Tuple<string, Command>> daemonCommands = new SortedDictionary<string, Tuple<string, Command>>()
         {
-            { "web", new Tuple<string, CommandHandler.Command>("web [interface name] [arguments]\n    Use an interface on your current webpage.", Web) }
+            { "web", new Tuple<string, Command>("web [interface name] [arguments]\n    Use an interface on your current webpage.", Web) }
         };
 
-        public override SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands
+        public override SortedDictionary<string, Tuple<string, Command>> Commands
         {
             get => daemonCommands;
         }
 
-        public static bool Web(GameClient client, string[] arguments)
+        public static bool Web(CommandProcess process, string[] arguments)
         {
+            return true;
             if(arguments.Length < 2)
             {
-                client.Send(HackLinksCommon.NetUtil.PacketType.MESSG, "Usage : web [interface name] [arguments]");
+                process.Print("Usage : web [interface name] [arguments]");
                 return true;
             }
-            Session session = client.activeSession;
 
-            HTTPDaemon daemon = (HTTPDaemon)client.activeSession.activeDaemon;
+            HTTPDaemon daemon = (HTTPDaemon) process;
 
-            var httpSession = daemon.httpSessions[session];
+            // TODO this
+            //var httpSession = daemon.httpSessions[session];
 
-            httpSession.ActivePage.UseInterfaces(httpSession, arguments[1].Split(' '));
+            //httpSession.ActivePage.UseInterfaces(httpSession, arguments[1].Split(' '));
 
             return true;
         }

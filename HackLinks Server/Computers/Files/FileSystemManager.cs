@@ -10,7 +10,7 @@ namespace HackLinks_Server.Computers.Files
     /// <summary>
     /// Contains the global list of all files and alocates ids to new files.
     /// </summary>
-    class FileSystemManager
+    public class FileSystemManager
     {
         private Dictionary<int, File> fileMap = new Dictionary<int, File>();
 

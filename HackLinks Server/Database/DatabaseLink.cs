@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Database
 {
-    class DatabaseLink
+    public class DatabaseLink
     {
         private MySqlConnectionStringBuilder connectionStringBuilder = new MySqlConnectionStringBuilder();
 
@@ -50,20 +50,12 @@ namespace HackLinks_Server.Database
                         {
                             while (reader.Read())
                             {
-                                Node newNode = null;
-                                int type = reader.GetInt32(3);
-                                if (type == 4)
+                                Node newNode = new Node
                                 {
-                                    newNode = new PlayerTerminal();
-                                    ((PlayerTerminal)newNode).ownerId = reader.GetInt32(2);
-                                }
-                                else
-                                {
-                                    newNode = new Node();
-                                }
-                                newNode.id = reader.GetInt32(0);
-                                newNode.ip = reader.GetString(1);
-                                newNode.ownerId = reader.GetInt32(2);
+                                    id = reader.GetInt32(0),
+                                    ip = reader.GetString(1),
+                                    ownerId = reader.GetInt32(2)
+                                };
 
                                 MySqlCommand fileCommand = new MySqlCommand("SELECT * FROM files WHERE computerId = @0", cn1);
                                 fileCommand.Parameters.Add(new MySqlParameter("0", newNode.id));
@@ -85,7 +77,7 @@ namespace HackLinks_Server.Database
                                             newFile.isFolder = fileType == 1;
 
                                             newFile.ParentId = fileReader.GetInt32(2);
-                                            newFile.OwnerUsername = fileReader.GetString(9);
+                                            newFile.OwnerId = fileReader.GetInt32(9);
                                             newFile.Group = (Group)fileReader.GetInt32(7);
                                             newFile.Permissions.PermissionValue = fileReader.GetInt32(8);
                                             newFile.Content = fileReader.GetString(5);
@@ -505,7 +497,7 @@ namespace HackLinks_Server.Database
                         new MySqlParameter("computerId", child.computerId),
                         new MySqlParameter("groupId", child.Group),
                         new MySqlParameter("permissions", child.Permissions.PermissionValue),
-                        new MySqlParameter("owner", child.OwnerUsername),
+                        new MySqlParameter("owner", child.OwnerId),
                     });
 
             int res = fileCommand.ExecuteNonQuery();

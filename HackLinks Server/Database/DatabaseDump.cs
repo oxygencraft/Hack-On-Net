@@ -16,7 +16,7 @@ namespace HackLinks_Server.Database
             "CREATE TABLE `accounts` ("+
             " `id` int(11) NOT NULL AUTO_INCREMENT,"+
             " `username` varchar(64) NOT NULL,"+
-            " `pass` text DEFAULT NULL,"+
+            " `pass` char(64) DEFAULT NULL," +
             " `mailaddress` varchar(64) DEFAULT NULL,"+
             " `homeComputer` int(11) DEFAULT NULL,"+
             " `permissions` TEXT NOT NULL,"+
@@ -51,7 +51,7 @@ namespace HackLinks_Server.Database
             //
             "LOCK TABLES `computers` WRITE",
             "/*!40000 ALTER TABLE `computers` DISABLE KEYS */",
-            "INSERT INTO `computers` VALUES (1,'8.8.8.8',1,4),(2,'2.2.2.2',1,4)",
+            "INSERT INTO `computers` VALUES (1,'8.8.8.8',1,4)",
             "/*!40000 ALTER TABLE `computers` ENABLE KEYS */",
             "UNLOCK TABLES",
             "/*!40101 SET character_set_client = @saved_cs_client */",
@@ -68,7 +68,7 @@ namespace HackLinks_Server.Database
             " `computerId` int(11) NOT NULL," +
             " `groupId` int(11) NOT NULL," +
             " `permissions` int(11) NOT NULL," +
-            " `owner` varchar(64) NOT NULL," +
+            " `owner` int NOT NULL," +
             " PRIMARY KEY (`id`)," +
             " UNIQUE KEY `uniquefiles` (`name`,`parentFile`,`computerId`)" +
             ") ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1",
@@ -79,17 +79,23 @@ namespace HackLinks_Server.Database
             "LOCK TABLES `files` WRITE",
             "/*!40000 ALTER TABLE `files` DISABLE KEYS */",
             "INSERT INTO `files` VALUES " +
-            "(1,'daemons',5,1,0,'',1,1,774,'root')," +
-            "(2,'autorun',1,0,0,'irc',1,1,774,'root')," +
-            "(3,'irc',1,0,1,'IRC',1,1,774,'root')," +
-            "(4,'daemons',6,1,0,'',2,1,774,'root')," +
-            "(5,'',0,1,0,'',1,0,774,'root')," +
-            "(6,'',0,1,0,'',2,0,774,'root')," +
-            "(7,'cfg',5,1,0,'',1,1,774,'root')," +
-            "(8,'users.cfg',7,0,0," +
-            "'root,admin,user,guest,root=potato\r\n" +
-            "user,jaber=potato\r\n'" +
-            ",1,1,774,'root')",
+            "(1,'',0,1,0,'',1,0,774,0)," +
+            "(2,'daemons',1,1,0,'',1,1,774,0)," +
+            "(3,'autorun',2,0,0,'irc',1,1,774,0)," +
+            "(4,'irc',2,0,1,'IRC',1,0,774,0)," +
+            "(5,'etc',1,1,0,'',1,1,774,0)," +
+            "(6,'passwd',5,0,0,'" +
+            "root:x:0:0:root:/root:/bin/hash\r\n" +
+            "admin:x:1:1:root:/root:/bin/hash\r\n" +
+            "user:x:2:2:root:/root:/bin/hash\r\n" +
+            "guest:x:3:3:root:/root:/bin/hash\r\n" +
+            "',1,1,774,0),"+
+            "(7,'group',5,0,0,'" +
+            "root:x:0:\r\n" +
+            "admin:x:1:root,admin\r\n" +
+            "user:x:2:root,admin,user\r\n" +
+            "guest:x:3:root,admin,user,guest\r\n" +
+            "',1,1,774,0)",
             "/*!40000 ALTER TABLE `files` ENABLE KEYS */",
             "UNLOCK TABLES",
         };

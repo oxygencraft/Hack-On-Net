@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server
 {
-    enum Permissions
+    public enum Permissions
     {
         Admin,
         Ban,

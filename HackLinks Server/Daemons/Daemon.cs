@@ -1,5 +1,6 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Daemons
 {
-    abstract class Daemon
+    public abstract class Daemon : CommandProcess
     {
         protected Node node;
         protected List<Session> connectedSessions = new List<Session>();
@@ -18,12 +19,10 @@ namespace HackLinks_Server.Daemons
         {
             get;
         }
-        //This should be created and populated by the implementing class
-        public abstract SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands { get; }
 
-        public Daemon(Node node)
+        public Daemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
-            this.node = node;
+            node = computer;
             OnStartUp();
         }
 
@@ -44,11 +43,6 @@ namespace HackLinks_Server.Daemons
             return StrType == strType.ToLower();
         }
 
-        public virtual bool HandleDaemonCommand(GameClient client, string[] command)
-        {
-            return false;
-        }
-
         public virtual void OnStartUp() { }
 
         public virtual void OnConnect(Session connectSession)
@@ -63,7 +57,7 @@ namespace HackLinks_Server.Daemons
 
         public bool CanBeAccessedBy(Session session)
         {
-            foreach(Group group in session.Groups)
+            foreach(Group group in Credentials.Groups)
             {
                 if(group <= accessLevel)
                 {

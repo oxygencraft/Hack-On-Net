@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using HackLinks_Server.Daemons.Types.Irc;
 using static HackLinksCommon.NetUtil;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 
 namespace HackLinks_Server.Daemons.Types
 {
@@ -14,19 +15,19 @@ namespace HackLinks_Server.Daemons.Types
     {
         public List<IrcMessage> messages = new List<IrcMessage>();
 
-        public SortedDictionary<string, Tuple<string, CommandHandler.Command>> daemonCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
+        public SortedDictionary<string, Tuple<string, Command>> daemonCommands = new SortedDictionary<string, Tuple<string, Command>>()
         {
-            { "irc", new Tuple<string, CommandHandler.Command>("irc send [text to send]\n    Send a message via the connected IRC daemon.", Irc) },
+            { "irc", new Tuple<string, Command>("irc send [text to send]\n    Send a message via the connected IRC daemon.", Irc) },
         };
 
-        public override SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands
+        public override SortedDictionary<string, Tuple<string, Command>> Commands
         {
             get => daemonCommands;
         }
 
         public override string StrType => "irc";
 
-        public IrcDaemon(Node node) : base(node)
+        public IrcDaemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
             this.accessLevel = Group.GUEST;
         }
@@ -68,24 +69,21 @@ namespace HackLinks_Server.Daemons.Types
             }
         }
 
-        private static bool Irc(GameClient client, string[] command)
+        private static bool Irc(CommandProcess process, string[] command)
         {
-
-            Session session = client.activeSession;
-
-            IrcDaemon daemon = (IrcDaemon) client.activeSession.activeDaemon;
+            IrcDaemon daemon = (IrcDaemon) process;
 
             if (command[0] == "irc")
             {
                 if (command.Length < 2)
                 {
-                    session.owner.Send(PacketType.MESSG, "Usage : irc [send]");
+                    process.Print("Usage : irc [send]");
                     return true;
                 }
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs.Length < 2)
                 {
-                    session.owner.Send(PacketType.MESSG, "Usage : irc [send]");
+                    process.Print("Usage : irc [send]");
                     return true;
                 }
                 if (cmdArgs[0] == "send")
@@ -93,20 +91,12 @@ namespace HackLinks_Server.Daemons.Types
                     var text = "";
                     for (int i = 1; i < cmdArgs.Length; i++)
                         text += cmdArgs[i] + (i != cmdArgs.Length ? " " : "");
-                    daemon.SendMessage(new IrcMessage(session.owner.username, text));
+                    daemon.SendMessage(new IrcMessage(process.computer.GetUsername(process.Credentials.UserId), text));
                     return true;
                 }
-                session.owner.Send(PacketType.MESSG, "Usage : irc [send]");
+                process.Print("Usage : irc [send]");
                 return true;
             }
-            return false;
-        }
-
-        public override bool HandleDaemonCommand(GameClient client, string[] command)
-        {
-            if (Commands.ContainsKey(command[0]))
-                return Commands[command[0]].Item2(client, command);
-
             return false;
         }
 
