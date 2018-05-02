@@ -44,6 +44,8 @@ namespace HackLinks_Server.Daemons.Types
         public List<Account> accounts = new List<Account>();
         private static ObservableCollection<string> bankTransfers = new ObservableCollection<string>();
 
+        // TODO: Fix this daemon for Jaber's pull when it is merged (preferrablely merging when that daemon bug is fixed would be better)
+
         public static bool Account(GameClient client, string[] command)
         {
             Session session = client.activeSession;
@@ -57,6 +59,9 @@ namespace HackLinks_Server.Daemons.Types
                     session.owner.Send(PacketType.MESSG, "Usage : account [create/resetpass/balance/transfer/loan/transactions/close]");
                     return true;
                 }
+                // TODO: Implement Loans
+                // TODO: Implement Transaction Log
+                // TODO: Update and implement anything user account management related when Jaber's pull has been merged
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs[0] == "create")
                 {
@@ -118,6 +123,7 @@ namespace HackLinks_Server.Daemons.Types
                 }
                 if (cmdArgs[0] == "resetpass")
                 {
+                    // TODO: Implement this when Jaber's pull is merged
                     client.Send(PacketType.MESSG, "To be implemented.\nPlease contact the admin of this node to reset your password.");
                     return true;
                 }
@@ -238,9 +244,17 @@ namespace HackLinks_Server.Daemons.Types
             }
         }
 
-        public void UpdateAccounts()
+        public void UpdateAccountDatabase()
         {
-            // TODO: Add this
+            File accountFile = node.fileSystem.rootFile.GetFileAtPath("/bank/accounts.db");
+            if (accountFile == null)
+                return;
+            string newAccountsFile = "";
+            foreach (var account in accounts)
+            {
+                newAccountsFile += account.accountName + "," + 0 + "," + account.username + "\r\n";
+            }
+            accountFile.Content = newAccountsFile;
         }
 
         public void ProcessBankTransfer(object sender, NotifyCollectionChangedEventArgs e)
