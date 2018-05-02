@@ -59,6 +59,11 @@ namespace HackLinks_Server.Computers
                 var newDaemon = new HTTPDaemon(this);
                 daemons.Add(newDaemon);
             }
+            else if(lines[0] == "BANK")
+            {
+                var newDaemon = new BankDaemon(this);
+                daemons.Add(newDaemon);
+            }
         }
 
         public Daemon GetDaemon(string type)
