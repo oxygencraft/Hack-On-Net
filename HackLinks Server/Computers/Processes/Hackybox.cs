@@ -30,7 +30,6 @@ namespace HackLinks_Server.Computers.Processes
             { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
             { "netmap", new Tuple<string, Command>("netmap [ip] [x] [y]\n    Adds a node to the network map", AddToNetMap) },
             { "music", new Tuple<string, Command>("music [file ((DLC\\)Music\\NameOfFile)] [playimmediately (0/1)] (DEBUG COMMAND)", PlayMusic) },
-            { "daemon", new Tuple<string, Command>("daemon [daemon name]\n    If it's available we'll launch the given daemon.", Daemon) },
         };
 
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
@@ -583,25 +582,6 @@ namespace HackLinks_Server.Computers.Processes
                 return true;
             }
             process.computer.Kernel.PlayMusic(process, command[1], command[2]);
-            return true;
-        }
-
-        private static bool Daemon(CommandProcess process, string[] command)
-        {
-            if (command.Length != 2)
-            {
-                process.Print("Usage : daemon [name of daemon]");
-                return true;
-            }
-            var target = command[1];
-            if (target == "exit")
-            {
-                process.computer.Kernel.ExitDaemon(process);
-                return true;
-            }
-
-            process.computer.Kernel.OpenDaemon(process, target);
-
             return true;
         }
     }

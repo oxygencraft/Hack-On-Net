@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using static HackLinksCommon.NetUtil;
 using System.Text.RegularExpressions;
 using HackLinks_Server.Files;
+using HackLinks_Server.Computers.Processes;
 
 namespace HackLinks_Server.Daemons.Types.Http
 {
@@ -41,7 +42,7 @@ namespace HackLinks_Server.Daemons.Types.Http
             return page;
         }
 
-        public void UseInterfaces(HTTPSession httpSession, string[] arguments)
+        public void UseInterfaces(HTTPClient httpSession, string[] arguments)
         {
             foreach(KeyValuePair<string, WebInterface> webInt in interfaces)
             {

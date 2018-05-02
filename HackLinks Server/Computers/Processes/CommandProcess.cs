@@ -24,6 +24,15 @@ namespace HackLinks_Server.Computers.Processes
             return false;
         }
 
+        public override void WriteInput(string inputData)
+        {
+            RunCommand(inputData);
+        }
+
+        /// <summary>
+        /// Helper function, Run the given command and exit immediately
+        /// </summary>
+        /// <param name="command"></param>
         public override void Run(string command)
         {
             exitCode = (byte) (RunCommand(command) ? 0 : 1);

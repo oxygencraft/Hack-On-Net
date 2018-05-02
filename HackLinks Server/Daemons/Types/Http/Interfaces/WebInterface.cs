@@ -1,4 +1,5 @@
-﻿using HackLinks_Server.Files;
+﻿using HackLinks_Server.Computers.Processes;
+using HackLinks_Server.Files;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace HackLinks_Server.Daemons.Types.Http.Interfaces
                 { "passwordSecurity", PasswordSecurity.Instanciate }
             };
 
-        public virtual void Use(HTTPSession session, string[] args)
+        public virtual void Use(HTTPClient session, string[] args)
         {
 
         }

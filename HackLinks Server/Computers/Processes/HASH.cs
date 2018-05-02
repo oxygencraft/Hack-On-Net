@@ -11,6 +11,7 @@ namespace HackLinks_Server.Computers.Processes
         private static SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>()
         {
             { "cd", new Tuple<string, Command>("cd [dir]\n    Moves current working directory to the specified directory.", ChangeDirectory) },
+            { "daemon", new Tuple<string, Command>("daemon [daemon name]\n    If it's available we'll launch the given daemon.", Daemon) },
         };
 
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
@@ -45,6 +46,20 @@ namespace HackLinks_Server.Computers.Processes
                 Process child = computer.Kernel.StartProcess(this, "Hackybox");
                 child.Run(inputData);
             }
+        }
+
+        private static bool Daemon(CommandProcess process, string[] command)
+        {
+            if (command.Length != 2)
+            {
+                process.Print("Usage : daemon [name of daemon]");
+                return true;
+            }
+            string target = command[1];
+
+            process.computer.Kernel.OpenDaemon(process, target);
+
+            return true;
         }
 
         public static bool ChangeDirectory(CommandProcess process, string[] command)

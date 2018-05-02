@@ -9,11 +9,12 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Daemons
 {
-    public abstract class Daemon : CommandProcess
+    public abstract class Daemon : Process
     {
         protected Node node;
         protected List<Session> connectedSessions = new List<Session>();
         protected Group accessLevel = Group.ROOT;
+        protected abstract Type ClientType { get; }
 
         public abstract string StrType
         {
@@ -45,7 +46,7 @@ namespace HackLinks_Server.Daemons
 
         public virtual void OnStartUp() { }
 
-        public virtual void OnConnect(Session connectSession)
+        public virtual void OnConnect(Session connectSession, DaemonClient client)
         {
             connectedSessions.Add(connectSession);
         }
@@ -70,6 +71,11 @@ namespace HackLinks_Server.Daemons
         public virtual string GetSSHDisplayName()
         {
             return null;
+        }
+
+        public DaemonClient CreateClient(Session session, Process parent)
+        {
+            return (DaemonClient)Activator.CreateInstance(ClientType, new object[] {session, this, node.NextPID, parent.Print, session.connectedNode, parent.Credentials });
         }
     }
 }

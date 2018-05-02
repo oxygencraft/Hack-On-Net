@@ -22,7 +22,8 @@ namespace HackLinks_Server.Computers
 
         private GameClient GetClient(Process process)
         {
-            return node.GetSession(process.ProcessId).owner;
+            Session session = node.GetSession(process.ProcessId) ?? null;
+            return session  != null? session.owner : null;
         }
 
         private Session GetSession(Process process)
@@ -92,6 +93,24 @@ namespace HackLinks_Server.Computers
                 client.Send(NetUtil.PacketType.KERNL, "connect", "fail", "0");
         }
 
+        /// <summary>
+        /// If the given is currently an attached process, then reattach the parent instead
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="child"></param>
+        public void ReattachParent(Process parent, Process child)
+        {
+            GameClient client = GetClient(child);
+            if (client != null)
+            {
+                Session session = client.activeSession;
+                if (session.HasProcessId(child.ProcessId))
+                {
+                    session.AttachProcess(parent);
+                }
+            }
+        }
+
         public void Disconnect(CommandProcess process)
         {
             GetClient(process).Disconnect();
@@ -120,6 +139,12 @@ namespace HackLinks_Server.Computers
         {
             // TODO clone credentials OR make sure they're imutable
             Process child = GetClient(process).CreateProcess(node, type, process);
+            StartProcess(process, child);
+            return child;
+        }
+
+        public Process StartProcess(Process process, Process child)
+        {
             process.computer.SetChildProcess(process, child);
             child.ActiveDirectory = process.ActiveDirectory;
             return child;
@@ -130,16 +155,6 @@ namespace HackLinks_Server.Computers
             GetClient(process).Send(NetUtil.PacketType.MUSIC, song, playimmediately);
         }
 
-        public void ExitDaemon(CommandProcess process)
-        {
-            Session activeSession = GetClient(process).activeSession;
-            if (activeSession.activeDaemon != null)
-            {
-                activeSession.activeDaemon.OnDisconnect(activeSession);
-            }
-            activeSession.activeDaemon = null;
-        }
-
         public void OpenDaemon(CommandProcess process, string target)
         {
             Session activeSession = GetClient(process).activeSession;
@@ -147,10 +162,10 @@ namespace HackLinks_Server.Computers
             {
                 if (daemon.IsOfType(target))
                 {
-                    if (activeSession.activeDaemon != null)
-                        activeSession.activeDaemon.OnDisconnect(activeSession);
-                    activeSession.activeDaemon = daemon;
-                    daemon.OnConnect(activeSession);
+                    DaemonClient daemonClient = daemon.CreateClient(activeSession, process);
+                    StartProcess(process, daemonClient);
+                    daemon.OnConnect(activeSession, daemonClient);
+                    GetClient(process).activeSession.AttachProcess(daemonClient);
                 }
             }
         }

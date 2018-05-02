@@ -57,6 +57,7 @@ namespace HackLinks_Server.Computers.Processes
         /// <param name="process"></param>
         public virtual void NotifyDeadChild(Process process)
         {
+            computer.Kernel.ReattachParent(this, process);
         }
 
         /// <summary>
