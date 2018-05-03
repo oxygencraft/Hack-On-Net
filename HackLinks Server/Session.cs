@@ -21,12 +21,16 @@ namespace HackLinks_Server
 
         public GameClient owner;
         public Node connectedNode;
-        public Daemon activeDaemon;
         private Process attachedProcess;
 
         public bool HasProcessId(int pid)
         {
             return attachedProcess.ProcessId == pid;
+        }
+
+        public void AttachProcess(Process process)
+        {
+            attachedProcess = process;
         }
 
         public int sessionId;
@@ -84,9 +88,7 @@ namespace HackLinks_Server
             ResetTrace();
             if (this.connectedNode != null)
                 this.connectedNode.sessions.Remove(this);
-            if(activeDaemon != null)
-                activeDaemon.OnDisconnect(this);
-            activeDaemon = null;
+            //TODO kill process
             connectedNode = null;
         }
 

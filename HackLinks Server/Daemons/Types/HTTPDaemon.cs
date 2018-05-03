@@ -18,40 +18,14 @@ namespace HackLinks_Server.Daemons.Types
 
         public List<WebPage> webPages = new List<WebPage>();
 
-        public Dictionary<Session, HTTPSession> httpSessions = new Dictionary<Session, HTTPSession>();
+        public Dictionary<Session, HTTPClient> httpSessions = new Dictionary<Session, HTTPClient>();
+
+        protected override Type ClientType => typeof(HTTPClient);
+
 
         public HTTPDaemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
 
-        }
-
-        public SortedDictionary<string, Tuple<string, Command>> daemonCommands = new SortedDictionary<string, Tuple<string, Command>>()
-        {
-            { "web", new Tuple<string, Command>("web [interface name] [arguments]\n    Use an interface on your current webpage.", Web) }
-        };
-
-        public override SortedDictionary<string, Tuple<string, Command>> Commands
-        {
-            get => daemonCommands;
-        }
-
-        public static bool Web(CommandProcess process, string[] arguments)
-        {
-            return true;
-            if(arguments.Length < 2)
-            {
-                process.Print("Usage : web [interface name] [arguments]");
-                return true;
-            }
-
-            HTTPDaemon daemon = (HTTPDaemon) process;
-
-            // TODO this
-            //var httpSession = daemon.httpSessions[session];
-
-            //httpSession.ActivePage.UseInterfaces(httpSession, arguments[1].Split(' '));
-
-            return true;
         }
 
         public WebPage GetPage(string v)
@@ -70,12 +44,11 @@ namespace HackLinks_Server.Daemons.Types
             LoadWebPages();
         }
 
-        public override void OnConnect(Session connectSession)
+        public override void OnConnect(Session connectSession, DaemonClient client)
         {
-            base.OnConnect(connectSession);
-            var newHTTPSession = new HTTPSession(this, connectSession);
-            httpSessions.Add(connectSession, newHTTPSession);
-            newHTTPSession.SetActivePage(defaultPage);
+            base.OnConnect(connectSession, client);
+            httpSessions.Add(connectSession, (HTTPClient)client);
+            ((HTTPClient)client).SetActivePage(defaultPage);
         }
 
         public override void OnDisconnect(Session disconnectSession)
