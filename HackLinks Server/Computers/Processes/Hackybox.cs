@@ -27,7 +27,6 @@ namespace HackLinks_Server.Computers.Processes
             { "chown", new Tuple<string, Command>("chown [file] [username]\n    Change the required user level for read and write operations on the given file.", ChOwn) },
             { "chmod", new Tuple<string, Command>("chmod [mode] [file]\n    Change the required user level for read and write operations on the given file.\n", ChMod) },
             { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
-            { "help", new Tuple<string, Command>("help [page]\n    Displays the specified page of commands.", Help) },
             { "netmap", new Tuple<string, Command>("netmap [ip] [x] [y]\n    Adds a node to the network map", AddToNetMap) },
             { "music", new Tuple<string, Command>("music [file ((DLC\\)Music\\NameOfFile)] [playimmediately (0/1)] (DEBUG COMMAND)", PlayMusic) },
         };
@@ -210,47 +209,6 @@ namespace HackLinks_Server.Computers.Processes
             }
 
             process.computer.Kernel.Display(process, "view", file.Name, file.Content);
-            return true;
-        }
-
-        public static bool Help(CommandProcess process, string[] command)
-        {
-            const int ITEMS_PER_PAGE = 10;
-            int totalPages = commands.Count / ITEMS_PER_PAGE + 1;
-
-            int pageNum = 0;
-
-            bool inputValid = command.Length == 1 || int.TryParse(command[1], out pageNum) && pageNum <= totalPages;
-
-            if (pageNum == 0 || !inputValid)
-                pageNum = 1;
-
-            string header = $"---------------------------------\nCommand List - Page {pageNum} of {totalPages}:\n";
-            string footer = "\n---------------------------------\n";
-
-            StringBuilder builder = new StringBuilder();
-
-            if (!inputValid)
-                builder.AppendLine("Invalid Page Number");
-
-            builder.AppendLine(header);
-
-            if (pageNum <= totalPages)
-            {
-                builder.AppendLine("------- Commands -------\n");
-                foreach (string key in commands.Keys.Skip((pageNum - 1) * 10).Take(10))
-                {
-                    builder.AppendLine(commands[key].Item1);
-                    builder.AppendLine();
-                }
-            }
-
-            builder.Append(commands["help"].Item1);
-
-            builder.Append(footer);
-
-            process.Print(builder.ToString());
-
             return true;
         }
 
