@@ -80,6 +80,8 @@
     <Compile Include="Daemons\Daemon.cs" />
     <Compile Include="Daemons\DaemonClient.cs" />
     <Compile Include="Computers\Processes\DNSClient.cs" />
+    <Compile Include="Daemons\Types\BankDaemon.cs" />
+    <Compile Include="Daemons\Types\Bank\Account.cs" />
     <Compile Include="Daemons\Types\HTTPDaemon.cs" />
     <Compile Include="Daemons\Types\DNSDaemon.cs" />
     <Compile Include="Daemons\Types\Dns\DNSEntry.cs" />

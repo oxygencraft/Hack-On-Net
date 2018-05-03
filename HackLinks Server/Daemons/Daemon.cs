@@ -31,7 +31,8 @@ namespace HackLinks_Server.Daemons
         {
             DEFAULT,
             IRC,
-            DNS
+            DNS,
+            BANK
         }
 
         public virtual DaemonType GetDaemonType()
