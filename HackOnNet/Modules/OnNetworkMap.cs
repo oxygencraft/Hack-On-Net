@@ -195,16 +195,19 @@ namespace HackOnNet.Modules
 
         public void DoGui(float t)
         {
-            if (!isNodesInSync && userScreen.netManager.gotNodes)
+            if (userScreen.netManager.nodesToSync != null)
             {
-                string[] nodes = userScreen.netManager.nodesToSync.Split(',');
-                foreach (var node in nodes)
+                if (!isNodesInSync && userScreen.netManager.gotNodes)
                 {
-                    string[] ippos = node.Split(new char[] { ':' }, 2);
-                    string[] pos = ippos[1].Split(':');
-                    userScreen.netMap.DiscoverNode(ippos[0], new Vector2(float.Parse(pos[0]), float.Parse(pos[1])), false);
+                    string[] nodes = userScreen.netManager.nodesToSync.Split(',');
+                    foreach (var node in nodes)
+                    {
+                        string[] ippos = node.Split(new char[] { ':' }, 2);
+                        string[] pos = ippos[1].Split(':');
+                        userScreen.netMap.DiscoverNode(ippos[0], new Vector2(float.Parse(pos[0]), float.Parse(pos[1])), false);
+                    }
+                    isNodesInSync = true;
                 }
-                isNodesInSync = true;
             }
 
             int num = -1;

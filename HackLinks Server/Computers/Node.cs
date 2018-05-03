@@ -98,7 +98,7 @@ namespace HackLinks_Server.Computers
             }
             else if(lines[0] == "BANK")
             {
-                var newDaemon = new BankDaemon(this);
+                var newDaemon = new BankDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);
             }
         }
