@@ -1,6 +1,5 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Permissions;
-using HackLinks_Server.Computers.Processes;
 using HackLinks_Server.Daemons.Types.Bank;
 using HackLinks_Server.Files;
 using HackLinksCommon;
@@ -11,7 +10,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static HackLinks_Server.Computers.Processes.CommandProcess;
 using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server.Daemons.Types
@@ -19,26 +17,217 @@ namespace HackLinks_Server.Daemons.Types
     class BankDaemon : Daemon
     {
 
+        public SortedDictionary<string, Tuple<string, CommandHandler.Command>> daemonCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
+        {
+            { "account", new Tuple<string, CommandHandler.Command>("account [create/resetpass/balance/transfer/loan/transactions/close]\n    Performs an account operation.", Account) },
+            { "balance", new Tuple<string, CommandHandler.Command>("balance [add/subtract]\n    Adds or subtracts balance (DEBUG COMMAND)", Balance) }
+        };
 
+        public override SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands
+        {
+            get => daemonCommands;
+        }
 
         public override string StrType => "bank";
-
-        protected override Type ClientType => typeof(IRCClient);
 
         public override DaemonType GetDaemonType()
         {
             return DaemonType.BANK;
         }
 
-        public BankDaemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid, printer, computer, credentials)
+        public BankDaemon(Node node) : base(node)
         {
+            
             this.accessLevel = Group.GUEST;
         }
 
         public List<Account> accounts = new List<Account>();
-        internal static ObservableCollection<string> bankTransfers = new ObservableCollection<string>();
+        private static ObservableCollection<string> bankTransfers = new ObservableCollection<string>();
 
         // TODO: Fix this daemon for Jaber's pull when it is merged (preferrablely merging when that daemon bug is fixed would be better)
+
+        public static bool Account(GameClient client, string[] command)
+        {
+            Session session = client.activeSession;
+
+            BankDaemon daemon = (BankDaemon)client.activeSession.activeDaemon;
+
+            if (command[0] == "account")
+            {
+                if (command.Length < 2)
+                {
+                    session.owner.Send(PacketType.MESSG, "Usage : account [create/resetpass/balance/transfer/loan/transactions/close]");
+                    return true;
+                }
+                // TODO: Implement Loans
+                // TODO: Implement Transaction Log
+                // TODO: Update and implement anything user account management related when Jaber's pull has been merged
+                var cmdArgs = command[1].Split(' ');
+                if (cmdArgs[0] == "create")
+                {
+                    if (cmdArgs.Length < 3)
+                    {
+                        session.owner.Send(PacketType.MESSG, "Usage : account create [accountname] [password]");
+                        return true;
+                    }
+                    var configFolder = session.connectedNode.fileSystem.rootFile.GetFile("cfg");
+                    if (configFolder == null || !configFolder.IsFolder())
+                    {
+                        client.Send(NetUtil.PacketType.MESSG, "No config folder was found ! (Contact the admin of this node to create one as the bank is useless without one)");
+                        return true;
+                    }
+                    var usersFile = configFolder.GetFile("users.cfg");
+                    if (usersFile == null)
+                    {
+                        client.Send(NetUtil.PacketType.MESSG, "No config file was found ! (Contact the admin of this node to create one as the bank is useless without one)");
+                        return true;
+                    }
+                    var bankFolder = session.connectedNode.fileSystem.rootFile.GetFile("bank");
+                    if (configFolder == null || !configFolder.IsFolder())
+                    {
+                        client.Send(NetUtil.PacketType.MESSG, "No bank daemon folder was found ! (Contact the admin of this node to create one as the bank is useless without one)");
+                        return true;
+                    }
+                    var accountFile = bankFolder.GetFile("accounts.db");
+                    if (accountFile == null)
+                    {
+                        client.Send(NetUtil.PacketType.MESSG, "No accounts file was found ! (Contact the admin of this node to create one as the bank is useless without one)");
+                        return true;
+                    }
+                    List<string> accounts = new List<string>();
+                    var accountsFile = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    if (accountsFile.Length != 0)
+                    {
+                        foreach (var account in accountsFile)
+                        {
+                            string[] accountData = account.Split('=');
+                            string accountPassword = accountData[1];
+                            // Update temporary holding array
+                            accountData = accountData[0].Split(',');
+                            accounts.Add(accountData[accountData.Length - 1]);
+                        }
+                    }
+                    if (cmdArgs[1] == "Guest" || accounts.Contains(cmdArgs[1]))
+                    {
+                        if (cmdArgs[1] == "Guest")
+                            client.Send(PacketType.MESSG, "The account name Guest is not allowed to prevent errors");
+                        else
+                            client.Send(PacketType.MESSG, "This account name is not available");
+                        return true;
+                    }
+                    usersFile.Content = usersFile.Content + "\r\nguest," + cmdArgs[1] + "=" + cmdArgs[2];
+                    int accountNumber = new Random().Next(9999999);
+                    daemon.accounts.Add(new Account(cmdArgs[1], 0, client.username));
+                    accountFile.Content += cmdArgs[1] + "," + 0 + "," + client.username + "\r\n";
+                    client.Send(PacketType.MESSG, "An account has been opened with account number: " + accountNumber + ". Use your account name to login.");
+                }
+                if (cmdArgs[0] == "resetpass")
+                {
+                    // TODO: Implement this when Jaber's pull is merged
+                    client.Send(PacketType.MESSG, "To be implemented.\nPlease contact the admin of this node to reset your password.");
+                    return true;
+                }
+                if (cmdArgs[0] == "balance")
+                {
+                    if (session.currentUsername == "Guest")
+                    {
+                        client.Send(PacketType.MESSG, "You are not logged in");
+                        return true;
+                    }
+                    Account account = null;
+                    foreach (var account2 in daemon.accounts)
+                    {
+                        if (account2.accountName == session.currentUsername)
+                        {
+                            account = account2;
+                            break;
+                        }
+                    }
+                    if (account == null)
+                    {
+                        client.Send(PacketType.MESSG, "Account data for this account does not exist in the database");
+                        return true;
+                    }
+                    client.Send(PacketType.MESSG, $"Account balance for {account.accountName} is {account.balance}");
+                }
+                if (cmdArgs[0] == "transfer")
+                {
+                    if (cmdArgs.Length < 4)
+                    {
+                        session.owner.Send(PacketType.MESSG, "Usage : account transfer [receivingaccountname] [bankip] [amount]");
+                        return true;
+                    }
+                    if (session.currentUsername == "Guest")
+                    {
+                        client.Send(PacketType.MESSG, "You are not logged in");
+                        return true;
+                    }
+                    Account account = null;
+                    foreach (var account2 in daemon.accounts)
+                    {
+                        if (account2.accountName == session.currentUsername)
+                        {
+                            account = account2;
+                            break;
+                        }
+                    }
+                    if (account == null)
+                    {
+                        client.Send(PacketType.MESSG, "Account data for this account does not exist in the database");
+                        return true;
+                    }
+                    if (account.balance < Convert.ToInt32(cmdArgs[3]))
+                    {
+                        client.Send(PacketType.MESSG, "Account does not have enough balance");
+                        return true;
+                    }
+                    if (bankTransfers.Count != 0)
+                        bankTransfers.Clear();
+                    account.balance -= Convert.ToInt32(cmdArgs[3]);
+                    bankTransfers.Add(cmdArgs[1] + "@" + cmdArgs[2] + ":" + cmdArgs[3]);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public static bool Balance(GameClient client, string[] command)
+        {
+            Session session = client.activeSession;
+
+            BankDaemon daemon = (BankDaemon)client.activeSession.activeDaemon;
+
+            if (command[0] == "balance")
+            {
+                if (command.Length < 2)
+                {
+                    session.owner.Send(PacketType.MESSG, "Usage : balance [balance]");
+                    return true;
+                }
+                if (session.currentUsername == "Guest")
+                {
+                    client.Send(PacketType.MESSG, "You are not logged in");
+                    return true;
+                }
+                Account account = null;
+                foreach (var account2 in daemon.accounts)
+                {
+                    if (account2.accountName == session.currentUsername)
+                    {
+                        account = account2;
+                        break;
+                    }
+                }
+                if (account == null)
+                {
+                    client.Send(PacketType.MESSG, "Account data for this account does not exist in the database");
+                    return true;
+                }
+                account.balance = Convert.ToInt32(command[1]);
+                return true;
+            }
+            return false;
+        }
 
         public void LoadAccounts()
         {
@@ -96,6 +285,14 @@ namespace HackLinks_Server.Daemons.Types
         {
             LoadAccounts();
             bankTransfers.CollectionChanged += ProcessBankTransfer;
+        }
+
+        public override bool HandleDaemonCommand(GameClient client, string[] command)
+        {
+            if (Commands.ContainsKey(command[0]))
+                return Commands[command[0]].Item2(client, command);
+
+            return false;
         }
 
         public override string GetSSHDisplayName()
