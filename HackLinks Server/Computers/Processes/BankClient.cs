@@ -13,15 +13,16 @@ namespace HackLinks_Server.Computers.Processes
     {
         public SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>()
         {
-            { "account", new Tuple<string, Command>("account [create/resetpass/balance/transfer/loan/transactions/close]\n    Performs an account operation.", Account) },
-            { "balance", new Tuple<string, Command>("balance [add/subtract]\n    Adds or subtracts balance (DEBUG COMMAND)", Balance) }
+            { "account", new Tuple<string, Command>("account [create/login/resetpass/balance/transfer/transactions/close]\n    Performs an account operation.", Account) },
+            { "balance", new Tuple<string, Command>("balance set [accountname] [value]/get [accountname]\n    Sets or gets balance (DEBUG COMMAND)", Balance) }
         };
 
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
+        private Account loggedInAccount = null;
 
         public BankClient(Session session, Daemon daemon, int pid, Printer printer, Node computer, Credentials credentials) : base(session, daemon, pid, printer, computer, credentials)
         {
-
+            
         }
 
         public override bool RunCommand(string command)
@@ -48,14 +49,14 @@ namespace HackLinks_Server.Computers.Processes
             {
                 if (command.Length < 2)
                 {
-                    process.Print("Usage : account [create/resetpass/balance/transfer/loan/transactions/close]");
+                    process.Print("Usage : account [create/login/resetpass/balance/transfer/transactions/close]");
                     return true;
                 }
-                // TODO: Implement Loans
                 // TODO: Implement Transaction Log
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs[0] == "create")
                 {
+                    // TODO: When mail daemon is implemented, require an email address for password reset
                     if (cmdArgs.Length < 3)
                     {
                         process.Print("Usage : account create [accountname] [password]");
@@ -79,69 +80,96 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("This account name is not available");
                         return true;
                     }
-                    usersFile.Content = usersFile.Content + "\r\nguest," + cmdArgs[1] + "=" + cmdArgs[2];
-                    int accountNumber = new Random().Next(9999999);
-                    daemon.accounts.Add(new Account(cmdArgs[1], 0, client.Credentials.UserId));
-                    accountFile.Content += cmdArgs[1] + "," + 0 + "," + client.Credentials.UserId + "\r\n";
-                    process.Print("An account has been opened with account number: " + accountNumber + ". Use your account name to login.");
+                    daemon.accounts.Add(new Account(cmdArgs[1], 0, cmdArgs[2], client.Session.owner.username));
+                    daemon.UpdateAccountDatabase();
+                    process.Print("Your account has been opened. Use account login [accountname] [password] to login.");
+                }
+                if (cmdArgs[0] == "login")
+                {
+                    if (cmdArgs.Length < 3)
+                    {
+                        process.Print("Usage : account login [accountname] [password]");
+                        return true;
+                    }
+                    foreach (var account in daemon.accounts)
+                    {
+                        if (account.accountName == cmdArgs[1] && account.password == cmdArgs[2])
+                        {
+                            client.loggedInAccount = account;
+                            daemon.computer.Log(Log.LogEvents.Login, daemon.computer.logs.Count + 1 + " " + client.Session.owner.homeComputer.ip + " logged in as bank account " + account.accountName, client.Session.sessionId, client.Session.owner.homeComputer.ip);
+                            process.Print($"Logged into bank account {account.accountName} successfully");
+                            break;
+                        }
+                    }
                 }
                 if (cmdArgs[0] == "resetpass")
                 {
-                    // TODO: Implement this when Jaber's pull is merged
-                    process.Print("To be implemented.\nPlease contact the admin of this node to reset your password.");
+                    if (cmdArgs.Length < 3)
+                    {
+                        process.Print("Usage : account resetpass [accountname] [newpassword]");
+                        return true;
+                    }
+                    // TODO: When mail daemon is implemented, change it to verify using email so players can hack by password reset
+                    foreach (var account in daemon.accounts)
+                    {
+                        if (account.accountName == cmdArgs[1])
+                        {
+                            if (account.clientUsername == client.Session.owner.username)
+                            {
+                                account.password = cmdArgs[2];
+                                daemon.UpdateAccountDatabase();
+                                process.Print("Your password has been changed");
+                            }
+                            else
+                                process.Print("You are not the owner of the account");
+                            break;
+                        }
+                    }
                     return true;
                 }
                 if (cmdArgs[0] == "balance")
                 {
-                    if (cmdArgs.Length < 3)
+                    if (client.loggedInAccount == null)
                     {
-                        process.Print("Usage : account balance [accountname]");
+                        process.Print("You are not logged in");
                         return true;
                     }
-                    Account account = null;
-                    foreach (var account2 in daemon.accounts)
-                    {
-                        if (account2.accountName == cmdArgs[1])
-                        {
-                            account = account2;
-                            break;
-                        }
-                    }
-                    if (account == null)
-                    {
-                        process.Print("Account data for this account does not exist in the database");
-                        return true;
-                    }
-                    process.Print($"Account balance for {account.accountName} is {account.balance}");
+                    process.Print($"Account balance for {client.loggedInAccount.accountName} is {client.loggedInAccount.balance}");
                 }
                 if (cmdArgs[0] == "transfer")
                 {
                     if (cmdArgs.Length < 4)
                     {
-                        process.Print("Usage : account transfer [receivingaccountname] [bankip] [amount]");
+                        process.Print("Usage : account transfer [receivingaccountname] [receivingbankip] [amount]");
                         return true;
                     }
-                    Account accountFrom = null;
-                    foreach (var account in daemon.accounts)
-                    {
-                        if (account.userId == client.Credentials.UserId)
-                        {
-                            accountFrom = account;
-                            break;
-                        }
-                    }
-                    if (accountFrom == null)
-                    {
-                        process.Print("Account data for this account does not exist in the database");
-                        return true;
-                    }
-                    if (accountFrom.balance < Convert.ToInt32(cmdArgs[3]))
+                    if (client.loggedInAccount.balance < Convert.ToInt32(cmdArgs[3]))
                     {
                         process.Print("Account does not have enough balance");
                         return true;
                     }
+                    if (Server.Instance.GetComputerManager().GetNodeByIp(cmdArgs[2]) == null)
+                    {
+                        process.Print("The receiving computer does not exist");
+                        return true;
+                    }
+                    BankDaemon targetBank = null;
+                    foreach (var computer in Server.Instance.GetComputerManager().NodeList)
+                    {
+                        if (computer.ip == cmdArgs[2])
+                        {
+                            Daemon targetDaemon = computer.GetDaemon("Bank");
+                            if (targetDaemon == null)
+                            {
+                                process.Print("The receiving computer does not have a bank daemon");
+                                return true;
+                            }
+                            targetBank = (BankDaemon)targetDaemon;
+                            break;
+                        }
+                    }
                     Account accountTo = null;
-                    foreach (var account in daemon.accounts)
+                    foreach (var account in targetBank.accounts)
                     {
                         if (account.accountName == cmdArgs[1])
                         {
@@ -149,8 +177,13 @@ namespace HackLinks_Server.Computers.Processes
                             break;
                         }
                     }
-
-                    daemon.ProcessBankTransfer(accountFrom, accountTo, cmdArgs[2], int.Parse(cmdArgs[3]));
+                    if (accountTo == null)
+                    {
+                        process.Print("The receiving account does not exist");
+                        return true;
+                    }
+                    daemon.computer.Log(Log.LogEvents.BankTransfer, $"{client.computer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}", client.Session.sessionId, client.computer.ip);
+                    targetBank.ProcessBankTransfer(client.loggedInAccount, accountTo, cmdArgs[2], int.Parse(cmdArgs[3]), client.Session);
                 }
                 return true;
             }
@@ -166,18 +199,14 @@ namespace HackLinks_Server.Computers.Processes
             {
                 if (command.Length < 3)
                 {
-                    process.Print("Usage : balance [[set [account] [value]]/[get [account]]]");
+                    process.Print("Usage : balance set [accountname] [value]/get [accountname]");
                     return true;
                 }
-                if (command.Length < 3)
-                {
-                    process.Print("Usage : balance [[set [account] [value]]/[get [account]]]");
-                    return true;
-                }
+                var cmdArgs = command[1].Split(' ');
                 Account account = null;
                 foreach (var account2 in daemon.accounts)
                 {
-                    if (account2.accountName == command[2])
+                    if (account2.accountName == cmdArgs[1])
                     {
                         account = account2;
                         break;
@@ -188,7 +217,12 @@ namespace HackLinks_Server.Computers.Processes
                     process.Print("Account data for this account does not exist in the database");
                     return true;
                 }
-                account.balance = Convert.ToInt32(command[3]);
+                if (cmdArgs[0] == "set")
+                {
+                    account.balance = Convert.ToInt32(command[2]);
+                    daemon.UpdateAccountDatabase();
+                }
+                process.Print($"Account balance for {account.accountName} is {account.balance}");
                 return true;
             }
             return false;

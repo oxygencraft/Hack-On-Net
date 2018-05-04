@@ -42,9 +42,9 @@ namespace HackLinks_Server.Daemons.Types
             foreach (string line in accountFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var data = line.Split(',');
-                if (data.Length < 3)
+                if (data.Length < 4)
                     continue;
-                accounts.Add(new Account(data[0], Convert.ToInt32(data[1]), int.Parse(data[2])));
+                accounts.Add(new Account(data[0], Convert.ToInt32(data[1]), data[2], data[3]));
             }
         }
 
@@ -56,7 +56,7 @@ namespace HackLinks_Server.Daemons.Types
             string newAccountsFile = "";
             foreach (var account in accounts)
             {
-                newAccountsFile += account.accountName + "," + 0 + "," + account.userId + "\r\n";
+                newAccountsFile += account.accountName + "," + 0 + "," + account.password + "," + account.clientUsername + "\r\n";
             }
             accountFile.Content = newAccountsFile;
         }
@@ -91,13 +91,19 @@ namespace HackLinks_Server.Daemons.Types
             return true;
         }
 
-        public void ProcessBankTransfer(Account from, Account to, string ip, int amount)
+        public void ProcessBankTransfer(Account from, Account to, string ip, int amount, Session session)
         {
-            if (ip != node.ip)
-                return; // TODO handle remote bank transfer
             Account account = null;
-
+            foreach (var account2 in accounts)
+            {
+                if (account2 == to)
+                {
+                    account = account2;
+                }
+            }
             account.balance += amount;
+            UpdateAccountDatabase();
+            computer.Log(Log.LogEvents.BankTransfer, $"Received {amount} from {from.accountName}@{ip} to {to.accountName}", session.sessionId, session.owner.homeComputer.ip);
         }
 
         public override void OnStartUp()
