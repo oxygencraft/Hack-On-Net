@@ -195,12 +195,22 @@ namespace HackLinks_Server.Computers.Processes
 
             if (command[0] == "balance")
             {
-                if (command.Length < 3)
+                if (command.Length < 2)
                 {
                     process.Print("Usage : balance set [accountname] [value]/get [accountname]");
                     return true;
                 }
                 var cmdArgs = command[1].Split(' ');
+                if (cmdArgs.Length < 2)
+                {
+                    process.Print("Usage : balance set [accountname] [value]/get [accountname]");
+                    return true;
+                }
+                if (cmdArgs[0] == "set" && cmdArgs.Length < 3)
+                {
+                    process.Print("Usage : balance set [accountname] [value]/get [accountname]");
+                    return true;
+                }
                 Account account = null;
                 foreach (var account2 in daemon.accounts)
                 {
@@ -217,8 +227,16 @@ namespace HackLinks_Server.Computers.Processes
                 }
                 if (cmdArgs[0] == "set")
                 {
-                    account.balance = Convert.ToInt32(command[2]);
-                    daemon.UpdateAccountDatabase();
+                    if(int.TryParse(cmdArgs[2], out int val))
+                    {
+                        account.balance = val;
+                        daemon.UpdateAccountDatabase();
+                    }
+                    else
+                    {
+                        process.Print("Error: non-integer value specified");
+                        return true;
+                    }
                 }
                 process.Print($"Account balance for {account.accountName} is {account.balance}");
                 return true;
