@@ -40,8 +40,6 @@ namespace HackLinks_Server.Computers.Processes
             BankClient client = (BankClient)process;
             BankDaemon daemon = (BankDaemon)client.Daemon;
 
-            var configFolder = process.computer.fileSystem.rootFile.GetFile("cfg");
-            var usersFile = configFolder.GetFile("users.cfg");
             var bankFolder = process.computer.fileSystem.rootFile.GetFile("bank");
             var accountFile = bankFolder.GetFile("accounts.db");
 
@@ -63,7 +61,7 @@ namespace HackLinks_Server.Computers.Processes
                         return true;
                     }
                     List<string> accounts = new List<string>();
-                    var accountsFile = usersFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    var accountsFile = accountFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                     if (accountsFile.Length != 0)
                     {
                         foreach (var account in accountsFile)

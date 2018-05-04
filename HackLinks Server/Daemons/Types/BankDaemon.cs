@@ -63,20 +63,8 @@ namespace HackLinks_Server.Daemons.Types
 
         public bool CheckFolders(CommandProcess process)
         {
-            var configFolder = process.computer.fileSystem.rootFile.GetFile("cfg");
-            if (configFolder == null || !configFolder.IsFolder())
-            {
-                process.Print("No config folder was found ! (Contact the admin of this node to create one as the bank is useless without one)");
-                return false;
-            }
-            var usersFile = configFolder.GetFile("users.cfg");
-            if (usersFile == null)
-            {
-                process.Print("No config file was found ! (Contact the admin of this node to create one as the bank is useless without one)");
-                return false;
-            }
             var bankFolder = process.computer.fileSystem.rootFile.GetFile("bank");
-            if (configFolder == null || !configFolder.IsFolder())
+            if (bankFolder == null || !bankFolder.IsFolder())
             {
                 process.Print("No bank daemon folder was found ! (Contact the admin of this node to create one as the bank is useless without one)");
                 return false;
