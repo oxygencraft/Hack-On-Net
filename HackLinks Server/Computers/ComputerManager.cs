@@ -45,6 +45,7 @@ namespace HackLinks_Server.Computers
                         continue;
                     if (!daemonFile.HasExecutePermission(0, Group.ROOT))
                         continue;
+                    //TODO user credentials from autorun file
                     node.LaunchDaemon(daemonFile);
                 }
             }

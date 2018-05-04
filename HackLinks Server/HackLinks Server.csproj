@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Computers\Kernel.cs" />
+    <Compile Include="Computers\Processes\BankClient.cs" />
     <Compile Include="Computers\Processes\CommandProcess.cs" />
     <Compile Include="Computers\Processes\Credentials.cs" />
     <Compile Include="Computers\Processes\Hackybox.cs" />

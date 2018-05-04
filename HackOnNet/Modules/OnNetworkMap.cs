@@ -195,7 +195,7 @@ namespace HackOnNet.Modules
 
         public void DoGui(float t)
         {
-            if (!isNodesInSync && userScreen.netManager.gotNodes)
+            if (!isNodesInSync && userScreen.netManager.gotNodes && userScreen.netManager.nodesToSync.Length > 0)
             {
                 string[] nodes = userScreen.netManager.nodesToSync.Split(',');
                 foreach (var node in nodes)

@@ -10,13 +10,13 @@ namespace HackLinks_Server.Daemons.Types.Bank
     {
         public string accountName;
         public int balance;
-        public string username;
+        public int userId;
 
-        public Account(string accountName, int balance, string username)
+        public Account(string accountName, int balance, int userId)
         {
             this.accountName = accountName;
             this.balance = balance;
-            this.username = username;
+            this.userId = userId;
         }
     }
 }
