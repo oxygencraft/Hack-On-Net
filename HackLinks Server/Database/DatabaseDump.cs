@@ -82,7 +82,7 @@ namespace HackLinks_Server.Database
             "INSERT INTO `files` VALUES " +
             "(1,'',0,1,0,'',1,0,774,0)," +
             "(2,'daemons',1,1,0,'',1,1,774,0)," +
-            "(3,'autorun',2,0,0,'irc',1,1,774,0)," +
+            "(3,'autorun',2,0,0,'irc\r\nbank',1,1,774,0)," +
             "(4,'irc',2,0,1,'IRC',1,0,774,0)," +
             "(5,'etc',1,1,0,'',1,1,774,0)," +
             "(6,'passwd',5,0,0,'" +
@@ -96,7 +96,10 @@ namespace HackLinks_Server.Database
             "admin:x:1:root,admin\r\n" +
             "user:x:2:root,admin,user\r\n" +
             "guest:x:3:root,admin,user,guest\r\n" +
-            "',1,1,774,0)",
+            "',1,1,774,0),"+
+            "(8,'bank',2,0,1,'BANK',1,0,774,0)," +
+            "(9,'bank',1,1,1,'bank',1,0,774,0)," +
+            "(10,'accounts.db',9,0,1,'',1,0,774,0)",
             "/*!40000 ALTER TABLE `files` ENABLE KEYS */",
             "UNLOCK TABLES",
         };

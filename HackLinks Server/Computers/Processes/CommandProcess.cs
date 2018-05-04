@@ -18,7 +18,7 @@ namespace HackLinks_Server.Computers.Processes
         {
         }
 
-        public bool RunCommand(string command)
+        public virtual bool RunCommand(string command)
         {
             string[] commandParts = command.Split(new char[] { ' ' }, 2);
             if (commandParts[0] == "help")

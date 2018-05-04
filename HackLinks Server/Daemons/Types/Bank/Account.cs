@@ -10,13 +10,15 @@ namespace HackLinks_Server.Daemons.Types.Bank
     {
         public string accountName;
         public int balance;
-        public string username;
+        public string password;
+        public string clientUsername;
 
-        public Account(string accountName, int balance, string username)
+        public Account(string accountName, int balance, string password, string clientUsername)
         {
             this.accountName = accountName;
             this.balance = balance;
-            this.username = username;
+            this.password = password;
+            this.clientUsername = clientUsername;
         }
     }
 }
