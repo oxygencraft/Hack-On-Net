@@ -28,7 +28,8 @@ namespace HackOnNet.GUI
         private static MenuState currentState = MenuState.OG_MENU;
         private static bool autoLoadLogin = false;
 
-        public static RPHandler.State preset = new RPHandler.State();
+        private static RPHandler RPCHandler = new RPHandler();
+        private static RPHandler.State preset = new RPHandler.State();
 
         private static Color CancelColor = new Color(125, 82, 82);
         private static string terminalString = "";
@@ -82,7 +83,7 @@ namespace HackOnNet.GUI
             if (currentState == MenuState.OG_MENU)
             {
                 preset = RPHandler.State.OGMenu;
-                RPHandler.PresencePresetSet(preset);
+                RPCHandler.PresencePresetSet(preset);
                 openHackOnNet.Draw();
 				
                 string[] cmdArgs = Environment.GetCommandLineArgs();
@@ -90,15 +91,15 @@ namespace HackOnNet.GUI
                 {
                     ResetForLogin();
                     ChangeState(MenuState.LOGIN);
-					preset = RPHandler.State.Login;
-					RPHandler.PresencePresetSet(preset);
+                    preset = RPHandler.State.MPLogIn;
+					RPCHandler.PresencePresetSet(preset);
                     MainMenu.StartGame(cmdArgs[3], cmdArgs[5]);
                 }
                 else if (cmdArgs.Contains("-hackonnet") && !autoLoadLogin)
                 {
                     ResetForLogin();
-					preset = RPHandler.State.Login;
-					RPHandler.PresencePresetSet(preset);
+					preset = RPHandler.State.MPLogIn;
+					RPCHandler.PresencePresetSet(preset);
                     ChangeState(MenuState.LOGIN);
                 }
                 autoLoadLogin = true;
@@ -107,11 +108,11 @@ namespace HackOnNet.GUI
             e.IsCancelled = true;
             if (currentState == MenuState.MAIN_MENU) {
                 preset = RPHandler.State.MainMenu;
-                RPHandler.PresencePresetSet(preset);
+                RPCHandler.PresencePresetSet(preset);
                 DrawMain(e);
             } else if (currentState == MenuState.LOGIN) {
                 preset = RPHandler.State.MPLogIn;
-                RPHandler.PresencePresetSet(preset);
+                RPCHandler.PresencePresetSet(preset);
                 DrawLogin(e);
             }
         }
@@ -142,6 +143,8 @@ namespace HackOnNet.GUI
 
             if (Hacknet.Gui.Button.doButton(15, 180, 360, 450, 28, LocaleTerms.Loc("Back to Main Menu"), Color.Gray))
             {
+                preset = RPHandler.State.OGMenu;
+                RPCHandler.PresencePresetSet(preset);
                 currentState = MenuState.OG_MENU;
             }
         }
@@ -274,7 +277,7 @@ namespace HackOnNet.GUI
             else if (loginState == LoginState.LOGGED)
             {
                 preset = RPHandler.State.InGame;
-                RPHandler.PresencePresetSet(preset);
+                RPCHandler.PresencePresetSet(preset);
                 loginMessage = "";
                 currentState = MenuState.LOGIN;
                 screen.netManager = netManager;
