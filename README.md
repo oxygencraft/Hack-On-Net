@@ -1,5 +1,9 @@
 # Hack-On-Net
-This is a fan-made MP mod for Hacknet. It is in development and a WIP. It is currently not in a playable state yet so this should not be used until it reaches a playable state. The beta will begin in about a month and should be playable but with a few bugs at the time.
+This is a fan-made MP mod for Hacknet. 
+
+**Note**:
+
+This is currently under development and a WIP. This mod is currently not in a playable state yet so this should not be used until it reaches a playable state. The beta will begin in about a month and should be playable but with a few bugs at the time.
 
 # Installation
 This is just preparation for the beta. Please do not use this yet, the releases tab is empty at this time.
