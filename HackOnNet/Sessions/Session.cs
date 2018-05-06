@@ -62,6 +62,7 @@ namespace HackOnNet.Sessions
 
         public void SetNodeInfo(string[] command)
         {
+            daemonButtons.Clear();
             if (command[1] != "none")
                 serverName = command[1];
             for(int i = 2; i < command.Length; i += 2)
