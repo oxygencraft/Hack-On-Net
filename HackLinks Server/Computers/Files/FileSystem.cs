@@ -10,7 +10,7 @@ namespace HackLinks_Server.Computers.Files
     /// <summary>
     /// Contains Files for a computer
     /// </summary>
-    class FileSystem
+    public class FileSystem
     {
         public readonly FileSystemManager fileSystemManager;
 
@@ -29,6 +29,11 @@ namespace HackLinks_Server.Computers.Files
         public File CreateFile(int id, Node computer, File parent, string fileName)
         {
             return File.CreateNewFile(id, fileSystemManager, computer, parent, fileName);
+        }
+
+        public File CreateFolder(Node computer, File parent, string fileName)
+        {
+            return File.CreateNewFolder(fileSystemManager, computer, parent, fileName);
         }
     }
 }

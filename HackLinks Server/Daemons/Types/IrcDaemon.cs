@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using HackLinks_Server.Daemons.Types.Irc;
 using static HackLinksCommon.NetUtil;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 
 namespace HackLinks_Server.Daemons.Types
 {
@@ -14,19 +15,11 @@ namespace HackLinks_Server.Daemons.Types
     {
         public List<IrcMessage> messages = new List<IrcMessage>();
 
-        public SortedDictionary<string, Tuple<string, CommandHandler.Command>> daemonCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
-        {
-            { "irc", new Tuple<string, CommandHandler.Command>("irc send [text to send]\n    Send a message via the connected IRC daemon.", Irc) },
-        };
-
-        public override SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands
-        {
-            get => daemonCommands;
-        }
-
         public override string StrType => "irc";
 
-        public IrcDaemon(Node node) : base(node)
+        protected override Type ClientType => typeof(IRCClient);
+
+        public IrcDaemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
             this.accessLevel = Group.GUEST;
         }
@@ -36,9 +29,9 @@ namespace HackLinks_Server.Daemons.Types
             return DaemonType.IRC;
         }
 
-        public override void OnConnect(Session connectSession)
+        public override void OnConnect(Session connectSession, DaemonClient client)
         {
-            base.OnConnect(connectSession);
+            base.OnConnect(connectSession, client);
             connectSession.owner.Send(PacketType.MESSG, "Connected to IRC Service");
             connectSession.owner.Send(PacketType.KERNL, "state", "irc", "join");
             var commandData = new List<string>() { "state", "irc", "messg" };
@@ -66,48 +59,6 @@ namespace HackLinks_Server.Daemons.Types
                     continue;
                 session.owner.Send(PacketType.KERNL, "state", "irc", "messg", message.author, message.content);
             }
-        }
-
-        private static bool Irc(GameClient client, string[] command)
-        {
-
-            Session session = client.activeSession;
-
-            IrcDaemon daemon = (IrcDaemon) client.activeSession.activeDaemon;
-
-            if (command[0] == "irc")
-            {
-                if (command.Length < 2)
-                {
-                    session.owner.Send(PacketType.MESSG, "Usage : irc [send]");
-                    return true;
-                }
-                var cmdArgs = command[1].Split(' ');
-                if (cmdArgs.Length < 2)
-                {
-                    session.owner.Send(PacketType.MESSG, "Usage : irc [send]");
-                    return true;
-                }
-                if (cmdArgs[0] == "send")
-                {
-                    var text = "";
-                    for (int i = 1; i < cmdArgs.Length; i++)
-                        text += cmdArgs[i] + (i != cmdArgs.Length ? " " : "");
-                    daemon.SendMessage(new IrcMessage(session.owner.username, text));
-                    return true;
-                }
-                session.owner.Send(PacketType.MESSG, "Usage : irc [send]");
-                return true;
-            }
-            return false;
-        }
-
-        public override bool HandleDaemonCommand(GameClient client, string[] command)
-        {
-            if (Commands.ContainsKey(command[0]))
-                return Commands[command[0]].Item2(client, command);
-
-            return false;
         }
 
         public override string GetSSHDisplayName()

@@ -16,6 +16,7 @@ namespace HackOnNet
         {
             if (File.Exists(@"DiscordRpc.dll")) DiscordRP.RPHandler.Initialize();
             EventManager.RegisterListener<DrawMainMenuEvent>(GUI.MainMenu.DrawMainMenu);
+            EventManager.RegisterListener<DrawMainMenuButtonsEvent>(GUI.MainMenu.DrawHackOnNetButton);
         }
 
         public void LoadContent()

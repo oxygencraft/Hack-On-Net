@@ -227,7 +227,8 @@ namespace HackOnNet.Modules
             Hacknet.Gui.TextItem.doFontLabel(new Vector2((float)(this.bounds.X + this.x), (float)(this.bounds.Y + this.y)), text, GuiData.font, new Color?(Color.White), (float)this.bounds.Width - 46f, 60f, false);
             if (Hacknet.Gui.Button.doButton(299999, this.bounds.X + (this.bounds.Width - 41), this.bounds.Y + 12, 27, 29, "<-", null))
             {
-                if (this.userScreen.activeSession.workingPath != "/")
+                Console.WriteLine(this.userScreen.activeSession.workingPath);
+                if (this.userScreen.activeSession.workingPath != "/" && this.userScreen.activeSession.workingPath != "")
                 {
                     this.userScreen.Execute("cd ..");
                     this.userScreen.Execute("ls");
@@ -244,7 +245,7 @@ namespace HackOnNet.Modules
             dest.Y = this.bounds.Y + 55;
             dest.Height = this.bounds.Height - 57;
 
-            Hacknet.Gui.TextItem.doFontLabel(new Vector2(dest.X, dest.Y), "Working Directory : "+userScreen.activeSession.workingPath, GuiData.smallfont, new Color?(Color.White), (float)this.bounds.Width - 46f, 60f, false);
+            Hacknet.Gui.TextItem.doFontLabel(new Vector2(dest.X, dest.Y), "Working Directory : "+(userScreen.activeSession.workingPath == "" ? "/" : userScreen.activeSession.workingPath), GuiData.smallfont, new Color?(Color.White), (float)this.bounds.Width - 46f, 60f, false);
 
             int ButtonHeight = (int)(GuiData.ActiveFontConfig.tinyFontCharHeight + 10f);
 

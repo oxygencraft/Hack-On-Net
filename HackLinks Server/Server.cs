@@ -10,46 +10,38 @@ using HackLinks_Server.Computers;
 using System.Text.RegularExpressions;
 using static HackLinksCommon.NetUtil;
 using HackLinks_Server.Computers.Files;
+using HackLinks_Server.Database;
 
 namespace HackLinks_Server
 {
-    class Server
+    public class Server
     {
         public static readonly Server Instance = new Server();
 
         public List<GameClient> clients;
 
-        private MySqlConnection conn;
-
-
         private ComputerManager computerManager;
         private FileSystemManager fileSystemManager = new FileSystemManager();
 
-        //Connection String args
-        private MySqlConnectionStringBuilder connectionStringBuilder = new MySqlConnectionStringBuilder();
-        public string MySQLServer { get => connectionStringBuilder.Server; internal set => connectionStringBuilder.Server = value; }
-        public string Database { get => connectionStringBuilder.Database; internal set => connectionStringBuilder.Database = value; }
-        public string UserID { get => connectionStringBuilder.UserID; internal set => connectionStringBuilder.UserID = value; }
-        public string Password { get => connectionStringBuilder.Password; internal set => connectionStringBuilder.Password = value; }
-
         public FileSystemManager FileSystemManager => fileSystemManager;
+
+        public DatabaseLink DatabaseLink { get; private set; }
 
         private Server()
         {
             clients = new List<GameClient>();
         }
 
+        public void Initalize(ConfigUtil.ConfigData config)
+        {
+            DatabaseLink = new DatabaseLink(config);
+        }
+
         public void StartServer()
         {
-            conn = new MySqlConnection(GetConnectionString());
-
-            Console.WriteLine("Opening SQL connection");
-            conn.Open();
-            Console.WriteLine("SQL Running");
-
-            computerManager = new ComputerManager(this);
             Console.WriteLine("Downloading Computer data...");
-            computerManager.DownloadDatabase();
+            computerManager = new ComputerManager(this, DatabaseLink.DownloadDatabase());
+            computerManager.Init();
             Console.WriteLine("Computer data loaded");
         }
 
@@ -60,19 +52,9 @@ namespace HackLinks_Server
             gameClient.Start();
         }
 
-        public MySqlConnection GetConnection()
-        {
-            return conn;
-        }
-
         public ComputerManager GetComputerManager()
         {
             return this.computerManager;
-        }
-
-        public string GetConnectionString()
-        {
-            return connectionStringBuilder.GetConnectionString(true);
         }
 
         public void TreatMessage(GameClient client, PacketType type, string[] messages)
@@ -80,10 +62,15 @@ namespace HackLinks_Server
             switch (type)
             {
                 case PacketType.COMND:
+                    //TODO fix cludge
+                    if(client.activeSession == null)
+                        client.ConnectTo(client.homeComputer);
                     if (client.status == GameClient.PlayerStatus.TERMINATED)
                         break;
-                    if (!CommandHandler.TreatCommand(client, messages[0]))
-                        client.Send(PacketType.OSMSG, "ERR:0"); // OSMSG:ERR:0 = La commande est introuvable
+                    //TODO fixup
+                    // if (!CommandHandler.TreatCommand(client, messages[0]))
+                    //    client.Send(PacketType.OSMSG, "ERR:0"); // OSMSG:ERR:0 = La commande est introuvable
+                    client.activeSession.WriteInput(messages[0]);
                     break;
                 case PacketType.LOGIN:
                     if (messages.Length < 2)
@@ -91,39 +78,33 @@ namespace HackLinks_Server
 
                     string tempUsername = messages[0];
                     string tempPass = messages[1];
+                    int banExpiry;
 
-                    MySqlCommand command = new MySqlCommand("SELECT pass, homeComputer FROM accounts WHERE username = @0", conn);
-                    command.Parameters.Add(new MySqlParameter("0", tempUsername));
-                    bool correctUser = false;
-                    int homeId = -1;
-                    using (MySqlDataReader reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            try
-                            {
-                                if (reader.GetString("pass") == tempPass)
-                                {
-                                    correctUser = true;
-                                    homeId = reader.GetInt32("homeComputer");
-                                    break;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine(ex.ToString());
-                            }
-                        }
-                    }
-                    if (correctUser)
+                    if (DatabaseLink.TryLogin(client, tempUsername, tempPass, out int homeId))
                     {
                         client.username = tempUsername;
+                        if (/*DatabaseLink.CheckUserBanStatus(client.username, out banExpiry)*/false)
+                        {
+                            if (banExpiry == 0)
+                            {
+                                client.Send(PacketType.LOGRE, "2", "You have been banned permanently");
+                                client.Disconnect();
+                                break;
+                            }
+                            client.Send(PacketType.LOGRE, "2", $"You have been banned until {DateTimeOffset.FromUnixTimeSeconds(banExpiry).ToString()} UTC");
+                            client.Disconnect();
+                            break;
+                        }
                         client.Send(PacketType.LOGRE, "0"); // Good account*/
                         var homeNode = computerManager.GetNodeById(homeId);
                         var ip = "none";
                         if (homeNode != null)
+                        {
                             ip = homeNode.ip;
-                        client.Send(PacketType.START, ip);
+                            client.homeComputer = homeNode;
+                        }
+                        client.permissions = DatabaseLink.GetUserPermissions()[client.username];
+                        client.Send(PacketType.START, ip, DatabaseLink.GetUserNodes(client.username));
                     }
                     else
                     {
@@ -164,6 +145,11 @@ namespace HackLinks_Server
                     client.activeSession.UpdateTrace(dT);
                 }
             }
+        }
+
+        internal void SaveDatabase()
+        {
+            DatabaseLink.UploadDatabase(computerManager.NodeList, computerManager.ToDelete);
         }
     }
 }

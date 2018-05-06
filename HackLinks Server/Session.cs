@@ -1,5 +1,6 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 using HackLinks_Server.Daemons;
 using HackLinks_Server.Files;
 using System;
@@ -10,7 +11,7 @@ using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
 {
-    class Session
+    public class Session
     {
         public float trace = 100;
 
@@ -18,50 +19,35 @@ namespace HackLinks_Server
 
         public float traceUpdtCooldown = 0;
 
-        private SortedDictionary<string, Tuple<string, CommandHandler.Command>> sessionCommands = new SortedDictionary<string, Tuple<string, CommandHandler.Command>>()
-        {
-            { "daemon", new Tuple<string, CommandHandler.Command>("daemon [daemon name]\n    If it's available we'll launch the given daemon.", Daemon) },
-        };
-
-        public SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands
-        {
-            get
-            {
-                //If we've not got a active daemon then we don't need to do a merge
-                if (activeDaemon == null)
-                {
-                    return sessionCommands;
-                }
-                else
-                {
-                    //Commands from the daemon will override commands from the session if there's a conflict.
-                    Dictionary<string, Tuple<string, CommandHandler.Command>> newCommands = sessionCommands
-                        .Union(activeDaemon.Commands)
-                        .GroupBy(k => k.Key, v => v.Value)
-                        .ToDictionary(k => k.Key, v => v.Last());
-
-                    //finally create sorted dictionary from this
-                    return new SortedDictionary<string, Tuple<string, CommandHandler.Command>>(newCommands);
-                }
-            }
-        }
-
         public GameClient owner;
         public Node connectedNode;
-        public Daemon activeDaemon;
+        private Process attachedProcess;
 
-        public File activeDirectory;
+        public bool HasProcessId(int pid)
+        {
+            return attachedProcess.ProcessId == pid;
+        }
 
-        public Group group = Group.GUEST;
-        public string currentUsername = "Guest";
+        public void AttachProcess(Process process)
+        {
+            attachedProcess = process;
+        }
 
-        public Session(GameClient client, Node node)
+        public int sessionId;
+
+        public Session(GameClient client, Node node, Process process)
         {
             this.connectedNode = node;
-            this.activeDirectory = node.fileSystem.rootFile;
             this.owner = client;
+            this.sessionId = GenerateSessionId(node);
+            this.attachedProcess = process;
             node.sessions.Add(this);
             SendNodeInfo();
+        }
+
+        public void WriteInput(string inputData)
+        {
+            attachedProcess.WriteInput(inputData);
         }
 
         public void SendNodeInfo()
@@ -77,58 +63,24 @@ namespace HackLinks_Server
             owner.Send(PacketType.KERNL, daemonTx.ToArray());
         }
 
-        public void Login(string level, string username)
+        private int GenerateSessionId(Node node)
         {
-            if (level == "root")
-                group = Group.ROOT;
-            else if (level == "admin")
-                group = Group.ADMIN;
-            else if (level == "user")
-                group = Group.USER;
-            else if (level == "guest")
-                group = Group.GUEST;
-            currentUsername = username;
-
-            owner.Send(PacketType.KERNL, "login", group.ToString(), username);
-        }
-
-        public bool HandleSessionCommand(GameClient client, string[] command)
-        {
-            if (Commands.ContainsKey(command[0]))
-                return Commands[command[0]].Item2(client, command);
-
-            return false;
-        }
-
-        private static bool Daemon(GameClient client, string[] command)
-        {
-            Session activeSession = client.activeSession;
-
-            if (command.Length != 2)
+            List<int> sessionIds = new List<int>();
+            foreach (var session in node.sessions)
             {
-                activeSession.owner.Send(PacketType.MESSG, "Usage : daemon [name of daemon]");
-                return true;
+                sessionIds.Add(session.sessionId);
             }
-            var target = command[1];
-            if(target == "exit")
+            foreach (var log in node.logs)
             {
-                activeSession.activeDaemon.OnDisconnect(activeSession);
-                activeSession.activeDaemon = null;
-                return true;
+                sessionIds.Add(log.sessionId);
             }
-            foreach (Daemon daemon in activeSession.connectedNode.daemons)
+            Random rand = new Random();
+            while (true)
             {
-                if (daemon.IsOfType(target))
-                {
-                    if(activeSession.activeDaemon != null)
-                        activeSession.activeDaemon.OnDisconnect(activeSession);
-                    activeSession.activeDaemon = daemon;
-                    daemon.OnConnect(activeSession);
-                    return true;
-                }
+                int sessionId = rand.Next();
+                if (!sessionIds.Contains(sessionId))
+                    return sessionId;
             }
-
-            return true;
         }
 
         public void DisconnectSession()
@@ -136,9 +88,7 @@ namespace HackLinks_Server
             ResetTrace();
             if (this.connectedNode != null)
                 this.connectedNode.sessions.Remove(this);
-            if(activeDaemon != null)
-                activeDaemon.OnDisconnect(this);
-            activeDaemon = null;
+            //TODO kill process
             connectedNode = null;
         }
 

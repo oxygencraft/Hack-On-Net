@@ -20,6 +20,7 @@ namespace HackLinksCommon
             OSMSG,
             LOGIN,
             FX,
+            MUSIC,
             DSCON,
         }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HackLinks_Server.Computers.Processes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,16 +27,16 @@ namespace HackLinks_Server.Daemons.Types.Http.Interfaces
             return newInterface;
         }
 
-        public override void Use(HTTPSession session, string[] args)
+        public override void Use(HTTPClient client, string[] args)
         {
             if(args.Length < 2)
             {
-                session.Session.owner.Send(HackLinksCommon.NetUtil.PacketType.MESSG, "Password required");
+                client.Session.owner.Send(HackLinksCommon.NetUtil.PacketType.MESSG, "Password required");
                 return;
             }
             if(args[1] == password)
             {
-                RunAction(session, args);
+                RunAction(client, args);
             }
         }
 
@@ -44,14 +45,14 @@ namespace HackLinks_Server.Daemons.Types.Http.Interfaces
             return "PASSWORD FIELD : " + this.ID;
         }
 
-        private void RunAction(HTTPSession session, string[] args)
+        private void RunAction(HTTPClient client, string[] args)
         {
             var actionData = action.Split(new char[] { ':' }, 2);
             if(actionData[0] == "goto")
             {
                 if (actionData.Length < 2)
                     return;
-                session.SetActivePage(session.Daemon.GetPage(actionData[1]));
+                client.SetActivePage(client.Daemon.GetPage(actionData[1]));
             }
         }
     }

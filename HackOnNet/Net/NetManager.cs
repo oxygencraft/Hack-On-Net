@@ -30,8 +30,11 @@ namespace HackOnNet.Net
             new ManualResetEvent(false);
 
         private static String response = String.Empty;
+        private static bool disconnectHandled = false;
 
         public UserScreen userScreen;
+        public string nodesToSync = "";
+        public bool gotNodes = false;
 
         public NetManager(UserScreen screen)
         {
@@ -51,14 +54,18 @@ namespace HackOnNet.Net
                 }
             }
             connectDone.Set();
-            Disconnect(isInGame);
+            Disconnect(isInGame, "Connection Lost");
         }
 
-        public void Disconnect(bool isInGame)
+        public void Disconnect(bool isInGame, string reason)
         {
-            clientSocket.Close();
-            if(isInGame)
-                userScreen.quitGame(this, "Connection Lost");
+            if (!disconnectHandled)
+            {
+                reason = string.IsNullOrWhiteSpace(reason) ? "The server or client did not provide a reason for disconnection" : reason;
+                clientSocket.Close();
+                if (isInGame)
+                    userScreen.quitGame(this, reason);
+            }
         }
 
         public void Init()
@@ -206,15 +213,36 @@ namespace HackOnNet.Net
                             MainMenu.loginState = MainMenu.LoginState.LOGGED;
                         else if (messages[0] == "1") // LOGRE:1 = Invalid account
                             MainMenu.loginState = MainMenu.LoginState.INVALID;
+                        else if (messages[0] == "2") // LOGRE:2 = The server rejected your connection for some reason (ban?)
+                        {
+                            if (string.IsNullOrWhiteSpace(messages[1]) == false)
+                                MainMenu.serverRejectReason = messages[1];
+                            MainMenu.loginState = MainMenu.LoginState.SERVER_REJECTED;
+                        } 
                     }
                     break;
                 case NetUtil.PacketType.START:
                     userScreen.homeIP = messages[0];
+                    nodesToSync = messages[1];
+                    gotNodes = true;
                     break;
                 case NetUtil.PacketType.OSMSG:
                     break;
                 case NetUtil.PacketType.FX:
                     userScreen.HandleFX(messages);
+                    break;
+                case NetUtil.PacketType.MUSIC:
+                    if (messages.Length > 0)
+                    {
+                        if (messages[1] == "1")
+                            Hacknet.MusicManager.playSongImmediatley(messages[0]);
+                        else
+                            Hacknet.MusicManager.transitionToSong(messages[0]);
+                    }
+                    break;
+                case NetUtil.PacketType.DSCON:
+                    Disconnect(true, messages[0]);
+                    disconnectHandled = true;
                     break;
                 default:
                     throw new InvalidOperationException($"Netmanager attempted treat message with invalid type { type.ToString() }");

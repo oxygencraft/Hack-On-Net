@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HackLinks_Server.FileSystem;
 using static HackLinksCommon.NetUtil;
 using System.Text.RegularExpressions;
+using HackLinks_Server.Files;
+using HackLinks_Server.Computers.Processes;
 
 namespace HackLinks_Server.Daemons.Types.Http
 {
@@ -27,9 +28,9 @@ namespace HackLinks_Server.Daemons.Types.Http
         public static WebPage ParseFromFile(File file)
         {
             WebPage page = new WebPage();
-            page.title = file.name;
-            page.content = file.content;
-            MatchCollection matches = Regex.Matches(file.content, "(<!interface.*>.*<\\/interface>)",RegexOptions.Multiline);
+            page.title = file.Name;
+            page.content = file.Content;
+            MatchCollection matches = Regex.Matches(file.Content, "(<!interface.*>.*<\\/interface>)",RegexOptions.Multiline);
             foreach(Match match in matches)
             {
                 var newInterface = WebInterface.ParseFromTag(match.Value, file);
@@ -41,7 +42,7 @@ namespace HackLinks_Server.Daemons.Types.Http
             return page;
         }
 
-        public void UseInterfaces(HTTPSession httpSession, string[] arguments)
+        public void UseInterfaces(HTTPClient httpSession, string[] arguments)
         {
             foreach(KeyValuePair<string, WebInterface> webInt in interfaces)
             {

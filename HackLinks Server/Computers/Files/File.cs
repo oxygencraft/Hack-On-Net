@@ -6,39 +6,47 @@ using System.Threading.Tasks;
 using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Files;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 using MySql.Data.MySqlClient;
 
 namespace HackLinks_Server.Files
 {
-    class File
+    public class File
     {
 
+        /// <summary>FilType determines how a file will be handled by the system</summary>
         public enum FileType
         {
-            NORMAL,
-            DAEMON,
+            Regular,
+            Directory,
+            Link,
             LOG,
-            EXE,
-            CONFIG
+            // TODO other types 
         }
 
         public readonly int id;
 
         private string name;
-        private Group writePriv = Group.ROOT;
-        private Group readPriv = Group.ROOT;
+        private int ownerId;
+        private Group group;
         private string content = "";
 
         private File parent;
         private int parentId;
         public int computerId;
 
-        private FileType type = FileType.NORMAL;
+        private FileType type = FileType.Regular;
 
         public bool Dirty { get; set; }
+
         public string Name { get => name; set { name = value; Dirty = true; } }
-        public Group WritePriv { get => writePriv; set { writePriv = value; Dirty = true; } }
-        public Group ReadPriv { get => readPriv; set { readPriv = value; Dirty = true; } }
+
+        public FilePermissions Permissions { get; set; }
+
+        public int OwnerId { get => ownerId; set { ownerId = value; Dirty = true; } }
+
+        public Group Group { get => group; set { group = value; Dirty = true; } }
+
         public string Content { get => content; set { content = value; Dirty = true;  } }
 
         public int ParentId { get => parentId; set { parentId = value; Dirty = true; } }
@@ -75,6 +83,7 @@ namespace HackLinks_Server.Files
             {
                 this.Parent.children.Add(this);
             }
+            Permissions = new FilePermissions(this);
         }
 
         /// <summary>
@@ -114,19 +123,83 @@ namespace HackLinks_Server.Files
             return newFile;
         }
 
-        public bool HasWritePermission(Session session)
+        public static File CreateNewFolder(FileSystemManager manager, Node computer, File parent, string name)
         {
-            return HasWritePermission(session.group);
+            File newFile = new File(manager.GetNewFileId(), computer, parent, name);
+            newFile.isFolder = true;
+            manager.RegisterNewFile(newFile);
+            return newFile;
         }
 
-        public bool HasWritePermission(Group priv)
+        public bool HasExecutePermission(Credentials credentials)
         {
-            return priv <= writePriv;
+            return HasPermission(credentials.UserId, credentials.Group, false, false, true);
         }
 
-        public bool HasReadPermission(Group priv)
+        public bool HasWritePermission(Credentials credentials)
         {
-            return priv <= ReadPriv;
+            return HasPermission(credentials.UserId, credentials.Group, false, true, false);
+        }
+
+        public bool HasReadPermission(Credentials credentials)
+        {
+            return HasPermission(credentials.UserId, credentials.Group, true, false, false);
+        }
+
+        public bool HasExecutePermission(int userId, Group priv)
+        {
+            return HasPermission(userId, priv, false, false, true);
+        }
+
+        public bool HasWritePermission(int userId, Group priv)
+        {
+            return HasPermission(userId, priv, false, true, false);
+        }
+
+        public bool HasReadPermission(int userId, Group priv)
+        {
+            return HasPermission(userId, priv, true, false, false);
+        }
+
+        public bool HasExecutePermission(int userId, List<Group> privs)
+        {
+            return HasPermission(userId, privs, false, false, true);
+        }
+
+        public bool HasWritePermission(int userId, List<Group> privs)
+        {
+            return HasPermission(userId, privs, false, true, false);
+        }
+
+        public bool HasReadPermission(int userId, List<Group> privs)
+        {
+            return HasPermission(userId, privs, true, false, false);
+        }
+
+        public bool HasPermission(int userId, Group priv, bool read, bool write, bool execute)
+        {
+            return HasPermission(userId, new List<Group> { priv }, read, write, execute);
+        }
+
+        public bool HasPermission(int userId, List<Group> privs, bool read, bool write, bool execute)
+        {
+            if (privs.Contains(Group))
+            {
+                if (Permissions.CheckPermission(FilePermissions.PermissionType.Group, read, write, execute))
+                {
+                    return true;
+                }
+            }
+
+            if (OwnerId == userId)
+            {
+                if (Permissions.CheckPermission(FilePermissions.PermissionType.User, read, write, execute))
+                {
+                    return true;
+                }
+            }
+
+            return Permissions.CheckPermission(FilePermissions.PermissionType.Others, read, write, execute);
         }
 
         virtual public bool IsFolder()
@@ -138,6 +211,19 @@ namespace HackLinks_Server.Files
         {
             Parent.children.Remove(this);
             ParentId = 0;
+            if (Type == FileType.LOG)
+            {
+                Log log = null;
+                foreach (var log2 in Server.Instance.GetComputerManager().GetNodeById(ComputerId).logs)
+                {
+                    if (log2.file == this)
+                    {
+                        log = log2;
+                        break;
+                    }
+                }
+                Server.Instance.GetComputerManager().GetNodeById(ComputerId).logs.Remove(log);
+            }
         }
 
         public void SetType(int specType)

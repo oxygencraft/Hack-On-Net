@@ -21,10 +21,12 @@ namespace HackOnNet.GUI
     {
         public enum MenuState { OG_MENU, MAIN_MENU, LOGIN }
 
-        public enum LoginState { MENU, LOGGED_IN, INVALID, UNAVAILABLE, LOGGED, LOGGING_IN }
+        public enum LoginState { MENU, LOGGED_IN, INVALID, UNAVAILABLE, LOGGED, LOGGING_IN, SERVER_REJECTED }
 
         public static LoginState loginState = LoginState.MENU;
+        public static string serverRejectReason = "";
         private static MenuState currentState = MenuState.OG_MENU;
+        private static bool autoLoadLogin = false;
 
         public static RPHandler.State preset = new RPHandler.State();
 
@@ -82,6 +84,24 @@ namespace HackOnNet.GUI
                 preset = RPHandler.State.OGMenu;
                 RPHandler.PresencePresetSet(preset);
                 openHackOnNet.Draw();
+				
+                string[] cmdArgs = Environment.GetCommandLineArgs();
+                if (cmdArgs.Contains("-hackonnet") && cmdArgs.Contains("-username") && cmdArgs.Contains("-password") && !autoLoadLogin)
+                {
+                    ResetForLogin();
+                    ChangeState(MenuState.LOGIN);
+					preset = RPHandler.State.Login;
+					RPHandler.PresencePresetSet(preset);
+                    MainMenu.StartGame(cmdArgs[3], cmdArgs[5]);
+                }
+                else if (cmdArgs.Contains("-hackonnet") && !autoLoadLogin)
+                {
+                    ResetForLogin();
+					preset = RPHandler.State.Login;
+					RPHandler.PresencePresetSet(preset);
+                    ChangeState(MenuState.LOGIN);
+                }
+                autoLoadLogin = true;
                 return;
             }
             e.IsCancelled = true;
@@ -94,6 +114,13 @@ namespace HackOnNet.GUI
                 RPHandler.PresencePresetSet(preset);
                 DrawLogin(e);
             }
+        }
+
+        internal static void DrawHackOnNetButton(DrawMainMenuButtonsEvent e)
+        {
+            openHackOnNet.Y = e.MainButtonY;
+            e.SecondaryButtonY = e.MainButtonY += 65;
+            openHackOnNet.Draw();
         }
 
         private static void DrawMain(DrawMainMenuEvent e)
@@ -266,6 +293,12 @@ namespace HackOnNet.GUI
             {
                 loginMessage = "The server is unavailable.";
             }
+            else if (loginState == LoginState.SERVER_REJECTED)
+            {
+                string reason = string.IsNullOrWhiteSpace(serverRejectReason) ? "Server did not provide reason for rejection" : serverRejectReason;
+                loginMessage = "The server rejected the connection: " + reason;
+                serverRejectReason = "";
+            }
 
             loginState = LoginState.MENU;
             ResetForLogin();
@@ -278,7 +311,7 @@ namespace HackOnNet.GUI
 
         private static string Hash(string input)
         {
-            var hash = (new SHA1Managed()).ComputeHash(Encoding.UTF8.GetBytes(input));
+            var hash = (new SHA256Managed()).ComputeHash(Encoding.UTF8.GetBytes(input));
             return string.Join("", hash.Select(b => b.ToString("x2")).ToArray());
         }
 
@@ -338,6 +371,8 @@ namespace HackOnNet.GUI
 
         public static void ResetForLogin()
         {
+            InPasswordMode = false;
+            Hacknet.Gui.TextBox.MaskingText = false;
             promptIndex = 0;
             IsReady = false;
             PromptSequence.Clear();

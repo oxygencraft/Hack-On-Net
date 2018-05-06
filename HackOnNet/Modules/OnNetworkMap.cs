@@ -30,6 +30,7 @@ namespace HackOnNet.Modules
         private Texture2D assetServerNodeOverlay;
 
         private string label;
+        private bool isNodesInSync = false;
 
         private Vector2 circleOrigin;
 
@@ -120,16 +121,33 @@ namespace HackOnNet.Modules
             return result;
         }
 
-        public void DiscoverNode(string ip)
+        public void DiscoverNode(string ip, bool updateDb)
         {
-            foreach(var node in nodeList)
+            Vector2 pos = generatePos();
+            foreach (var node in nodeList)
             {
                 if(node.ip == ip)
                 {
                     return;
                 }
             }
-            nodeList.Add(new NodeCircle(ip, generatePos()));
+            nodeList.Add(new NodeCircle(ip, pos));
+            if (updateDb)
+                userScreen.Execute("netmap " + ip + " " + pos.X.ToString() + " " + pos.Y.ToString());
+        }
+
+        public void DiscoverNode(string ip, Vector2 pos, bool updateDb)
+        {
+            foreach (var node in nodeList)
+            {
+                if (node.ip == ip)
+                {
+                    return;
+                }
+            }
+            nodeList.Add(new NodeCircle(ip, pos));
+            if (updateDb)
+                userScreen.Execute("netmap " + ip + " " + pos.X.ToString() + " " + pos.Y.ToString());
         }
 
         private Vector2 generatePos()
@@ -177,6 +195,18 @@ namespace HackOnNet.Modules
 
         public void DoGui(float t)
         {
+            if (!isNodesInSync && userScreen.netManager.gotNodes && userScreen.netManager.nodesToSync.Length > 0)
+            {
+                string[] nodes = userScreen.netManager.nodesToSync.Split(',');
+                foreach (var node in nodes)
+                {
+                    string[] ippos = node.Split(new char[] { ':' }, 2);
+                    string[] pos = ippos[1].Split(':');
+                    userScreen.netMap.DiscoverNode(ippos[0], new Vector2(float.Parse(pos[0]), float.Parse(pos[1])), false);
+                }
+                isNodesInSync = true;
+            }
+
             int num = -1;
             Color color = this.userScreen.highlightColor;
 

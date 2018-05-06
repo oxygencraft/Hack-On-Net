@@ -1,5 +1,6 @@
 ﻿using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Permissions;
+using HackLinks_Server.Computers.Processes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,22 +9,21 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Daemons
 {
-    abstract class Daemon
+    public abstract class Daemon : Process
     {
         protected Node node;
         protected List<Session> connectedSessions = new List<Session>();
         protected Group accessLevel = Group.ROOT;
+        protected abstract Type ClientType { get; }
 
         public abstract string StrType
         {
             get;
         }
-        //This should be created and populated by the implementing class
-        public abstract SortedDictionary<string, Tuple<string, CommandHandler.Command>> Commands { get; }
 
-        public Daemon(Node node)
+        public Daemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid,  printer, computer, credentials)
         {
-            this.node = node;
+            node = computer;
             OnStartUp();
         }
 
@@ -31,7 +31,8 @@ namespace HackLinks_Server.Daemons
         {
             DEFAULT,
             IRC,
-            DNS
+            DNS,
+            BANK
         }
 
         public virtual DaemonType GetDaemonType()
@@ -44,14 +45,9 @@ namespace HackLinks_Server.Daemons
             return StrType == strType.ToLower();
         }
 
-        public virtual bool HandleDaemonCommand(GameClient client, string[] command)
-        {
-            return false;
-        }
-
         public virtual void OnStartUp() { }
 
-        public virtual void OnConnect(Session connectSession)
+        public virtual void OnConnect(Session connectSession, DaemonClient client)
         {
             connectedSessions.Add(connectSession);
         }
@@ -63,12 +59,24 @@ namespace HackLinks_Server.Daemons
 
         public bool CanBeAccessedBy(Session session)
         {
-            return session.group <= this.accessLevel;
+            foreach(Group group in Credentials.Groups)
+            {
+                if(group <= accessLevel)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public virtual string GetSSHDisplayName()
         {
             return null;
+        }
+
+        public DaemonClient CreateClient(Session session, Process parent)
+        {
+            return (DaemonClient)Activator.CreateInstance(ClientType, new object[] {session, this, node.NextPID, parent.Print, session.connectedNode, parent.Credentials });
         }
     }
 }
