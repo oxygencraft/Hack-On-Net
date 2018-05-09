@@ -1,6 +1,7 @@
 ﻿using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
 using HackLinks_Server.Daemons.Types.Bank;
+using HackLinks_Server.Files;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -141,6 +142,11 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : account transfer [receivingaccountname] [receivingbankip] [amount]");
                         return true;
                     }
+                    if (client.loggedInAccount == null)
+                    {
+                        process.Print("You are not logged in");
+                        return true;
+                    }
                     if (client.loggedInAccount.balance < Convert.ToInt32(cmdArgs[3]))
                     {
                         process.Print("Account does not have enough balance");
@@ -180,8 +186,87 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("The receiving account does not exist");
                         return true;
                     }
-                    daemon.computer.Log(Log.LogEvents.BankTransfer, $"{client.computer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}", client.Session.sessionId, client.computer.ip);
+                    daemon.computer.Log(Log.LogEvents.BankTransfer, $"{client.Session.sessionId} {client.computer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}", client.Session.sessionId, client.computer.ip);
                     targetBank.ProcessBankTransfer(client.loggedInAccount, accountTo, cmdArgs[2], int.Parse(cmdArgs[3]), client.Session);
+                    File transactionLog = bankFolder.GetFile("transactionlog.db");
+                    if (transactionLog != null)
+                    {
+                        if (transactionLog.Content == "")
+                            transactionLog.Content += $"{client.loggedInAccount},{client.Session.sessionId}_{client.computer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}";
+                        else
+                            transactionLog.Content += $"\r\n{client.loggedInAccount},{client.Session.sessionId}_{client.computer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}";
+                    }
+                }
+                if (cmdArgs[0] == "transactions")
+                {
+                    if (client.loggedInAccount == null)
+                    {
+                        process.Print("You are not logged in");
+                        return true;
+                    }
+                    File transactionLog = bankFolder.GetFile("transactionlog.db");
+                    if (transactionLog == null)
+                    {
+                        process.Print("This bank does not keep transaction logs");
+                        return true;
+                    }
+                    string[] transactions = transactionLog.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    if (transactions.Length == 0)
+                    {
+                        process.Print("The transaction log database is empty");
+                        return true;
+                    }
+                    int pageModifier = 20;
+                    int pageNumber = 1;
+                    if (cmdArgs.Length > 1)
+                    {
+                        if (int.TryParse(cmdArgs[1], out pageNumber))
+                        {
+                            if (pageNumber != 1)
+                            {
+                                if (pageNumber <= 0 || pageNumber > transactions.Length / 20)
+                                {
+                                    process.Print("Invalid page number");
+                                    return true;
+                                }
+                            }
+                            pageModifier = pageNumber * 20;
+                        }
+                    }
+                    string transactionLogForClient = "------ Transaction Log for " + client.loggedInAccount.accountName + " ------";
+                    int currentTransaction = transactions.Length - pageModifier;
+                    for (int i = transactions.Length - pageModifier; transactions.Length - pageModifier < i; i--)
+                    {
+                        string[] transaction = transactions[currentTransaction].Split(',');
+                        if (transaction[0] == client.loggedInAccount.accountName)
+                        {
+                            transactionLogForClient += transaction[1] + "\n";
+                        }
+                        else
+                            i++;
+                        currentTransaction--;
+                    }
+                    int pageNumberToDisplay = transactions.Length / 20 == 0 ? 1 : transactions.Length / 20;
+                    if (transactionLogForClient == "------ Transaction Log for " + client.loggedInAccount.accountName + " ------")
+                        transactionLogForClient += "\nThis account's transaction log is empty\n";
+                    transactionLogForClient += "------ Page " + pageNumber + "/" + pageNumberToDisplay + " ------"; 
+                }
+                if (cmdArgs[0] == "close")
+                {
+                    if (client.loggedInAccount == null)
+                    {
+                        process.Print("You are not logged in");
+                        return true;
+                    }
+                    if (client.loggedInAccount.balance != 0)
+                    {
+                        process.Print("Your account balance must be zero before you can close your account.\nUse account transfer to transfer your money out of your account");
+                        return true;
+                    }
+                    daemon.accounts.Remove(client.loggedInAccount);
+                    daemon.UpdateAccountDatabase();
+                    client.loggedInAccount = null;
+                    process.Print("Your account has been closed");
                 }
                 return true;
             }
