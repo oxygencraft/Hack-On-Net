@@ -250,6 +250,31 @@ namespace HackOnNet.Net
                             } else {
                                 userScreen.Write("Mods\\HNMPMusic does not exist.");
                             }
+                        } else if (messages[0] == "list") {
+                            if (Directory.Exists("Mods\\HNMPMusic")) {
+                                string[] files = Directory.GetFiles("Mods\\HNMPMusic");
+                                List<string> songFiles = new List<string>();
+                                foreach (string file in files) {
+                                    if (Path.GetExtension(file) == ".wav") {
+                                        songFiles.Add(file);
+                                    }
+                                }
+                                int i = 0;
+                                List<string> names = new List<string>();
+                                foreach (string name in songFiles) {
+                                    int index = name.LastIndexOf('\\');
+                                    names.Add(name.Substring(index + 1).Replace(".wav", ""));
+                                    i++;
+                                }
+                                StringBuilder builder = new StringBuilder();
+                                builder.Append(" \nYour Music Library:\n \n");
+                                foreach (string name in names) {
+                                    builder.Append(($"{name}\n"));
+                                }
+                                userScreen.Write(builder.ToString());
+                            } else {
+                                userScreen.Write("Mods\\HNMPMusic does not exist.");
+                            }
                         } else {
                             if (File.Exists(songLocation)) {
                                 MusicManager.Play(songLocation);

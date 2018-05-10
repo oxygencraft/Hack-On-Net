@@ -63,6 +63,7 @@ namespace HackOnNet.Modules {
                 Stop();
             }
             if (songsInQueue.Count == 0 && !Hacknet.MusicManager.isPlaying && !sw.IsRunning) {
+                hacknetMusicDisabled = false;
                 Hacknet.MusicManager.playSongImmediatley("Music\\Broken_Boy.ogg");
             }
         }
