@@ -150,9 +150,9 @@ namespace HackLinks_Server.Computers
             return child;
         }
 
-        public void PlayMusic(Process process, string song, string playimmediately)
+        public void PlayMusic(Process process, string song)
         {
-            GetClient(process).Send(NetUtil.PacketType.MUSIC, song, playimmediately);
+            GetClient(process).Send(NetUtil.PacketType.MUSIC, song);
         }
 
         public void OpenDaemon(CommandProcess process, string target)

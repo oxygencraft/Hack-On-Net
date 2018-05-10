@@ -28,7 +28,7 @@ namespace HackLinks_Server.Computers.Processes
             { "chmod", new Tuple<string, Command>("chmod [mode] [file]\n    Change the required user level for read and write operations on the given file.\n", ChMod) },
             { "fedit", new Tuple<string, Command>("fedit [append/line/remove/insert/help]\n     Edits the given file according to the mode used.", Fedit) },
             { "netmap", new Tuple<string, Command>("netmap [ip] [x] [y]\n    Adds a node to the network map", AddToNetMap) },
-            { "music", new Tuple<string, Command>("music [file ((DLC\\)Music\\NameOfFile)] [playimmediately (0/1)] (DEBUG COMMAND)", PlayMusic) },
+            { "music", new Tuple<string, Command>("music [(nameOfSong) OR (shuffle)]", PlayMusic) },
         };
 
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
@@ -534,15 +534,11 @@ namespace HackLinks_Server.Computers.Processes
                 List<string> command = new List<string>();
                 command.Add("music");
                 command.AddRange(commandUnsplit[1].Split());
-                if (command.Count < 3) {
-                    process.Print("Usage: music [file (nameofsong) (Note: Must be in a folder called \"HNMPMusic\" in the Mods folder as an .ogg file.)] [playimmediately (0/1)]\nor music shuffle [playimmediately (0/1)]");
+                if (command.Count < 2) {
+                    process.Print("Usage: music [(nameofsong) (Note: Must be in a folder called \"HNMPMusic\" in the Mods folder as an .wav file.)]\nOR music shuffle");
                     return true;
                 }
-                if (command[2] != "0" && command[2] != "1") {
-                    process.Print("Please input a 0 or 1 for playimmediately.");
-                    return true;
-                }
-                process.computer.Kernel.PlayMusic(process, command[1], command[2]);
+                process.computer.Kernel.PlayMusic(process, command[1]);
                 return true;
             } catch(ObjectDisposedException e) {
                 Console.WriteLine(e);
