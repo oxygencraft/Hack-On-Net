@@ -135,6 +135,14 @@ namespace HackLinks_Server.Computers
             GetClient(process).server.GetComputerManager().AddToDelete(file);
         }
 
+        public Process StartProcess(Process process, File file)
+        {
+            if(!file.HasExecutePermission(process.Credentials))
+                StartProcess(process, "False");
+            string type = GetClient(process).server.GetCompileManager().GetType(file.Checksum);
+            return StartProcess(process, type);
+        }
+
         public Process StartProcess(Process process, string type)
         {
             // TODO clone credentials OR make sure they're imutable
