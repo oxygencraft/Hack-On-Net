@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Media;
 using System.Threading;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace HackOnNet.Modules {
@@ -13,24 +12,16 @@ namespace HackOnNet.Modules {
             Stop();
             List<string> songFilesShuffled = songFiles;
             songFilesShuffled.Shuffle();
-            var t = Task.Run(() => ShuffleAsync(songFilesShuffled));
-            t.Wait();
-        }
-        private static void ShuffleAsync(List<string> songs) {
-            foreach (string song in songs) {
+            foreach (string song in songFilesShuffled) {
                 player.Stream = File.OpenRead(song);
-                player.PlaySync();
+                player.Play();
             }
         }
 
         public static void Play(string song) {
             Stop();
-            var t = Task.Run(() => PlayAsync(song));
-            t.Wait();
-        }
-        private static void PlayAsync(string song) {
             player.Stream = File.OpenRead(song);
-            player.PlaySync();
+            player.Play();
         }
 
         public static void Stop() {
