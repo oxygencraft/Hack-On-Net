@@ -154,6 +154,8 @@ namespace HackOnNet.Screens
 
             foreach (Overlay overlay in overlays)
                 overlay.Update(gameTime.ElapsedGameTime.TotalSeconds);
+
+            Modules.MusicManager.Check();
         }
 
         public override void Draw(GameTime gameTime)

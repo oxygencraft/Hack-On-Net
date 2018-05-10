@@ -78,6 +78,8 @@ namespace HackOnNet.GUI
 
         public static void DrawMainMenu(DrawMainMenuEvent e)
         {
+            Modules.MusicManager.Check();
+
             if (bMenu == null)
                 bMenu = e.MainMenu;
             if (currentState == MenuState.OG_MENU)
