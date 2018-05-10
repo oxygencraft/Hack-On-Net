@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using static HackOnNet.ConfigUtil;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using System.Media;
+using System.Security.Cryptography;
 
 namespace HackOnNet.Net
 {
@@ -22,6 +24,8 @@ namespace HackOnNet.Net
         private const string configFile = "Mods/HNMP.conf";
         public Socket clientSocket;
 
+        SoundPlayer player = new SoundPlayer();
+        
         private static ManualResetEvent connectDone =
             new ManualResetEvent(false);
         private static ManualResetEvent sendDone =
@@ -232,12 +236,40 @@ namespace HackOnNet.Net
                     userScreen.HandleFX(messages);
                     break;
                 case NetUtil.PacketType.MUSIC:
-                    if (messages.Length > 0)
-                    {
-                        if (messages[1] == "1")
-                            Hacknet.MusicManager.playSongImmediatley(messages[0]);
-                        else
-                            Hacknet.MusicManager.transitionToSong(messages[0]);
+                    // Note: Switch to System.Media.SoundPlayer
+                    if (messages.Length > 0) {
+                        string songLocation = $"Mods\\HNMPMusic\\{messages[0]}.ogg";
+                        if (messages[0] == "shuffle") {
+                            if (Directory.Exists("Mods\\HNMPMusic")) {
+                                string[] files = Directory.GetFiles("Mods\\HNMPMusic");
+                                List<string> songFiles = new List<string>();
+
+                                foreach (string file in songFiles) {
+                                    if (Path.GetExtension(file) == ".wav") {
+                                        songFiles.Add(file);
+                                    }
+                                }
+                                songFiles.Shuffle();
+                                Task play = new Task(() => {
+                                    foreach (string song in songFiles) {
+                                        player.Stream = File.OpenRead(song);
+                                        player.PlaySync();
+                                    }
+                                });
+                                play.Start();
+                            } else {
+                                userScreen.Write("Mods\\HNMPMusic does not exist.");
+                            }
+                        } else {
+                            if (File.Exists(songLocation)) {
+                                if (messages[1] == "0")
+                                    Hacknet.MusicManager.transitionToSong(messages[0]);
+                                else
+                                    Hacknet.MusicManager.playSongImmediatley(messages[0]);
+                            } else {
+                                userScreen.Write($"\"{songLocation}\" does not exist.");
+                            }
+                        }
                     }
                     break;
                 case NetUtil.PacketType.DSCON:
@@ -279,5 +311,25 @@ namespace HackOnNet.Net
             }
         }
 
+    }
+    static class ThreadSafeRandom {
+        [ThreadStatic] private static Random Local;
+
+        public static Random ThisThreadsRandom {
+            get { return Local ?? (Local = new Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId))); }
+        }
+    }
+
+    static class MyExtensions {
+        public static void Shuffle<T>(this IList<T> list) {
+            int n = list.Count;
+            while (n > 1) {
+                n--;
+                int k = ThreadSafeRandom.ThisThreadsRandom.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+        }
     }
 }

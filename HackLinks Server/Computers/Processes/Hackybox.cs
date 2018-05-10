@@ -529,18 +529,28 @@ namespace HackLinks_Server.Computers.Processes
             return true;
         }
 
-        public static bool PlayMusic(CommandProcess process, string[] commandUnsplit)
-        {
-            List<string> command = new List<string>();
-            command.Add("music");
-            command.AddRange(commandUnsplit[1].Split());
-            if (command.Count < 3)
-            {
-                process.Print("Usage: music [file ((DLC\\)Music\\NameOfFile)] [playimmediately (0/1)]");
+        public static bool PlayMusic(CommandProcess process, string[] commandUnsplit) {
+            try {
+                List<string> command = new List<string>();
+                command.Add("music");
+                command.AddRange(commandUnsplit[1].Split());
+                if (command.Count < 3) {
+                    process.Print("Usage: music [file (nameofsong) (Note: Must be in a folder called \"HNMPMusic\" in the Mods folder as an .ogg file.)] [playimmediately (0/1)]\nor music shuffle [playimmediately (0/1)]");
+                    return true;
+                }
+                if (command[2] != "0" && command[2] != "1") {
+                    process.Print("Please input a 0 or 1 for playimmediately.");
+                    return true;
+                }
+                process.computer.Kernel.PlayMusic(process, command[1], command[2]);
+                return true;
+            } catch(ObjectDisposedException e) {
+                Console.WriteLine(e);
+                return true;
+            } catch(Exception e) {
+                Console.WriteLine(e);
                 return true;
             }
-            process.computer.Kernel.PlayMusic(process, command[1], command[2]);
-            return true;
         }
     }
 }

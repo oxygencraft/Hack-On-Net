@@ -19,14 +19,6 @@ namespace HackOnNet.DiscordRP {
             DiscordRpc.Initialize(clientId, ref handlers, true, null);
             isEnabled = true;
         }
-        public void UpdatePresence(string details, string largeImageKey) {
-            if (isEnabled) {
-                presence.details = details;
-                presence.largeImageKey = largeImageKey;
-
-                DiscordRpc.UpdatePresence(presence);
-            }
-        }
         public static void Shutdown() {
             DiscordRpc.ClearPresence();
             DiscordRpc.Shutdown();
