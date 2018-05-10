@@ -42,6 +42,7 @@ namespace HackOnNet.Modules {
             sw.Stop();
             sw.Reset();
             songLength = 0;
+            songsInQueue.Clear();
             player.Stop();
         }
 
@@ -59,8 +60,10 @@ namespace HackOnNet.Modules {
                 }
             }
             if (sw.ElapsedMilliseconds > songLength) {
-                sw.Stop();
-                sw.Reset();
+                Stop();
+            }
+            if (songsInQueue.Count == 0 && !Hacknet.MusicManager.isPlaying && !sw.IsRunning) {
+                Hacknet.MusicManager.playSongImmediatley("Music\\Broken_Boy.ogg");
             }
         }
 

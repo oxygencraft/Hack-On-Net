@@ -123,8 +123,6 @@ namespace HackOnNet.Screens
             this.ram.LoadContent();
             this.modules.Add(this.ram);
 
-            Hacknet.MusicManager.playSongImmediatley("Music\\Broken_Boy.ogg");
-
             this.modules.Add(terminal);
         }
 
