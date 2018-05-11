@@ -94,6 +94,7 @@
     <Compile Include="GUI\TerminalStringParser.cs" />
     <Compile Include="GUI\Theme.cs" />
     <Compile Include="HackOnNetMod.cs" />
+    <Compile Include="Modules\MusicManager.cs" />
     <Compile Include="Modules\NodeCircle.cs" />
     <Compile Include="Modules\OnCoreModule.cs" />
     <Compile Include="Modules\OnModule.cs" />
