@@ -93,7 +93,7 @@ namespace HackLinks_Server.Computers.Permissions
                             case '=':
                                 break;
                             case '-':
-                                permissionDigit = permissions.GetPermissionDigit(type) ^ permissionDigit;
+                                permissionDigit = permissions.GetPermissionDigit(type) & ~permissionDigit;
                                 break;
                             // Logically there will never be anything but a '+', '=', or '-' here, so default throws exceptions in case of future bugs.
                             default:
