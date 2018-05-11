@@ -99,9 +99,40 @@ namespace HackLinks_Server.Database
             "',1,1,774,0),"+
             "(8,'bank',2,0,1,'BANK',1,0,774,0)," +
             "(9,'bank',1,1,1,'bank',1,0,774,0)," +
-            "(10,'accounts.db',9,0,1,'',1,0,774,0)",
+            "(10,'accounts.db',9,0,1,'',1,0,774,0)," +
+            "(11,'bin',1,1,0,'',1,0,774,0)," +
+            "(0,'hackybox',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'ping',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'connect',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'disconnect',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'dc',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'ls',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'touch',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'view',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'mkdir',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'rm',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'login',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'chown',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'chmod',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'fedit',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'netmap',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'music',11,0,0,'hackybox',1,0,774,0),"+
+            "(0,'admin',11,0,0,'serveradmin',1,0,774,0)",
             "/*!40000 ALTER TABLE `files` ENABLE KEYS */",
+
             "UNLOCK TABLES",
+            "DROP TABLE IF EXISTS `binaries`",
+            "CREATE TABLE `binaries` (" +
+            " `id` int(11) PRIMARY KEY NOT NULL AUTO_INCREMENT," +
+            " `checksum` int NOT NULL," +
+            " `type` char(64) NOT NULL" +
+            ") ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = latin1",
+            //
+            // Dumping data for table `binaries`
+            //
+            $"INSERT INTO `binaries` VALUES "+
+            $"(0,{"hackybox".GetHashCode()},'Hackybox'),"+
+            $"(0,{"serveradmin".GetHashCode()},'ServerAdmin')",
         };
 
         public static List<string> Commands => commands;

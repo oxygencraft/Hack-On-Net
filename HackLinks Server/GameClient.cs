@@ -74,7 +74,15 @@ namespace HackLinks_Server
         private Process CreateProcess(Node node, Type type, Credentials credentials, Process.Printer printer)
         {
             Console.WriteLine(type);
-            return (Process)Activator.CreateInstance(type, new object[] { node.NextPID, printer, node, credentials });
+            object[] args;
+            if( type == typeof(ServerAdmin))
+            {
+                args = new object[] { node.NextPID, printer, node, credentials, this };
+            } else
+            {
+                args = new object[] { node.NextPID, printer, node, credentials };
+            }
+            return (Process)Activator.CreateInstance(type, args);
         }
 
         public void Disconnect()
