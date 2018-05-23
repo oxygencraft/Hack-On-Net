@@ -27,6 +27,7 @@ namespace HackLinks_Server.Computers
         public List<Session> sessions = new List<Session>();
         public List<Daemon> daemons = new List<Daemon>();
         public List<Log> logs = new List<Log>();
+        public string bankAccountRedirectionInfo = "";
 
         public Kernel Kernel { get; set; }
 
@@ -76,6 +77,17 @@ namespace HackLinks_Server.Computers
                     return line.Substring(5);
             }
             return ip;
+        }
+
+        public string GetBankAccountRedirectionInfo()
+        {
+            if (string.IsNullOrWhiteSpace(bankAccountRedirectionInfo))
+            {
+                var cfgFile = fileSystem.rootFile.GetFileAtPath("/cfg/BankAccountRedirectionInfo.cfg");
+                if (cfgFile != null)
+                    bankAccountRedirectionInfo = cfgFile.Content;
+            }
+            return bankAccountRedirectionInfo;
         }
 
         public void LaunchDaemon(File daemonLauncher)
