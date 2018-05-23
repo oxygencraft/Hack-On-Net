@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HackLinks_Server.Files;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,19 +33,47 @@ namespace HackLinks_Server.Computers.Processes
             return false;
         }
 
+        private bool HandleExternal(string command)
+        {
+            string[] commandParts = command.Split(new char[] { ' ' }, 2);
+            File applicationFile = SearchPath(commandParts[0]);
+            if (applicationFile != null)
+            {
+                Process child = computer.Kernel.StartProcess(this, applicationFile);
+                child.Run(command);
+                return true;
+            }
+            return false;
+        }
+
+        private File SearchPath(string v)
+        {
+            File file = ActiveDirectory.GetFile(v);
+            if(file != null)
+            {
+                return file;
+            }
+            File bin = computer.fileSystem.rootFile.GetFile("bin");
+            if(bin != null)
+            {
+                file = bin.GetFile(v);
+            }
+            return file;
+        }
+
         public override void WriteInput(string inputData)
         {
-            if(inputData != null)
+            if(inputData != null && inputData.Length > 0)
             {
-                bool handled = HandleBuiltin(inputData);
-
-                if(handled)
+                if (HandleBuiltin(inputData))
                 {
                     return;
                 }
-
-                Process child = computer.Kernel.StartProcess(this, "Hackybox");
-                child.Run(inputData);
+                if (HandleExternal(inputData))
+                {
+                    return;
+                }
+                Print($"{inputData.Split(new char[] { ' ' }, 2)[0]}: command not found");
             }
         }
 

@@ -102,6 +102,20 @@ namespace HackLinks_Server.Database
                 }
             }
 
+            using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand command = new MySqlCommand("SELECT checksum, type FROM binaries", conn);
+
+                using (MySqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        Server.Instance.GetCompileManager().AddType(reader.GetInt32("checksum"), reader.GetString("type"));
+                    }
+                }
+            }
+
             return nodeList;
         }
 

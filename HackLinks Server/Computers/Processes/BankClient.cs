@@ -64,13 +64,12 @@ namespace HackLinks_Server.Computers.Processes
                     var accountsFile = accountFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                     if (accountsFile.Length != 0)
                     {
-                        foreach (var account in accountsFile)
+                        foreach (string line in accountFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                         {
-                            string[] accountData = account.Split('=');
-                            string accountPassword = accountData[1];
-                            // Update temporary holding array
-                            accountData = accountData[0].Split(',');
-                            accounts.Add(accountData[accountData.Length - 1]);
+                            var data = line.Split(',');
+                            if (data.Length < 4)
+                                continue;
+                            accounts.Add(data[0]);
                         }
                     }
                     if (accounts.Contains(cmdArgs[1]))
@@ -99,6 +98,7 @@ namespace HackLinks_Server.Computers.Processes
                             break;
                         }
                     }
+                    process.Print("Invalid account name or password");
                 }
                 if (cmdArgs[0] == "resetpass")
                 {

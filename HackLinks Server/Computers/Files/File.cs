@@ -47,7 +47,8 @@ namespace HackLinks_Server.Files
 
         public Group Group { get => group; set { group = value; Dirty = true; } }
 
-        public string Content { get => content; set { content = value; Dirty = true;  } }
+        public string Content { get => content; set { content = value; Dirty = true; Checksum = content.GetHashCode(); } } // TODO make hash function portable/low collision eg. https://softwareengineering.stackexchange.com/questions/49550/which-hashing-algorithm-is-best-for-uniqueness-and-speed
+        public int Checksum { get; private set; }
 
         public int ParentId { get => parentId; set { parentId = value; Dirty = true; } }
         public int ComputerId { get => computerId; set { computerId = value; Dirty = true; } }

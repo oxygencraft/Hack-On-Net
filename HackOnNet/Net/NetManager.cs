@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 using static HackOnNet.ConfigUtil;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using System.Media;
+using System.Security.Cryptography;
+using HackOnNet.Modules;
 
 namespace HackOnNet.Net
 {
@@ -175,7 +178,6 @@ namespace HackOnNet.Net
                     {
                         TreatMessage(packet.Type, packet.Data);
                     }
-
                 }
 
                 state.sb.Clear();
@@ -232,12 +234,54 @@ namespace HackOnNet.Net
                     userScreen.HandleFX(messages);
                     break;
                 case NetUtil.PacketType.MUSIC:
-                    if (messages.Length > 0)
-                    {
-                        if (messages[1] == "1")
-                            Hacknet.MusicManager.playSongImmediatley(messages[0]);
-                        else
-                            Hacknet.MusicManager.transitionToSong(messages[0]);
+                    if (messages.Length > 0) {
+                        string songLocation = $"Mods\\HNMPMusic\\{messages[0]}.wav";
+                        if (messages[0] == "shuffle") {
+                            if (Directory.Exists("Mods\\HNMPMusic")) {
+                                string[] files = Directory.GetFiles("Mods\\HNMPMusic");
+                                List<string> songFiles = new List<string>();
+
+                                foreach (string file in files) {
+                                    if (Path.GetExtension(file) == ".wav") {
+                                        songFiles.Add(file);
+                                    }
+                                }
+                                MusicManager.Shuffle(songFiles);
+                            } else {
+                                userScreen.Write("Mods\\HNMPMusic does not exist.");
+                            }
+                        } else if (messages[0] == "list") {
+                            if (Directory.Exists("Mods\\HNMPMusic")) {
+                                string[] files = Directory.GetFiles("Mods\\HNMPMusic");
+                                List<string> songFiles = new List<string>();
+                                foreach (string file in files) {
+                                    if (Path.GetExtension(file) == ".wav") {
+                                        songFiles.Add(file);
+                                    }
+                                }
+                                int i = 0;
+                                List<string> names = new List<string>();
+                                foreach (string name in songFiles) {
+                                    int index = name.LastIndexOf('\\');
+                                    names.Add(name.Substring(index + 1).Replace(".wav", ""));
+                                    i++;
+                                }
+                                StringBuilder builder = new StringBuilder();
+                                builder.Append(" \nYour Music Library:\n \n");
+                                foreach (string name in names) {
+                                    builder.Append(($"{name}\n"));
+                                }
+                                userScreen.Write(builder.ToString());
+                            } else {
+                                userScreen.Write("Mods\\HNMPMusic does not exist.");
+                            }
+                        } else {
+                            if (File.Exists(songLocation)) {
+                                MusicManager.Play(songLocation);
+                            } else {
+                                userScreen.Write($"\"{songLocation}\" does not exist.");
+                            }
+                        }
                     }
                     break;
                 case NetUtil.PacketType.DSCON:
@@ -278,6 +322,5 @@ namespace HackOnNet.Net
                 Disconnect(e, true);
             }
         }
-
     }
 }

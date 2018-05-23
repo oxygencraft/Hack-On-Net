@@ -22,6 +22,7 @@ namespace HackLinks_Server
 
         private ComputerManager computerManager;
         private FileSystemManager fileSystemManager = new FileSystemManager();
+        private CompiledFileManager compileManager = new CompiledFileManager();
 
         public FileSystemManager FileSystemManager => fileSystemManager;
 
@@ -145,6 +146,11 @@ namespace HackLinks_Server
                     client.activeSession.UpdateTrace(dT);
                 }
             }
+        }
+
+        public CompiledFileManager GetCompileManager()
+        {
+            return compileManager;
         }
 
         internal void SaveDatabase()

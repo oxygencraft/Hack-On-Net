@@ -1,4 +1,5 @@
-﻿using HackLinksCommon;
+﻿using HackLinks_Server.Files;
+using HackLinksCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,12 +12,14 @@ namespace HackLinks_Server.Computers.Processes
     {
         private static SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>()
         {
+            { "admin", new Tuple<string, Command>("admin COMMAND [args]\n    Executes the given Server Admin command with args.", CommandExec) },
             { "trace", new Tuple<string, Command>("trace [over/start]\n    DEBUG COMMAND", TraceDebug) },
             { "giveperms", new Tuple<string, Command>("giveperms [username] [admin/kick/ban/giveperms]\n    Gives user permissions", GivePermissions) },
             { "kick", new Tuple<string, Command>("kick [username]\n    Kicks User", Kick) },
             { "ban", new Tuple<string, Command>("ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]\n    Bans user for a specified amount of time", Ban) },
             { "unban", new Tuple<string, Command>("unban\n    Unbans a user", Unban) },
             { "changetheme", new Tuple<string, Command>("changetheme [filepathtotheme] (DEBUG COMMAND)", ChangeTheme) },
+            { "compile", new Tuple<string, Command>("compile FILENAME TYPE", Compile) },
         };
 
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
@@ -37,6 +40,45 @@ namespace HackLinks_Server.Computers.Processes
             {
                 Print("Unauthorized access to privilaged resources detected, halting execution");
             }
+        }
+
+        public static bool CommandExec(CommandProcess process, string[] command)
+        {
+            if (command.Length > 1)
+            {
+                return process.RunCommand(command[1]);
+            }
+            process.Print(commands[command[0]].Item1);
+            return true;
+        }
+
+        public static bool Compile(CommandProcess process, string[] command)
+        {
+            ServerAdmin serverAdmin = (ServerAdmin)process;
+            if (command.Length != 2)
+            {
+                process.Print("Usage: compile FILENAME TYPE");
+                return true;
+            }
+            string[] args = command[1].Split(' ');
+            if(args.Length != 2)
+            {
+                process.Print("Usage: compile FILENAME TYPE");
+                return true;
+            }
+            File file = process.ActiveDirectory.GetFile(args[0]);
+            if (file == null)
+            {
+                process.Print("File not found");
+                return true;
+            }
+            if (file.IsFolder())
+            {
+                process.Print("Invalid file, cannot be folder");
+                return true;
+            }
+            serverAdmin.client.server.GetCompileManager().AddType(file.Checksum, args[1]);
+            return true;
         }
 
         public static bool TraceDebug(CommandProcess process, string[] command)
