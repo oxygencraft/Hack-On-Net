@@ -91,16 +91,22 @@ namespace HackLinks_Server.Daemons.Types
             }
             account.balance += amount;
             UpdateAccountDatabase();
-            computer.Log(Log.LogEvents.BankTransfer, $"Received {amount} from {from.accountName}@{ip} to {to.accountName}", session.sessionId, session.owner.homeComputer.ip);
+            var bankFolder = computer.fileSystem.rootFile.GetFile("bank");
+            LogTransaction($"{to.accountName},Received {amount} from {from.accountName}@{ip} to {to.accountName}", session.sessionId, session.owner.homeComputer.ip);
+        }
+
+        public void LogTransaction(string transactionMessage, int sessionId, string ip)
+        {
             var bankFolder = computer.fileSystem.rootFile.GetFile("bank");
             File transactionLog = bankFolder.GetFile("transactionlog.db");
             if (transactionLog != null)
             {
                 if (transactionLog.Content == "")
-                    transactionLog.Content += $"{to.accountName},Received {amount} from {from.accountName}@{ip} to {to.accountName}";
+                    transactionLog.Content = transactionLog.Content.Insert(0, transactionMessage);
                 else
-                    transactionLog.Content += $"\r\n{to.accountName},Received {amount} from {from.accountName}@{ip} to {to.accountName}";
+                    transactionLog.Content = transactionLog.Content.Insert(0, transactionMessage + "\r\n");
             }
+            node.Log(Log.LogEvents.BankTransaction, transactionMessage, sessionId, ip);
         }
 
         public override void OnStartUp()

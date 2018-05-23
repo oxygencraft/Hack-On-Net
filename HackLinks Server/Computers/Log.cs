@@ -58,7 +58,7 @@ namespace HackLinks_Server.Computers
         public enum LogEvents
         {
             Login,
-            BankTransfer
+            BankTransaction
         }
     }
 }

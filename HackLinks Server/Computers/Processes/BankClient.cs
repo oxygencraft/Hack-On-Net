@@ -96,7 +96,7 @@ namespace HackLinks_Server.Computers.Processes
                             client.loggedInAccount = account;
                             daemon.computer.Log(Log.LogEvents.Login, daemon.computer.logs.Count + 1 + " " + client.Session.owner.homeComputer.ip + " logged in as bank account " + account.accountName, client.Session.sessionId, client.Session.owner.homeComputer.ip);
                             process.Print($"Logged into bank account {account.accountName} successfully");
-                            break;
+                            return true;
                         }
                     }
                     process.Print("Invalid account name or password");
@@ -185,17 +185,9 @@ namespace HackLinks_Server.Computers.Processes
                     {
                         process.Print("The receiving account does not exist");
                         return true;
-                    }
-                    daemon.computer.Log(Log.LogEvents.BankTransfer, $"{client.Session.sessionId} {client.computer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}", client.Session.sessionId, client.computer.ip);
+                    }                    
                     targetBank.ProcessBankTransfer(client.loggedInAccount, accountTo, cmdArgs[2], int.Parse(cmdArgs[3]), client.Session);
-                    File transactionLog = bankFolder.GetFile("transactionlog.db");
-                    if (transactionLog != null)
-                    {
-                        if (transactionLog.Content == "")
-                            transactionLog.Content += $"{client.loggedInAccount},{client.Session.sessionId}_{client.computer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}";
-                        else
-                            transactionLog.Content += $"\r\n{client.loggedInAccount},{client.Session.sessionId}_{client.computer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}";
-                    }
+                    daemon.LogTransaction($"{client.loggedInAccount.accountName},{client.Session.owner.homeComputer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}", client.Session.sessionId, client.Session.owner.homeComputer.ip);
                 }
                 if (cmdArgs[0] == "transactions")
                 {
@@ -210,46 +202,28 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("This bank does not keep transaction logs");
                         return true;
                     }
-                    string[] transactions = transactionLog.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] transactions = transactionLog.Content.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
                     if (transactions.Length == 0)
                     {
                         process.Print("The transaction log database is empty");
                         return true;
                     }
-                    int pageModifier = 20;
-                    int pageNumber = 1;
-                    if (cmdArgs.Length > 1)
+                    string transactionLogForClient = "";
+                    foreach (var transactionUnsplit in transactions)
                     {
-                        if (int.TryParse(cmdArgs[1], out pageNumber))
-                        {
-                            if (pageNumber != 1)
-                            {
-                                if (pageNumber <= 0 || pageNumber > transactions.Length / 20)
-                                {
-                                    process.Print("Invalid page number");
-                                    return true;
-                                }
-                            }
-                            pageModifier = pageNumber * 20;
-                        }
-                    }
-                    string transactionLogForClient = "------ Transaction Log for " + client.loggedInAccount.accountName + " ------";
-                    int currentTransaction = transactions.Length - pageModifier;
-                    for (int i = transactions.Length - pageModifier; transactions.Length - pageModifier < i; i--)
-                    {
-                        string[] transaction = transactions[currentTransaction].Split(',');
+                        string[] transaction = transactionUnsplit.Split(',');
                         if (transaction[0] == client.loggedInAccount.accountName)
-                        {
                             transactionLogForClient += transaction[1] + "\n";
-                        }
-                        else
-                            i++;
-                        currentTransaction--;
                     }
-                    int pageNumberToDisplay = transactions.Length / 20 == 0 ? 1 : transactions.Length / 20;
-                    if (transactionLogForClient == "------ Transaction Log for " + client.loggedInAccount.accountName + " ------")
-                        transactionLogForClient += "\nThis account's transaction log is empty\n";
-                    transactionLogForClient += "------ Page " + pageNumber + "/" + pageNumberToDisplay + " ------"; 
+                    if (transactionLogForClient == "")
+                        transactionLogForClient += "Your transaction log is empty";
+                    File transactionFileForClient = client.Session.owner.homeComputer.fileSystem.CreateFile(client.Session.owner.homeComputer, client.Session.owner.homeComputer.fileSystem.rootFile, "Bank_Transaction_Log_For_" + client.loggedInAccount.accountName);
+                    transactionFileForClient.Content = transactionLogForClient;
+                    transactionFileForClient.OwnerId = 0;
+                    transactionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
+                    transactionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+                    transactionFileForClient.Group = transactionFileForClient.Parent.Group;
+                    process.Print("A file containing your transaction log has been uploaded to your computer");
                 }
                 if (cmdArgs[0] == "close")
                 {
@@ -316,6 +290,8 @@ namespace HackLinks_Server.Computers.Processes
                     {
                         account.balance = val;
                         daemon.UpdateAccountDatabase();
+                        var bankFolder = process.computer.fileSystem.rootFile.GetFile("bank");
+                        daemon.LogTransaction($"{account.accountName},CHEATED Balance set to {val}", client.Session.sessionId, client.Session.owner.homeComputer.ip);
                     }
                     else
                     {
