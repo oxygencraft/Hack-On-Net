@@ -217,12 +217,19 @@ namespace HackLinks_Server.Computers.Processes
                     }
                     if (transactionLogForClient == "")
                         transactionLogForClient += "Your transaction log is empty";
-                    File transactionFileForClient = client.Session.owner.homeComputer.fileSystem.CreateFile(client.Session.owner.homeComputer, client.Session.owner.homeComputer.fileSystem.rootFile, "Bank_Transaction_Log_For_" + client.loggedInAccount.accountName);
+                    File transactionFileForClient = client.Session.owner.homeComputer.fileSystem.rootFile.GetFile("Bank_Transaction_Log_For_" + client.loggedInAccount.accountName);
+                    if (transactionFileForClient == null)
+                    {
+                        transactionFileForClient = client.Session.owner.homeComputer.fileSystem.CreateFile(client.Session.owner.homeComputer, client.Session.owner.homeComputer.fileSystem.rootFile, "Bank_Transaction_Log_For_" + client.loggedInAccount.accountName);
+                        transactionFileForClient.Content = transactionLogForClient;
+                        transactionFileForClient.OwnerId = 0;
+                        transactionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
+                        transactionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+                        transactionFileForClient.Group = transactionFileForClient.Parent.Group;
+                        process.Print("A file containing your transaction log has been uploaded to your computer");
+                        return true;
+                    }
                     transactionFileForClient.Content = transactionLogForClient;
-                    transactionFileForClient.OwnerId = 0;
-                    transactionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
-                    transactionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
-                    transactionFileForClient.Group = transactionFileForClient.Parent.Group;
                     process.Print("A file containing your transaction log has been uploaded to your computer");
                 }
                 if (cmdArgs[0] == "close")
