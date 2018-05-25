@@ -1,6 +1,7 @@
 ﻿using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
 using HackLinks_Server.Daemons.Types.Bank;
+using HackLinks_Server.Daemons.Types.Mission;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,18 +10,18 @@ using System.Threading.Tasks;
 
 namespace HackLinks_Server.Computers.Processes
 {
-    class BankClient : DaemonClient
+    class MissionClient : DaemonClient
     {
         public SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>()
         {
-            { "account", new Tuple<string, Command>("account [create/login/resetpass/balance/transfer/transactions/close]\n    Performs an account operation.", Account) },
+            { "account", new Tuple<string, Command>("account [create/login/resetpass/close]\n    Performs an account operation.", Account) },
             { "balance", new Tuple<string, Command>("balance set [accountname] [value]/get [accountname]\n    Sets or gets balance (DEBUG COMMAND)", Balance) }
         };
 
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
-        private BankAccount loggedInAccount = null;
+        private MissionAccount loggedInAccount = null;
 
-        public BankClient(Session session, Daemon daemon, int pid, Printer printer, Node computer, Credentials credentials) : base(session, daemon, pid, printer, computer, credentials)
+        public MissionClient(Session session, Daemon daemon, int pid, Printer printer, Node computer, Credentials credentials) : base(session, daemon, pid, printer, computer, credentials)
         {
             
         }
@@ -28,7 +29,7 @@ namespace HackLinks_Server.Computers.Processes
         public override bool RunCommand(string command)
         {
             // We hide the old runCommand function to perform this check on startup
-            if (!((BankDaemon)Daemon).CheckFolders(this))
+            if (!((MissionDaemon)Daemon).CheckFolders(this))
             {
                 return true;
             }
@@ -37,8 +38,8 @@ namespace HackLinks_Server.Computers.Processes
 
         public static bool Account(CommandProcess process, string[] command)
         {
-            BankClient client = (BankClient)process;
-            BankDaemon daemon = (BankDaemon)client.Daemon;
+            MissionClient client = (MissionClient)process;
+            MissionDaemon daemon = (MissionDaemon)client.Daemon;
 
             var bankFolder = process.computer.fileSystem.rootFile.GetFile("bank");
             var accountFile = bankFolder.GetFile("accounts.db");
@@ -67,7 +68,7 @@ namespace HackLinks_Server.Computers.Processes
                         foreach (string line in accountFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                         {
                             var data = line.Split(',');
-                            if (data.Length < 4)
+                            if (data.Length < 5)
                                 continue;
                             accounts.Add(data[0]);
                         }
@@ -77,7 +78,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("This account name is not available");
                         return true;
                     }
-                    daemon.accounts.Add(new BankAccount(cmdArgs[1], 0, cmdArgs[2], client.Session.owner.username));
+                    daemon.accounts.Add(new MissionAccount(cmdArgs[1], 0, 0, cmdArgs[2], client.Session.owner.username));
                     daemon.UpdateAccountDatabase();
                     process.Print("Your account has been opened. Use account login [accountname] [password] to login.");
                 }
@@ -124,64 +125,6 @@ namespace HackLinks_Server.Computers.Processes
                         }
                     }
                     return true;
-                }
-                if (cmdArgs[0] == "balance")
-                {
-                    if (client.loggedInAccount == null)
-                    {
-                        process.Print("You are not logged in");
-                        return true;
-                    }
-                    process.Print($"Account balance for {client.loggedInAccount.accountName} is {client.loggedInAccount.balance}");
-                }
-                if (cmdArgs[0] == "transfer")
-                {
-                    if (cmdArgs.Length < 4)
-                    {
-                        process.Print("Usage : account transfer [receivingaccountname] [receivingbankip] [amount]");
-                        return true;
-                    }
-                    if (client.loggedInAccount.balance < Convert.ToInt32(cmdArgs[3]))
-                    {
-                        process.Print("Account does not have enough balance");
-                        return true;
-                    }
-                    if (Server.Instance.GetComputerManager().GetNodeByIp(cmdArgs[2]) == null)
-                    {
-                        process.Print("The receiving computer does not exist");
-                        return true;
-                    }
-                    BankDaemon targetBank = null;
-                    foreach (var computer in Server.Instance.GetComputerManager().NodeList)
-                    {
-                        if (computer.ip == cmdArgs[2])
-                        {
-                            Daemon targetDaemon = computer.GetDaemon("Bank");
-                            if (targetDaemon == null)
-                            {
-                                process.Print("The receiving computer does not have a bank daemon");
-                                return true;
-                            }
-                            targetBank = (BankDaemon)targetDaemon;
-                            break;
-                        }
-                    }
-                    BankAccount accountTo = null;
-                    foreach (var account in targetBank.accounts)
-                    {
-                        if (account.accountName == cmdArgs[1])
-                        {
-                            accountTo = account;
-                            break;
-                        }
-                    }
-                    if (accountTo == null)
-                    {
-                        process.Print("The receiving account does not exist");
-                        return true;
-                    }
-                    daemon.computer.Log(Log.LogEvents.BankTransfer, $"{client.computer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}", client.Session.sessionId, client.computer.ip);
-                    targetBank.ProcessBankTransfer(client.loggedInAccount, accountTo, cmdArgs[2], int.Parse(cmdArgs[3]), client.Session);
                 }
                 return true;
             }

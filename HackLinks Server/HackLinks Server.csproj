@@ -63,6 +63,7 @@
   <ItemGroup>
     <Compile Include="Computers\CompiledFileManager.cs" />
     <Compile Include="Computers\Kernel.cs" />
+    <Compile Include="Computers\Processes\MissionClient.cs" />
     <Compile Include="Computers\Processes\BankClient.cs" />
     <Compile Include="Computers\Processes\CommandProcess.cs" />
     <Compile Include="Computers\Processes\Credentials.cs" />
@@ -83,8 +84,9 @@
     <Compile Include="Daemons\Daemon.cs" />
     <Compile Include="Daemons\DaemonClient.cs" />
     <Compile Include="Computers\Processes\DNSClient.cs" />
+    <Compile Include="Daemons\Types\MissionDaemon.cs" />
     <Compile Include="Daemons\Types\BankDaemon.cs" />
-    <Compile Include="Daemons\Types\Bank\Account.cs" />
+    <Compile Include="Daemons\Types\Bank\BankAccount.cs" />
     <Compile Include="Daemons\Types\HTTPDaemon.cs" />
     <Compile Include="Daemons\Types\DNSDaemon.cs" />
     <Compile Include="Daemons\Types\Dns\DNSEntry.cs" />
@@ -95,6 +97,8 @@
     <Compile Include="Daemons\Types\IrcDaemon.cs" />
     <Compile Include="Computers\Processes\IRCClient.cs" />
     <Compile Include="Daemons\Types\Irc\IrcMessage.cs" />
+    <Compile Include="Daemons\Types\Mission\MissionAccount.cs" />
+    <Compile Include="Daemons\Types\Mission\MissionListing.cs" />
     <Compile Include="Database\DatabaseDump.cs" />
     <Compile Include="Database\DatabaseLink.cs" />
     <Compile Include="Extensions.cs" />
