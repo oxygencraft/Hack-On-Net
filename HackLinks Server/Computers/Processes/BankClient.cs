@@ -1,6 +1,7 @@
 ﻿using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
 using HackLinks_Server.Daemons.Types.Bank;
+using HackLinks_Server.Files;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,7 +96,7 @@ namespace HackLinks_Server.Computers.Processes
                             client.loggedInAccount = account;
                             daemon.computer.Log(Log.LogEvents.Login, daemon.computer.logs.Count + 1 + " " + client.Session.owner.homeComputer.ip + " logged in as bank account " + account.accountName, client.Session.sessionId, client.Session.owner.homeComputer.ip);
                             process.Print($"Logged into bank account {account.accountName} successfully");
-                            break;
+                            return true;
                         }
                     }
                     process.Print("Invalid account name or password");
@@ -141,6 +142,11 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : account transfer [receivingaccountname] [receivingbankip] [amount]");
                         return true;
                     }
+                    if (client.loggedInAccount == null)
+                    {
+                        process.Print("You are not logged in");
+                        return true;
+                    }
                     if (client.loggedInAccount.balance < Convert.ToInt32(cmdArgs[3]))
                     {
                         process.Print("Account does not have enough balance");
@@ -179,9 +185,69 @@ namespace HackLinks_Server.Computers.Processes
                     {
                         process.Print("The receiving account does not exist");
                         return true;
-                    }
-                    daemon.computer.Log(Log.LogEvents.BankTransfer, $"{client.computer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}", client.Session.sessionId, client.computer.ip);
+                    }                    
                     targetBank.ProcessBankTransfer(client.loggedInAccount, accountTo, cmdArgs[2], int.Parse(cmdArgs[3]), client.Session);
+                    daemon.LogTransaction($"{client.loggedInAccount.accountName},{client.Session.owner.homeComputer.ip} transferred {cmdArgs[3]} from {client.loggedInAccount.accountName} to {accountTo.accountName}@{targetBank.computer.ip}", client.Session.sessionId, client.Session.owner.homeComputer.ip);
+                }
+                if (cmdArgs[0] == "transactions")
+                {
+                    if (client.loggedInAccount == null)
+                    {
+                        process.Print("You are not logged in");
+                        return true;
+                    }
+                    File transactionLog = bankFolder.GetFile("transactionlog.db");
+                    if (transactionLog == null)
+                    {
+                        process.Print("This bank does not keep transaction logs");
+                        return true;
+                    }
+                    string[] transactions = transactionLog.Content.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    if (transactions.Length == 0)
+                    {
+                        process.Print("The transaction log database is empty");
+                        return true;
+                    }
+                    string transactionLogForClient = "";
+                    foreach (var transactionUnsplit in transactions)
+                    {
+                        string[] transaction = transactionUnsplit.Split(',');
+                        if (transaction[0] == client.loggedInAccount.accountName)
+                            transactionLogForClient += transaction[1] + "\n";
+                    }
+                    if (transactionLogForClient == "")
+                        transactionLogForClient += "Your transaction log is empty";
+                    File transactionFileForClient = client.Session.owner.homeComputer.fileSystem.rootFile.GetFile("Bank_Transaction_Log_For_" + client.loggedInAccount.accountName);
+                    if (transactionFileForClient == null)
+                    {
+                        transactionFileForClient = client.Session.owner.homeComputer.fileSystem.CreateFile(client.Session.owner.homeComputer, client.Session.owner.homeComputer.fileSystem.rootFile, "Bank_Transaction_Log_For_" + client.loggedInAccount.accountName);
+                        transactionFileForClient.Content = transactionLogForClient;
+                        transactionFileForClient.OwnerId = 0;
+                        transactionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
+                        transactionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+                        transactionFileForClient.Group = transactionFileForClient.Parent.Group;
+                        process.Print("A file containing your transaction log has been uploaded to your computer");
+                        return true;
+                    }
+                    transactionFileForClient.Content = transactionLogForClient;
+                    process.Print("A file containing your transaction log has been uploaded to your computer");
+                }
+                if (cmdArgs[0] == "close")
+                {
+                    if (client.loggedInAccount == null)
+                    {
+                        process.Print("You are not logged in");
+                        return true;
+                    }
+                    if (client.loggedInAccount.balance != 0)
+                    {
+                        process.Print("Your account balance must be zero before you can close your account.\nUse account transfer to transfer your money out of your account");
+                        return true;
+                    }
+                    daemon.accounts.Remove(client.loggedInAccount);
+                    daemon.UpdateAccountDatabase();
+                    client.loggedInAccount = null;
+                    process.Print("Your account has been closed");
                 }
                 return true;
             }
@@ -231,6 +297,8 @@ namespace HackLinks_Server.Computers.Processes
                     {
                         account.balance = val;
                         daemon.UpdateAccountDatabase();
+                        var bankFolder = process.computer.fileSystem.rootFile.GetFile("bank");
+                        daemon.LogTransaction($"{account.accountName},CHEATED Balance set to {val}", client.Session.sessionId, client.Session.owner.homeComputer.ip);
                     }
                     else
                     {
