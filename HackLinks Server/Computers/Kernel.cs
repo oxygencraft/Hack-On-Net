@@ -163,6 +163,12 @@ namespace HackLinks_Server.Computers
             GetClient(process).Send(NetUtil.PacketType.MUSIC, song);
         }
 
+        public void AddNodeToNetMap(Process process, string ip, string x, string y)
+        {
+            Server.Instance.DatabaseLink.AddUserNode(process.computer.GetSession(process.ProcessId).owner.username, ip, x + ":" + y);
+            GetClient(process).Send(NetUtil.PacketType.KERNL, "nmap", ip, x, y);
+        }
+
         public void OpenDaemon(CommandProcess process, string target)
         {
             Session activeSession = GetClient(process).activeSession;

@@ -521,11 +521,11 @@ namespace HackLinks_Server.Computers.Processes
             if (command.Count < 4)
             {
                 //TODO kernel
-                //client.Send(NetUtil.PacketType.MESSG, "Usage: netmap [ip] [x] [y]");
+                process.Print("Usage: netmap [ip] [x] [y]");
                 return true;
             }
             //TODO kernel
-            //Server.Instance.DatabaseLink.AddUserNode(client.username, command[1], command[2] + ":" + command[3]);
+            process.computer.Kernel.AddNodeToNetMap(process, command[1], command[2], command[3]);
             return true;
         }
 
