@@ -14,8 +14,7 @@ namespace HackLinks_Server.Computers.Processes
     {
         public SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>()
         {
-            { "account", new Tuple<string, Command>("account [create/login/resetpass/close]\n    Performs an account operation.", Account) },
-            { "balance", new Tuple<string, Command>("balance set [accountname] [value]/get [accountname]\n    Sets or gets balance (DEBUG COMMAND)", Balance) }
+            { "account", new Tuple<string, Command>("account [create/login/resetpass/delete]\n    Performs an account operation.", Account) },
         };
 
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
@@ -48,7 +47,7 @@ namespace HackLinks_Server.Computers.Processes
             {
                 if (command.Length < 2)
                 {
-                    process.Print("Usage : account [create/login/resetpass/balance/transfer/transactions/close]");
+                    process.Print("Usage : account [create/login/resetpass/delete]");
                     return true;
                 }
                 // TODO: Implement Transaction Log
@@ -124,64 +123,33 @@ namespace HackLinks_Server.Computers.Processes
                             break;
                         }
                     }
-                    return true;
-                }
-                return true;
-            }
-            return false;
-        }
-
-        public static bool Balance(CommandProcess process, string[] command)
-        {
-            BankClient client = (BankClient)process;
-            BankDaemon daemon = (BankDaemon)client.Daemon;
-
-            if (command[0] == "balance")
-            {
-                if (command.Length < 2)
-                {
-                    process.Print("Usage : balance set [accountname] [value]/get [accountname]");
-                    return true;
-                }
-                var cmdArgs = command[1].Split(' ');
-                if (cmdArgs.Length < 2)
-                {
-                    process.Print("Usage : balance set [accountname] [value]/get [accountname]");
-                    return true;
-                }
-                if (cmdArgs[0] == "set" && cmdArgs.Length < 3)
-                {
-                    process.Print("Usage : balance set [accountname] [value]/get [accountname]");
-                    return true;
-                }
-                BankAccount account = null;
-                foreach (var account2 in daemon.accounts)
-                {
-                    if (account2.accountName == cmdArgs[1])
+                    if (cmdArgs[0] == "delete")
                     {
-                        account = account2;
-                        break;
-                    }
-                }
-                if (account == null)
-                {
-                    process.Print("Account data for this account does not exist in the database");
-                    return true;
-                }
-                if (cmdArgs[0] == "set")
-                {
-                    if(int.TryParse(cmdArgs[2], out int val))
-                    {
-                        account.balance = val;
+                        if (client.loggedInAccount == null)
+                        {
+                            process.Print("You are not logged in");
+                            return true;
+                        }
+                        if (cmdArgs.Length >= 2)
+                        {
+                            if (cmdArgs[1] != "y")
+                            {
+                                process.Print("Are you sure you want to delete your account?\nRun account delete y if you are sure you want to delete your account");
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            process.Print("Are you sure you want to delete your account?\nRun account delete y if you are sure you want to delete your account");
+                            return true;
+                        }
+                        daemon.accounts.Remove(client.loggedInAccount);
                         daemon.UpdateAccountDatabase();
+                        client.loggedInAccount = null;
+                        process.Print("Your account has been deleted");
                     }
-                    else
-                    {
-                        process.Print("Error: non-integer value specified");
-                        return true;
-                    }
+                    return true;
                 }
-                process.Print($"Account balance for {account.accountName} is {account.balance}");
                 return true;
             }
             return false;
