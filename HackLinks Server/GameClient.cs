@@ -12,6 +12,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using HackLinks_Server.Util;
 using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server
@@ -73,7 +74,7 @@ namespace HackLinks_Server
 
         private Process CreateProcess(Node node, Type type, Credentials credentials, Process.Printer printer)
         {
-            Console.WriteLine(type);
+            Logger.Debug(type);
             object[] args;
             if( type == typeof(ServerAdmin))
             {
@@ -106,7 +107,7 @@ namespace HackLinks_Server
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.Exception(e);
                 netDisconnect();
             }
         }
@@ -128,7 +129,7 @@ namespace HackLinks_Server
 
                     content = state.sb.ToString();
 
-                    Console.WriteLine($"Received Data: \"{content}\"");
+                    Logger.Debug($"Received Data: \"{content}\"");
 
                     List<Packet> packets = ParsePackets(content);
 
@@ -145,7 +146,7 @@ namespace HackLinks_Server
             }
             catch(Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Logger.Exception(ex);
                 netDisconnect();
             }
         }
@@ -176,7 +177,7 @@ namespace HackLinks_Server
             }
             catch(Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Logger.Exception(ex);
                 netDisconnect();
             }
         }
@@ -189,7 +190,7 @@ namespace HackLinks_Server
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.Exception(e);
                 netDisconnect();
             }
         }

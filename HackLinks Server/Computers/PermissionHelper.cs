@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HackLinks_Server.Computers.Processes;
+using HackLinks_Server.Util;
 
 namespace HackLinks_Server.Computers.Permissions
 {
@@ -81,7 +82,7 @@ namespace HackLinks_Server.Computers.Permissions
                 foreach(Capture permissionCapture in match.Groups[2].Captures)
                 {
                     string permission = permissionCapture.Value;
-                    Console.WriteLine($"permission {permission}");
+                    Logger.Debug($"permission {permission}");
                     foreach (FilePermissions.PermissionType type in permissionTypes)
                     {
                         int permissionDigit = FilePermissions.CalculatePermissionDigit(permission.Contains('r'), permission.Contains('w'), permission.Contains('x'));
