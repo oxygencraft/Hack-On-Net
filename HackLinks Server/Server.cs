@@ -84,7 +84,7 @@ namespace HackLinks_Server
                     if (DatabaseLink.TryLogin(client, tempUsername, tempPass, out int homeId))
                     {
                         client.username = tempUsername;
-                        if (/*DatabaseLink.CheckUserBanStatus(client.username, out banExpiry)*/false)
+                        if (DatabaseLink.CheckUserBanStatus(client.username, out banExpiry))
                         {
                             if (banExpiry == 0)
                             {
