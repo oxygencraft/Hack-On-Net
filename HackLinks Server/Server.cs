@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using static HackLinksCommon.NetUtil;
 using HackLinks_Server.Computers.Files;
 using HackLinks_Server.Database;
+using HackLinks_Server.Util;
 
 namespace HackLinks_Server
 {
@@ -40,10 +41,10 @@ namespace HackLinks_Server
 
         public void StartServer()
         {
-            Console.WriteLine("Downloading Computer data...");
+            Logger.Info("Downloading Computer data...");
             computerManager = new ComputerManager(this, DatabaseLink.DownloadDatabase());
             computerManager.Init();
-            Console.WriteLine("Computer data loaded");
+            Logger.Info("Computer data loaded");
         }
 
         public void AddClient(Socket client)
@@ -123,7 +124,7 @@ namespace HackLinks_Server
         {
             if(client.activeSession != null)
                 client.activeSession.DisconnectSession();
-            Console.WriteLine(client.username + " disconnected from server.");
+            Logger.Info(client.username + " disconnected from server.");
             clients.Remove(client);
         }
 

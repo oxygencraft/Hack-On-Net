@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HackLinks_Server.Files;
+using HackLinks_Server.Util;
 
 namespace HackLinks_Server.Computers.Files
 {
@@ -35,7 +36,7 @@ namespace HackLinks_Server.Computers.Files
         /// <param name="newFile">File to register</param>
         public void RegisterNewFile(File newFile)
         {
-            Console.WriteLine($"{newFile.Name} Registered with id {newFile.id}");
+            Logger.Info($"{newFile.Name} Registered with id {newFile.id}");
             fileMap[newFile.id] = newFile;
         }
 

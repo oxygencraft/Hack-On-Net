@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HackLinks_Server.Util;
 
 namespace HackLinks_Server.Database
 {
@@ -70,7 +71,7 @@ namespace HackLinks_Server.Database
                                             int fileType = fileReader.GetByte(3);
                                             string fileName = fileReader.GetString(1);
 
-                                            Console.WriteLine($"Creating file {fileName} with id {fileReader.GetInt32(0)}");
+                                            Logger.Info($"Creating file {fileName} with id {fileReader.GetInt32(0)}");
 
                                             File newFile = newNode.fileSystem.CreateFile(fileReader.GetInt32(0), newNode, newNode.fileSystem.rootFile, fileName);
 
@@ -428,7 +429,7 @@ namespace HackLinks_Server.Database
 
         public void UploadDatabase(List<Node> nodeList, List<File> toDelete)
         {
-            Console.WriteLine("Uploading Database");
+            Logger.Info("Uploading Database");
 
             using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
             {
@@ -445,7 +446,7 @@ namespace HackLinks_Server.Database
 
                         if (UpdateDbFile(child, conn))
                         {
-                            Console.WriteLine($"    Updated {child.Name}");
+                            Logger.Info($"    Updated {child.Name}");
                         }
 
                         child.Dirty = false;
@@ -458,20 +459,22 @@ namespace HackLinks_Server.Database
                     File file = toDelete[i];
                     if (DeleteDbFile(file, conn))
                     {
-                        Console.WriteLine($"    Deleted {file.Name}");
+                        Logger.Info($"    Deleted {file.Name}");
                         toDelete.Remove(file);
                     }
                     else
                     {
-                        Console.WriteLine($"    Can't Delete {file.Name} ID {file.id}");
+                        Logger.Error($"    Can't Delete {file.Name} ID {file.id}");
                     }
                 } 
             }
+
+            Logger.Info("Finished Uploading Database");
         }
 
         public void RebuildDatabase()
         {
-            Console.WriteLine("Rebuilding Database");
+            Logger.Info("Rebuilding Database");
 
             using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
             {
@@ -483,6 +486,8 @@ namespace HackLinks_Server.Database
                     int res = command.ExecuteNonQuery();
                 }
             }
+
+            Logger.Info("Finished Rebuilding Database");
         }
 
         private bool UpdateDbFile(File child, MySqlConnection conn)

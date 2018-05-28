@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HackLinks_Server.Util;
 
 namespace HackLinks_Server.Computers.Processes
 {
@@ -409,7 +410,7 @@ namespace HackLinks_Server.Computers.Processes
                     }
                     else
                     {
-                        Console.WriteLine($"User {process.computer.GetUsername(process.Credentials.UserId)} doesn't have permission for {file.Name} {file.Group} {file.Permissions.PermissionValue}");
+                        Logger.Warning($"User {process.computer.GetUsername(process.Credentials.UserId)} doesn't have permission for {file.Name} {file.Group} {file.Permissions.PermissionValue}");
                     }
                 }
                 process.computer.Kernel.LS(process, fileList.ToArray());
@@ -541,10 +542,10 @@ namespace HackLinks_Server.Computers.Processes
                 process.computer.Kernel.PlayMusic(process, command[1]);
                 return true;
             } catch(ObjectDisposedException e) {
-                Console.WriteLine(e);
+                Logger.Exception(e);
                 return true;
             } catch(Exception e) {
-                Console.WriteLine(e);
+                Logger.Exception(e);
                 return true;
             }
         }

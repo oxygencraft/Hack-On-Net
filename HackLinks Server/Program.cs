@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Mono.Options;
 using System.Diagnostics;
+using System.IO;
+using HackLinks_Server.Util;
 
 namespace HackLinks_Server
 {
@@ -19,6 +21,10 @@ namespace HackLinks_Server
 
         static void Main(string[] args)
         {
+            Logger.LogFile = $".{Path.DirectorySeparatorChar}HackLinks.log";
+            Logger.Archive = $".{Path.DirectorySeparatorChar}Archive";
+
+            Logger.Info("HackLinks Server is starting up.");
 
             bool showHelp = false;
             bool rebuildDB = false;
@@ -55,7 +61,7 @@ namespace HackLinks_Server
                         }
                         else
                         {
-                            Console.WriteLine("Invalid Port Specified: \"{0}\". Using Default Port.", v);
+                            Logger.Warning("Invalid Port Specified: \"{0}\". Using Default Port.", v);
                         }
                     }
                 },
@@ -119,7 +125,7 @@ namespace HackLinks_Server
             } catch(OptionException e)
             {
                 //One of our options failed. Output the message
-                Console.WriteLine(e.Message);
+                Logger.Exception(e);
                 return;
             }
 
@@ -147,10 +153,10 @@ namespace HackLinks_Server
 
                     if(recieving == false)
                     {
-                        Console.WriteLine("Waiting for a connection...");
                         listener.BeginAccept(
                             new AsyncCallback(AcceptCallback),
                             listener);
+                        Logger.Status($"Server ready, listening on {localEndPoint}");
                         recieving = true;
                     }
                   
@@ -168,7 +174,7 @@ namespace HackLinks_Server
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.Exception(e);
             }
 
             Console.WriteLine("\nHit enter to continue...");
