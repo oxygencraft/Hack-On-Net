@@ -24,13 +24,7 @@ namespace HackLinks_Server.Computers.Processes
 
         public bool HandleBuiltin(string command)
         {
-            string[] commandParts = command.Split(new char[] { ' ' }, 2);
-            if (Commands.ContainsKey(commandParts[0]))
-            {
-                Commands[commandParts[0]].Item2(this, commandParts);
-                return true;
-            }
-            return false;
+            return RunCommand(command);
         }
 
         private bool HandleExternal(string command)
