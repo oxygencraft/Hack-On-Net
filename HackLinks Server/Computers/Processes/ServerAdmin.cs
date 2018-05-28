@@ -211,19 +211,23 @@ namespace HackLinks_Server.Computers.Processes
         public static bool Ban(CommandProcess process, string[] commandUnsplit)
         {
             GameClient client = ((ServerAdmin)process).client;
-
-            List<string> command = new List<string>();
-            command.Add("ban");
-            command.AddRange(commandUnsplit[1].Split());
-
             if (client.permissions.Contains(HackLinks_Server.Permissions.Admin) == false && client.permissions.Contains(HackLinks_Server.Permissions.Ban) == false)
             {
                 process.Print("Insufficent Privileges");
                 return true;
             }
+            if (commandUnsplit.Length < 2)
+            {
+                process.Print("Usage: ban [username] [permban (t/f)] [days] [hr] [mins]");
+                return true;
+            }
+            List<string> command = new List<string>();
+            command.Add("ban");
+            command.AddRange(commandUnsplit[1].Split());
+
             if (command.Count < 3)
             {
-                process.Print("Usage: ban [username] [unban (t/f)] [permban (t/f)] [days] [hr] [mins]");
+                process.Print("Usage: ban [username] [permban (t/f)] [days] [hr] [mins]");
                 return true;
             }
             if (command.Count < 4)

@@ -181,21 +181,23 @@ namespace HackLinks_Server.Database
                 if (user2 == user)
                     break;
             }
-            GameClient client = null;
-            foreach (var client2 in Server.Instance.clients)
+            if (!unban)
             {
-                if (client2.username == user)
+                GameClient client = null;
+                foreach (var client2 in Server.Instance.clients)
                 {
-                    client = client2;
-                    break;
+                    if (client2.username == user)
+                    {
+                        client = client2;
+                        break;
+                    }
+                }
+                if (client != null)
+                {
+                    client.Send(HackLinksCommon.NetUtil.PacketType.DSCON, "You have been banned from the server");
+                    client.netDisconnect();
                 }
             }
-            try
-            {
-                client.Send(HackLinksCommon.NetUtil.PacketType.DSCON, "You have been banned from the server");
-                client.netDisconnect();
-            }
-            catch (Exception) { }
 
             using (MySqlConnection conn = new MySqlConnection(GetConnectionString()))
             {
