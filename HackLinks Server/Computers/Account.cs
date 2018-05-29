@@ -12,8 +12,9 @@ namespace HackLinks_Server.Computers.Permissions
     {
         public string Username {get; set; }
         public string Password {get; set; }
-        public int UserId { get; private set; }
+        public int UserId { get; private set; } = -2;
         public int GroupId {get; set; }
+        public string Info { get; set; }
         public File HomeDirectory { get; set; }
         public File DefaultProcess {get; set; }
 
@@ -31,43 +32,47 @@ namespace HackLinks_Server.Computers.Permissions
             Password = accountData[1];
             UserId = Convert.ToInt32(accountData[2]);
             GroupId = Convert.ToInt32(accountData[3]);
-            HomeString = accountData[4];
-            DPString = accountData[5];
+            Info = accountData[4];
+            HomeString = accountData[5];
+            DPString = accountData[6];
             Computer = node;
-            HomeDirectory = Computer.fileSystem.rootFile.GetFileAtPath(accountData[4]);
-            DefaultProcess = Computer.fileSystem.rootFile.GetFileAtPath(accountData[5]);
+            HomeDirectory = Computer.fileSystem.rootFile.GetFileAtPath(HomeString);
+            DefaultProcess = Computer.fileSystem.rootFile.GetFileAtPath(DPString);
 
         }
 
-        public Account( string username, string password, int groupId,string homeString, string dpString, Node computer)
+        public Account( string username, string password, int groupId,string info,string homeString, string dpString, Node computer)
         {
             HomeString = homeString;
             DPString = dpString;
             Username = username;
             Password = password;
             GroupId = groupId;
+            Info = info;
             Computer = computer;
             HomeDirectory = Computer.fileSystem.rootFile.GetFileAtPath(homeString);
             DefaultProcess = Computer.fileSystem.rootFile.GetFileAtPath(dpString);
         }
 
-        public Account(string username, string password,Group group,string homeString, string dpString, Node computer)
+        public Account(string username, string password,Group group,string info,string homeString, string dpString, Node computer)
         {
+            Username = username;
+            Password = password;
+            GroupId = (int) group;
+            Info = info;
             HomeString = homeString;
             DPString = dpString;
-            Username = username;
-            GroupId = (int) group;
-            Password = password;
             HomeDirectory = computer.fileSystem.rootFile.GetFileAtPath(homeString);
             DefaultProcess = computer.fileSystem.rootFile.GetFileAtPath(dpString);
             Computer = computer;
         }
 
-        public Account(string username, string password, int groupId, File homeDirectory, File defaultProcess, Node computer)
+        public Account(string username, string password, int groupId,string info, File homeDirectory, File defaultProcess, Node computer)
         {
             Username = username;
             Password = password;
             GroupId = groupId;
+            Info = info;
             HomeDirectory = homeDirectory;
             DefaultProcess = defaultProcess;
             HomeString = homeDirectory.Name;
@@ -75,11 +80,12 @@ namespace HackLinks_Server.Computers.Permissions
             Computer = computer;
         }
 
-        public Account(string username, string password,Group group, File homeDirectory, File defaultProcess, Node computer)
+        public Account(string username, string password,Group group,string info, File homeDirectory, File defaultProcess, Node computer)
         {
             Username = username;
             Password = password;
             GroupId = (int)group;
+            Info = info;
             HomeDirectory = homeDirectory;
             DefaultProcess = defaultProcess;
             HomeString = homeDirectory.Name;
@@ -112,7 +118,7 @@ namespace HackLinks_Server.Computers.Permissions
             {
                 UserId = new Account(accounts.Last(),Computer).UserId + 1;
             }
-            string line = Username + ":" + Password + ":" + UserId + ":" + GroupId + ":" + HomeString + ":" + DPString;
+            string line = Username + ":" + Password + ":" + UserId + ":" + GroupId + ":" + Info + ":" + HomeString + ":" + DPString;
             string acc = "";
             foreach (string account in accounts)
             {
