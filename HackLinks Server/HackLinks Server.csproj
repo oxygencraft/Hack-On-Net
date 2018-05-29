@@ -61,10 +61,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Computers\Account.cs" />
     <Compile Include="Computers\CompiledFileManager.cs" />
     <Compile Include="Computers\Kernel.cs" />
     <Compile Include="Computers\Processes\BankClient.cs" />
     <Compile Include="Computers\Processes\CommandProcess.cs" />
+    <Compile Include="Computers\Processes\ComputerAdmin.cs" />
     <Compile Include="Computers\Processes\Credentials.cs" />
     <Compile Include="Computers\Processes\False.cs" />
     <Compile Include="Computers\Processes\Hackybox.cs" />
@@ -84,7 +86,7 @@
     <Compile Include="Daemons\DaemonClient.cs" />
     <Compile Include="Computers\Processes\DNSClient.cs" />
     <Compile Include="Daemons\Types\BankDaemon.cs" />
-    <Compile Include="Daemons\Types\Bank\Account.cs" />
+    <Compile Include="Daemons\Types\Bank\BankAccount.cs" />
     <Compile Include="Daemons\Types\HTTPDaemon.cs" />
     <Compile Include="Daemons\Types\DNSDaemon.cs" />
     <Compile Include="Daemons\Types\Dns\DNSEntry.cs" />
