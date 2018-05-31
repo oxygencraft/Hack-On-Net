@@ -12,7 +12,7 @@ namespace HackLinks_Server.Computers.Permissions
     {
         public string Username {get; set; }
         public string Password {get; set; }
-        public int UserId { get; private set; } = -2;
+        public int UserId { get; set; } = -1;
         public int GroupId {get; set; }
         public string Info { get; set; }
         public File HomeDirectory { get; set; }
@@ -114,24 +114,63 @@ namespace HackLinks_Server.Computers.Permissions
         {
             File passwd = Computer.fileSystem.rootFile.GetFileAtPath("etc/passwd");
             string[] accounts = passwd.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            if (UserId == -2)
+            if (UserId == -1)
             {
-                UserId = new Account(accounts.Last(),Computer).UserId + 1;
+                if (new Account(accounts.Last(), Computer).UserId < 1000) UserId = 1000;
+                else UserId = new Account(accounts.Last(),Computer).UserId + 1;
+            }
+
+            Account before = null;
+            if (UserId == -3)
+            {
+                if (new Account(accounts.Last(), Computer).UserId < 1000) UserId = new Account(accounts.Last(),Computer).UserId + 1;
+                else
+                {
+                    before = new Account(accounts.First(), Computer);
+                    foreach (string account in accounts)
+                    {
+                        if (new Account(account, Computer).UserId < 1000)
+                        {
+                            before = new Account(account, Computer);
+                            continue;
+                        }
+
+                        UserId = before.UserId + 1;
+                    }
+                }
             }
             string line = Username + ":" + Password + ":" + UserId + ":" + GroupId + ":" + Info + ":" + HomeString + ":" + DPString;
             string acc = "";
-            foreach (string account in accounts)
+            if (before != null)
             {
-                if (account.StartsWith(Username))
+                foreach (string account in accounts)
                 {
-                    if(UserId == -1) continue;
+                    if (account.StartsWith(before.Username + ":"))
+                    {
+                        acc += "\r\n" + account;
+                        acc += "\r\n" + line;
+                    }
+                    else if (account.StartsWith(Username + ":")) continue;
+                    else acc += "\r\n" + account;
+                }
+            }
+            else
+            {
+                foreach (string account in accounts)
+                {
+
+                    if (account.StartsWith(Username + ":"))
+                    {
+                        if (UserId == -2) continue;
+                        acc += "\r\n" + line;
+                    }
+                    else acc += "\r\n" + account;
+                }
+
+                if (accounts.All(ac => !ac.StartsWith(Username + ":")))
+                {
                     acc += "\r\n" + line;
                 }
-                else acc += "\r\n" + account;
-            }
-            if (accounts.All(ac => !ac.StartsWith(Username)))
-            {
-                acc += "\r\n" + line;
             }
 
             passwd.Content = acc;
@@ -140,7 +179,6 @@ namespace HackLinks_Server.Computers.Permissions
         public static List<Account> FromFile(File passwd,Node computer)
         {
             List<Account> tmp = new List<Account>();
-            if(passwd.Name != "passwd") return tmp;
             string[] accounts = passwd.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string account in accounts)
             {
@@ -148,6 +186,22 @@ namespace HackLinks_Server.Computers.Permissions
             }
 
             return tmp;
+        }
+
+        public void Delete()
+        {
+            UserId = -2;
+        }
+
+        public static Account FromId(int UID, Node computer)
+        {
+            List<Account> accounts = computer.Kernel.GetAccounts();
+            foreach (Account account in accounts)
+            {
+                if (account.UserId == UID) return account;
+            }
+
+            return null;
         }
     }
 }
