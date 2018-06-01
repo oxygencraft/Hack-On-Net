@@ -14,12 +14,12 @@ namespace HackLinks_Server.Computers.Processes
     {
         public SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>()
         {
-            { "account", new Tuple<string, Command>("account [create/login/resetpass/balance/transfer/transactions/close]\n    Performs an account operation.", Account) },
+            { "account", new Tuple<string, Command>("account [create/login/resetpass/balance/transfer/transactions/close]\n    Performs an account operation.", BankAccount) },
             { "balance", new Tuple<string, Command>("balance set [accountname] [value]/get [accountname]\n    Sets or gets balance (DEBUG COMMAND)", Balance) }
         };
 
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
-        private Account loggedInAccount = null;
+        private BankAccount loggedInAccount = null;
 
         public BankClient(Session session, Daemon daemon, int pid, Printer printer, Node computer, Credentials credentials) : base(session, daemon, pid, printer, computer, credentials)
         {
@@ -36,7 +36,7 @@ namespace HackLinks_Server.Computers.Processes
             return base.RunCommand(command);
         }
 
-        public static bool Account(CommandProcess process, string[] command)
+        public static bool BankAccount(CommandProcess process, string[] command)
         {
             BankClient client = (BankClient)process;
             BankDaemon daemon = (BankDaemon)client.Daemon;
@@ -78,7 +78,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("This account name is not available");
                         return true;
                     }
-                    daemon.accounts.Add(new Account(cmdArgs[1], 0, cmdArgs[2], client.Session.owner.username));
+                    daemon.accounts.Add(new BankAccount(cmdArgs[1], 0, cmdArgs[2], client.Session.owner.username));
                     daemon.UpdateAccountDatabase();
                     process.Print("Your account has been opened. Use account login [accountname] [password] to login.");
                 }
@@ -172,7 +172,7 @@ namespace HackLinks_Server.Computers.Processes
                             break;
                         }
                     }
-                    Account accountTo = null;
+                    BankAccount accountTo = null;
                     foreach (var account in targetBank.accounts)
                     {
                         if (account.accountName == cmdArgs[1])
@@ -277,7 +277,7 @@ namespace HackLinks_Server.Computers.Processes
                     process.Print("Usage : balance set [accountname] [value]/get [accountname]");
                     return true;
                 }
-                Account account = null;
+                BankAccount account = null;
                 foreach (var account2 in daemon.accounts)
                 {
                     if (account2.accountName == cmdArgs[1])

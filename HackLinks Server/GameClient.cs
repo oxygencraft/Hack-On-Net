@@ -129,7 +129,7 @@ namespace HackLinks_Server
 
                     content = state.sb.ToString();
 
-                    Logger.Debug($"Received Data: \"{content}\"");
+                    Logger.Debug($"Received Data: \"{content.Replace("{","{{").Replace("}","}}")}\"");
 
                     List<Packet> packets = ParsePackets(content);
 
@@ -154,8 +154,8 @@ namespace HackLinks_Server
         public void netDisconnect()
         {
             //client.Disconnect(false);
-            client.Dispose();
             server.RemoveClient(this);
+            client.Dispose();
         }
 
         public void Send(PacketType type, params string[] data)

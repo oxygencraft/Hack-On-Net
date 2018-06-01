@@ -31,7 +31,7 @@ namespace HackLinks_Server.Daemons.Types
 
         }
 
-        public List<Account> accounts = new List<Account>();
+        public List<BankAccount> accounts = new List<BankAccount>();
 
         public void LoadAccounts()
         {
@@ -44,7 +44,7 @@ namespace HackLinks_Server.Daemons.Types
                 var data = line.Split(',');
                 if (data.Length < 4)
                     continue;
-                accounts.Add(new Account(data[0], Convert.ToInt32(data[1]), data[2], data[3]));
+                accounts.Add(new BankAccount(data[0], Convert.ToInt32(data[1]), data[2], data[3]));
             }
         }
 
@@ -79,9 +79,9 @@ namespace HackLinks_Server.Daemons.Types
             return true;
         }
 
-        public void ProcessBankTransfer(Account from, Account to, string ip, int amount, Session session)
+        public void ProcessBankTransfer(BankAccount from, BankAccount to, string ip, int amount, Session session)
         {
-            Account account = null;
+            BankAccount account = null;
             foreach (var account2 in accounts)
             {
                 if (account2 == to)
