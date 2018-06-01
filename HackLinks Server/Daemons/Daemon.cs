@@ -32,7 +32,8 @@ namespace HackLinks_Server.Daemons
             DEFAULT,
             IRC,
             DNS,
-            BANK
+            BANK,
+            MAIL
         }
 
         public virtual DaemonType GetDaemonType()
