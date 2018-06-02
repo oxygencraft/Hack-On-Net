@@ -34,6 +34,7 @@ namespace HackLinks_Server
         public enum PlayerStatus
         {
             ONLINE,
+            DISCONNECTING,
             TERMINATED
         }
 
@@ -153,6 +154,7 @@ namespace HackLinks_Server
 
         public void netDisconnect()
         {
+            this.status = PlayerStatus.DISCONNECTING;
             //client.Disconnect(false);
             server.RemoveClient(this);
             client.Dispose();
