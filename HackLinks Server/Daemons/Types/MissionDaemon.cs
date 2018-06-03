@@ -57,9 +57,12 @@ namespace HackLinks_Server.Daemons.Types
             foreach (string line in missionFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var data = line.Split(',');
-                if (data.Length < 8)
+                if (data.Length < 7)
                     continue;
-                missions.Add(Convert.ToInt32(data[0]), new MissionListing(Convert.ToInt32(data[0]), data[1], data[2], Convert.ToInt32(data[3]), (MissionListing.Difficulty)Convert.ToInt32(data[4]), (MissionListing.Status)Convert.ToInt32(data[5]), data[6], data[7]));
+                if (data.Length < 8)
+                    missions.Add(Convert.ToInt32(data[0]), new MissionListing(Convert.ToInt32(data[0]), data[1], data[2], Convert.ToInt32(data[3]), (MissionListing.Difficulty)Convert.ToInt32(data[4]), (MissionListing.Status)Convert.ToInt32(data[5]), data[6], ""));
+                else
+                    missions.Add(Convert.ToInt32(data[0]), new MissionListing(Convert.ToInt32(data[0]), data[1], data[2], Convert.ToInt32(data[3]), (MissionListing.Difficulty)Convert.ToInt32(data[4]), (MissionListing.Status)Convert.ToInt32(data[5]), data[6], data[7]));
             }
         }
 

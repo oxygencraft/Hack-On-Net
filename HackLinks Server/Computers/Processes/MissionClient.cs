@@ -65,16 +65,21 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("There are currently no missions available on this board");
                         return true;
                     }
-                    string missionsForClient = "ID  MISSION NAME                                REQUIRED RANKING  DIFFICULTY  STATUS  EMPLOYER";
+                    string missionsForClient = "ID  MISSION NAME                                REQUIRED RANKING  DIFFICULTY  STATUS  EMPLOYER\n";
                     foreach (var missionPair in daemon.missions)
                     {
                         var mission = missionPair.Value;
-                        if (mission.status != MissionListing.Status.Unpublished || mission.status != MissionListing.Status.InProgress || mission.status != MissionListing.Status.Failed || mission.status != MissionListing.Status.Complete)
-                            missionsForClient += mission.id + " " + mission.missionName + " " + mission.requiredRanking + " " + nameof(mission.difficulty) + " " + mission.status + " " + mission.employer + "\n";
+                        if (mission.status == MissionListing.Status.Unclaimed)
+                            missionsForClient += mission.id + " " + mission.missionName + " " + mission.requiredRanking + " " + mission.difficulty + " " + mission.status + " " + mission.employer + "\n";
                     }
                     File missionFileForClient = client.Session.owner.homeComputer.fileSystem.rootFile.GetFile("Missions_On_" + client.computer.ip);
                     if (missionFileForClient == null)
                     {
+                        if (missionsForClient == "ID  MISSION NAME                                REQUIRED RANKING  DIFFICULTY  STATUS  EMPLOYER\n")
+                        {
+                            process.Print("There are currently no missions visible to you");
+                            return true;
+                        }
                         missionFileForClient = client.Session.owner.homeComputer.fileSystem.CreateFile(client.Session.owner.homeComputer, client.Session.owner.homeComputer.fileSystem.rootFile, "Missions_On_" + client.computer.ip);
                         missionFileForClient.Content = missionsForClient;
                         missionFileForClient.OwnerId = 0;
@@ -82,6 +87,50 @@ namespace HackLinks_Server.Computers.Processes
                         missionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
                         missionFileForClient.Group = missionFileForClient.Parent.Group;
                         process.Print("A file containing the missions on this baord has been uploaded to your computer");
+                        return true;
+                    }
+                    if (missionsForClient == "ID  MISSION NAME                                REQUIRED RANKING  DIFFICULTY  STATUS  EMPLOYER\n")
+                    {
+                        process.Print("There are currently no missions visible to you");
+                        return true;
+                    }
+                    missionFileForClient.Content = missionsForClient;
+                    process.Print("A file containing the missions on this board has been uploaded to your computer");
+                }
+                if (cmdArgs[0] == "browsecreated")
+                {
+                    if (daemon.missions.Count == 0)
+                    {
+                        process.Print("There are currently no missions available on this board");
+                        return true;
+                    }
+                    string missionsForClient = "ID  MISSION NAME                                REQUIRED RANKING  DIFFICULTY  STATUS  EMPLOYER\n";
+                    foreach (var missionPair in daemon.missions)
+                    {
+                        var mission = missionPair.Value;
+                        if (mission.employer == client.loggedInAccount.accountName)
+                            missionsForClient += mission.id + " " + mission.missionName + " " + mission.requiredRanking + " " + mission.difficulty + " " + mission.status + " " + mission.employer + "\n";
+                    }
+                    File missionFileForClient = client.Session.owner.homeComputer.fileSystem.rootFile.GetFile("Your_Missions_On_" + client.computer.ip);
+                    if (missionFileForClient == null)
+                    {
+                        if (missionsForClient == "ID  MISSION NAME                                REQUIRED RANKING  DIFFICULTY  STATUS  EMPLOYER\n")
+                        {
+                            process.Print("There are currently no missions visible to you");
+                            return true;
+                        }
+                        missionFileForClient = client.Session.owner.homeComputer.fileSystem.CreateFile(client.Session.owner.homeComputer, client.Session.owner.homeComputer.fileSystem.rootFile, "Your_Missions_On_" + client.computer.ip);
+                        missionFileForClient.Content = missionsForClient;
+                        missionFileForClient.OwnerId = 0;
+                        missionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
+                        missionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
+                        missionFileForClient.Group = missionFileForClient.Parent.Group;
+                        process.Print("A file containing the missions you created on this baord has been uploaded to your computer");
+                        return true;
+                    }
+                    if (missionsForClient == "ID  MISSION NAME                                REQUIRED RANKING  DIFFICULTY  STATUS  EMPLOYER\n")
+                    {
+                        process.Print("There are currently no missions visible to you");
                         return true;
                     }
                     missionFileForClient.Content = missionsForClient;
@@ -99,7 +148,7 @@ namespace HackLinks_Server.Computers.Processes
                         return true;
                     if (string.IsNullOrWhiteSpace(mission.description))
                     {
-                        process.Print("No description for mission ID" + mission.id);
+                        process.Print("No description for mission ID " + mission.id);
                         return true;
                     }
                     process.Print("Description for mission ID " + mission.id + "\n\n" + mission.description);
@@ -118,7 +167,7 @@ namespace HackLinks_Server.Computers.Processes
                     string description = "";
                     foreach (var word in cmdArgs)
                     {
-                        if (doneWords < 3)
+                        if (doneWords < 2)
                         {
                             doneWords++;
                             continue;
@@ -148,7 +197,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Difficulty must be a number and be one of the options\nValid Options: 0 = Beginner\n1 = Basic\n2 = Intermediate\n3 = Advanced\n4 = Expert\n5 = Extreme\n6 = Impossible");
                         return true;
                     }
-                    else if (difficultyInt > 7 || difficultyInt < 0)
+                    else if (difficultyInt > 6 || difficultyInt < 0)
                     {
                         process.Print("Not a valid difficulty option\nValid Options: 0 = Beginner\n1 = Basic\n2 = Intermediate\n3 = Advanced\n4 = Expert\n5 = Extreme\n6 = Impossible");
                         return true;
@@ -220,7 +269,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Difficulty must be a number and be one of the options\nValid Options: 0 = Beginner\n1 = Basic\n2 = Intermediate\n3 = Advanced\n4 = Expert\n5 = Extreme\n6 = Impossible");
                         return true;
                     }
-                    else if (difficultyInt > 7 || difficultyInt < 0)
+                    else if (difficultyInt > 6 || difficultyInt < 0)
                     {
                         process.Print("Not a valid difficulty option\nValid Options: 0 = Beginner\n1 = Basic\n2 = Intermediate\n3 = Advanced\n4 = Expert\n5 = Extreme\n6 = Impossible");
                         return true;
