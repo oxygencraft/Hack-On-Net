@@ -18,7 +18,7 @@ namespace HackLinks_Server.Daemons.Types
     {
         public override string StrType => "mission";
 
-        protected override Type ClientType => typeof(BankClient);
+        protected override Type ClientType => typeof(MissionClient);
 
         public override DaemonType GetDaemonType()
         {
@@ -44,7 +44,22 @@ namespace HackLinks_Server.Daemons.Types
                 var data = line.Split(',');
                 if (data.Length < 5)
                     continue;
-                accounts.Add(new MissionAccount(data[0], Convert.ToInt32(data[1]), Convert.ToInt32(data[2]), data[3], data[5]));
+                accounts.Add(new MissionAccount(data[0], Convert.ToInt32(data[1]), Convert.ToInt32(data[2]), data[3], data[4]));
+            }
+        }
+
+        public void LoadMissions()
+        {
+            missions.Clear();
+            File missionFile = node.fileSystem.rootFile.GetFileAtPath("/mission/missions.db");
+            if (missionFile == null)
+                return;
+            foreach (string line in missionFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var data = line.Split(',');
+                if (data.Length < 8)
+                    continue;
+                missions.Add(Convert.ToInt32(data[0]), new MissionListing(Convert.ToInt32(data[0]), data[1], data[2], Convert.ToInt32(data[3]), (MissionListing.Difficulty)Convert.ToInt32(data[4]), (MissionListing.Status)Convert.ToInt32(data[5]), data[6], data[7]));
             }
         }
 
@@ -71,7 +86,7 @@ namespace HackLinks_Server.Daemons.Types
             {
                 var mission = missionKeyPair.Value;
                 int missionId = missionKeyPair.Key;
-                newMissionsFile += missionId + "," + mission.missionName + "," + mission.requiredRanking + "," + mission.status + "," + mission.from + "," + mission.accepted + "\r\n";
+                newMissionsFile += missionId + "," + mission.missionName + "," + mission.requiredRanking + "," + (int)mission.difficulty + "," + (int)mission.status + "," + mission.employer + "," + mission.claimedBy + "\r\n";
             }
             missionFile.Content = newMissionsFile;
         }
@@ -102,6 +117,7 @@ namespace HackLinks_Server.Daemons.Types
         public override void OnStartUp()
         {
             LoadAccounts();
+            LoadMissions();
         }
 
         public override string GetSSHDisplayName()

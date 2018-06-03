@@ -10,25 +10,28 @@ namespace HackLinks_Server.Daemons.Types.Mission
     {
         public int id;
         public string missionName;
+        public string description;
         public int requiredRanking;
         public Difficulty difficulty;
         public Status status;
-        public string from;
-        public string accepted;
+        public string employer;
+        public string claimedBy;
 
-        public MissionListing(int id, string missionName, int requiredRanking, Difficulty difficulty, Status status, string from, string accepted)
+        public MissionListing(int id, string missionName, string description, int requiredRanking, Difficulty difficulty, Status status, string employer, string claimedBy)
         {
             this.id = id;
             this.missionName = missionName;
+            this.description = description;
             this.requiredRanking = requiredRanking;
             this.difficulty = difficulty;
             this.status = status;
-            this.from = from;
-            this.accepted = accepted;
+            this.employer = employer;
+            this.claimedBy = claimedBy;
         }
 
         public enum Status
         {
+            Unpublished,
             Unclaimed,
             InProgress,
             Complete,
@@ -37,11 +40,11 @@ namespace HackLinks_Server.Daemons.Types.Mission
 
         public enum Difficulty
         {
-            NoobFriendly,
-            BeginnerFriendly,
-            Easy,
-            Medium,
-            Hard,
+            Beginner,
+            Basic,
+            Intermediate,
+            Advanced,
+            Expert,
             Extreme,
             Impossible
         }
