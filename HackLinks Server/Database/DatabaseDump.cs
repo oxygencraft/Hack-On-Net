@@ -117,7 +117,9 @@ namespace HackLinks_Server.Database
             "(0,'fedit',11,0,0,'hackybox',1,0,774,0),"+
             "(0,'netmap',11,0,0,'hackybox',1,0,774,0),"+
             "(0,'music',11,0,0,'hackybox',1,0,774,0),"+
-            "(0,'admin',11,0,0,'serveradmin',1,0,774,0)",
+            "(0,'admin',11,0,0,'serveradmin',1,0,774,0),"+
+            "(0,'cadmin',11,0,0,'computeradmin',1,0,774,0)," +
+            "(0,'hash',11,0,0,'hash',1,0,774,0)", 
             "/*!40000 ALTER TABLE `files` ENABLE KEYS */",
 
             "UNLOCK TABLES",
@@ -132,7 +134,8 @@ namespace HackLinks_Server.Database
             //
             $"INSERT INTO `binaries` VALUES "+
             $"(0,{"hackybox".GetHashCode()},'Hackybox'),"+
-            $"(0,{"serveradmin".GetHashCode()},'ServerAdmin')",
+            $"(0,{"serveradmin".GetHashCode()},'ServerAdmin'),"+
+            $"(0,{"computeradmin".GetHashCode()},'ComputerAdmin')",
         };
 
         public static List<string> Commands => commands;

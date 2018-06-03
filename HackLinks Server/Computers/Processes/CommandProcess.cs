@@ -25,7 +25,6 @@ namespace HackLinks_Server.Computers.Processes
                 return Help(commandParts);
             if (Commands.ContainsKey(commandParts[0]))
                 return Commands[commandParts[0]].Item2(this, commandParts);
-            Print($"Invalid Command: '{command}'");
             return false;
         }
 

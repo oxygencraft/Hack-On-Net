@@ -61,11 +61,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Computers\Account.cs" />
     <Compile Include="Computers\CompiledFileManager.cs" />
     <Compile Include="Computers\Kernel.cs" />
     <Compile Include="Computers\Processes\MissionClient.cs" />
     <Compile Include="Computers\Processes\BankClient.cs" />
     <Compile Include="Computers\Processes\CommandProcess.cs" />
+    <Compile Include="Computers\Processes\ComputerAdmin.cs" />
     <Compile Include="Computers\Processes\Credentials.cs" />
     <Compile Include="Computers\Processes\False.cs" />
     <Compile Include="Computers\Processes\Hackybox.cs" />
@@ -109,6 +111,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Session.cs" />
+    <Compile Include="Util\Logger.cs" />
+    <Compile Include="Util\LogLevel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

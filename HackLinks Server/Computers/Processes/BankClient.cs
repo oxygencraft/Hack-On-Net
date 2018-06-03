@@ -14,7 +14,7 @@ namespace HackLinks_Server.Computers.Processes
     {
         public SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>()
         {
-            { "account", new Tuple<string, Command>("account [create/login/resetpass/balance/transfer/transactions/close]\n    Performs an account operation.", Account) },
+            { "account", new Tuple<string, Command>("account [create/login/resetpass/balance/transfer/transactions/close]\n    Performs an account operation.", BankAccount) },
             { "balance", new Tuple<string, Command>("balance set [accountname] [value]/get [accountname]\n    Sets or gets balance (DEBUG COMMAND)", Balance) }
         };
 
@@ -36,7 +36,7 @@ namespace HackLinks_Server.Computers.Processes
             return base.RunCommand(command);
         }
 
-        public static bool Account(CommandProcess process, string[] command)
+        public static bool BankAccount(CommandProcess process, string[] command)
         {
             BankClient client = (BankClient)process;
             BankDaemon daemon = (BankDaemon)client.Daemon;

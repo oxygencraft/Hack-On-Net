@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HackLinks_Server.Util;
 
 namespace HackLinks_Server.Computers
 {
@@ -27,7 +28,7 @@ namespace HackLinks_Server.Computers
 
         public void Init()
         {
-            Console.WriteLine("Initializing daemons");
+            Logger.Info("Initializing daemons");
             foreach (Node node in nodeList)
             {
                 var daemonsFolder = node.fileSystem.rootFile.GetFile("daemons");
@@ -79,11 +80,11 @@ namespace HackLinks_Server.Computers
             while(fileQueue.Any())
             {
                 File parent = fileQueue.Dequeue();
-                Console.WriteLine($"Processing File {parent.Name} {parent.id}");
+                Logger.Info($"Processing File {parent.Name} {parent.id}");
 
                 foreach (File child in files.Where(x => x.ParentId.Equals(parent.id)))
                 {
-                    Console.WriteLine($"Processing Child File {child.Name} {child.id} of {parent.Name} {parent.id}");
+                    Logger.Info($"Processing Child File {child.Name} {child.id} of {parent.Name} {parent.id}");
 
                     child.Parent = parent;
                     parent.children.Add(child);

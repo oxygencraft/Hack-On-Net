@@ -7,6 +7,7 @@ using HackLinks_Server.Computers;
 using HackLinks_Server.Computers.Files;
 using HackLinks_Server.Computers.Permissions;
 using HackLinks_Server.Computers.Processes;
+using HackLinks_Server.Util;
 using MySql.Data.MySqlClient;
 
 namespace HackLinks_Server.Files
@@ -264,7 +265,7 @@ namespace HackLinks_Server.Files
         public void PrintFolderRecursive(int depth)
         {
             string tabs = new String(' ', depth);
-            Console.WriteLine(tabs + id + "  d- " + Name);
+            Logger.Debug(tabs + id + "  d- " + Name);
             foreach (var item in children)
             {
                 if (item.IsFolder())
@@ -273,7 +274,7 @@ namespace HackLinks_Server.Files
                 }
                 else
                 {
-                    Console.WriteLine(tabs + " " + item.id + "  f- " + item.Name);
+                    Logger.Debug(tabs + " " + item.id + "  f- " + item.Name);
                 }
             }
         }

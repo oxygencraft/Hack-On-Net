@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HackLinks_Server.Computers.Permissions;
 
 namespace HackLinks_Server.Computers
 {
@@ -182,6 +183,11 @@ namespace HackLinks_Server.Computers
                     GetClient(process).activeSession.AttachProcess(daemonClient);
                 }
             }
+        }
+
+        public List<Account> GetAccounts()
+        {
+            return Account.FromFile(node.fileSystem.rootFile.GetFileAtPath("etc/passwd"), node);
         }
     }
 }
