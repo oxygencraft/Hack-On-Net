@@ -316,7 +316,7 @@ namespace HackOnNet.Screens
             {
                 this.ExitToMenuMessageBox = new MessageBoxScreen("Logout of your\nCurrent Session?" + "\n", false, true);
                 this.ExitToMenuMessageBox.OverrideAcceptedText = LocaleTerms.Loc("Exit to Menu");
-                this.ExitToMenuMessageBox.Accepted += new System.EventHandler<PlayerIndexEventArgs>(this.quitGame);
+                this.ExitToMenuMessageBox.Accepted += new System.EventHandler<PlayerIndexEventArgs>(this.QuitToOG);
                 base.ScreenManager.AddScreen(this.ExitToMenuMessageBox);
             }
             else
@@ -484,6 +484,12 @@ namespace HackOnNet.Screens
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+
+        public void QuitToOG(object sender, PlayerIndexEventArgs e)
+        {
+            netManager.Send(NetUtil.PacketType.DSCON);
+            netManager.Disconnect(true, "", true);
         }
 
         public void quitGame(object sender, PlayerIndexEventArgs e)
