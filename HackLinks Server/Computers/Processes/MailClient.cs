@@ -14,6 +14,8 @@ namespace HackLinks_Server.Computers.Processes {
         };
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
 
+        Account loggedInAccount = null;
+
         public MailClient(Session session, Daemon daemon, int pid, Printer printer, Node computer, Credentials credentials) : base(session, daemon, pid, printer, computer, credentials) {}
 
         public override bool RunCommand(string command) {
@@ -26,9 +28,6 @@ namespace HackLinks_Server.Computers.Processes {
         public static bool MailAccount(CommandProcess process, string[] command) {
             MailClient client = (MailClient)process;
             MailDaemon daemon = (MailDaemon)client.Daemon;
-
-            if (!daemon.CheckFolders(process))
-                return true;
 
             File mailFolder = process.computer.fileSystem.rootFile.GetFile("mail");
             File accountFile = mailFolder.GetFile("accounts.db");
@@ -58,6 +57,27 @@ namespace HackLinks_Server.Computers.Processes {
                         }
                     daemon.AddAccount(new Account(cmdArgs[1], cmdArgs[2]));
                     return true;
+                } else if (cmdArgs[0] == "login") {
+                    if (cmdArgs.Length != 3) {
+                        process.Print("Usage : account login [username] [password]");
+                        return true;
+                    }
+                    Account accountToLogin = new Account(cmdArgs[1], cmdArgs[2]);
+                    if (!daemon.accounts.Contains(accountToLogin)) {
+                        process.Print("This account either does not exist or the password is incorrect.");
+                        return true;
+                    }
+                    client.loggedInAccount = accountToLogin;
+                } else if (cmdArgs[0] == "resetpass") {
+                    if (cmdArgs.Length != 2) {
+                        process.Print("You are not logged in!");
+                        return true;
+                    }
+                    daemon.accounts.Remove(client.loggedInAccount);
+                    client.loggedInAccount.password = cmdArgs[1];
+                    daemon.AddAccount(client.loggedInAccount);
+                    process.Print($"Your new password is \"{cmdArgs[1]}\"!");
+					return true;
                 }
             }
             return true;
