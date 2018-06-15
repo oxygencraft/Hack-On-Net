@@ -1,17 +1,9 @@
 ﻿using HackLinks_Server.Computers;
-using HackLinks_Server.Computers.Permissions;
 using HackLinks_Server.Computers.Processes;
 using HackLinks_Server.Daemons.Types.Mail;
 using HackLinks_Server.Files;
-using HackLinksCommon;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static HackLinksCommon.NetUtil;
 
 namespace HackLinks_Server.Daemons.Types {
     class MailDaemon : Daemon {
@@ -55,7 +47,7 @@ namespace HackLinks_Server.Daemons.Types {
                 if (data[0] != "MAILACCOUNT" || data.Length != 3)
                     return;
 
-                accounts.Add(new Account(data[1], data[2]));
+                accounts.Add(new Mail.Account(data[1], data[2]));
             }
         }
 
@@ -70,11 +62,20 @@ namespace HackLinks_Server.Daemons.Types {
 
             string newAccountFile = "";
 
-            foreach (Account account in accounts) {
+            foreach (Mail.Account account in accounts) {
                 newAccountFile += "MAILACCOUNT" + account.accountName + "," + account.password + "\r\n";
             }
 
             accountFile.Content = newAccountFile;
+        }
+
+        #endregion
+
+        #region Add Account
+
+        public void AddAccount(Account newAccount) {
+            accounts.Add(newAccount);
+            UpdateAccountDatabase();
         }
 
         #endregion
@@ -98,7 +99,5 @@ namespace HackLinks_Server.Daemons.Types {
         }
 
         #endregion
-
-
     }
 }

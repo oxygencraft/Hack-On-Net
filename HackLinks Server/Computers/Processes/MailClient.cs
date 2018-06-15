@@ -1,17 +1,16 @@
 ﻿using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
-using HackLinks_Server.Daemons.Types.Mail;
 using System;
 using System.Collections.Generic;
+using HackLinks_Server.Daemons.Types.Mail;
+using HackLinks_Server.Files;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace HackLinks_Server.Computers.Processes
-{
+namespace HackLinks_Server.Computers.Processes {
     class MailClient : DaemonClient {
+        private const string help = "account\nShows account infomation.";
         public SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>() {
-            { "account", new Tuple<string, Command>("account\nShows account infomation.", Account)}
+            { "account", new Tuple<string, Command>(help, MailAccount)}
         };
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
 
@@ -19,13 +18,48 @@ namespace HackLinks_Server.Computers.Processes
 
         public override bool RunCommand(string command) {
             // We hide the old runCommand function to perform this check on startup
-            if (!((MailDaemon)Daemon).CheckFolders(this)) {
+            if (!((MailDaemon)Daemon).CheckFolders(this))
                 return true;
-            }
             return base.RunCommand(command);
         }
 
-        public static bool Account(CommandProcess process, string[] command) {
+        public static bool MailAccount(CommandProcess process, string[] command) {
+            MailClient client = (MailClient)process;
+            MailDaemon daemon = (MailDaemon)client.Daemon;
+
+            if (!daemon.CheckFolders(process))
+                return true;
+
+            File mailFolder = process.computer.fileSystem.rootFile.GetFile("mail");
+            File accountFile = mailFolder.GetFile("accounts.db");
+
+            if (command[0] == "account") {
+                if (command.Length < 2)
+                    process.Print(help);
+                string[] cmdArgs = command[1].Split(' ');
+                if (cmdArgs[0] == "create") {
+                    if (cmdArgs.Length != 3) {
+                        process.Print("Usage : account create [username] [password]");
+                        return true;
+                    }
+                    List<Account> accounts = new List<Account>();
+                    accounts.AddRange(accountFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries).Select(x => {
+                        // The mail account format is MAILACCOUNT,(username),(password)
+                        var data = x.Split(',');
+                        if (data[0] != "MAILACCOUNT" || data.Length < 3)
+                            return null;
+                        return new Account(data[1], data[2]);
+                    }));
+                    accounts.RemoveAll(null);
+                    foreach (Account account in accounts)
+                        if (account.accountName == cmdArgs[1]) {
+                            process.Print("This username already exists!");
+                            return true;
+                        }
+                    daemon.AddAccount(new Account(cmdArgs[1], cmdArgs[2]));
+                    return true;
+                }
+            }
             return true;
         }
     }
