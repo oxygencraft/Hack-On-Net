@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using HackLinks_Server.Daemons.Types.Mail;
 using HackLinks_Server.Files;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace HackLinks_Server.Computers.Processes {
     class MailClient : DaemonClient {
-        private const string help = "account\nShows account infomation.";
+        private const string help = "mail account\nShows account infomation.";
         public SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>() {
-            { "account", new Tuple<string, Command>(help, MailAccount)}
+            { "mail", new Tuple<string, Command>(help, MailServerCommands)}
         };
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
 
@@ -20,25 +21,27 @@ namespace HackLinks_Server.Computers.Processes {
 
         public override bool RunCommand(string command) {
             // We hide the old runCommand function to perform this check on startup
-            if (!((MailDaemon)Daemon).CheckFolders(this))
+            if (!((MailDaemon)Daemon).CheckFolders())
                 return true;
             return base.RunCommand(command);
         }
 
-        public static bool MailAccount(CommandProcess process, string[] command) {
+        public static bool MailServerCommands(CommandProcess process, string[] command) {
             MailClient client = (MailClient)process;
             MailDaemon daemon = (MailDaemon)client.Daemon;
 
             File mailFolder = process.computer.fileSystem.rootFile.GetFile("mail");
             File accountFile = mailFolder.GetFile("accounts.db");
 
-            if (command[0] == "account") {
-                if (command.Length < 2)
-                    process.Print(help);
-                string[] cmdArgs = command[1].Split(' ');
-                if (cmdArgs[0] == "create") {
-                    if (cmdArgs.Length != 3) {
-                        process.Print("Usage : account create [username] [password]");
+            if (command.Length < 2) {
+                process.Print(help);
+                return true;
+            }
+            string[] cmdArgs = command[1].Split(' ');
+            if (cmdArgs[0] == "account") {
+                if (cmdArgs[1] == "create") {
+                    if (cmdArgs.Length != 4) {
+                        process.Print("Usage : mail account create [username] [password]");
                         return true;
                     }
                     List<Account> accounts = new List<Account>();
@@ -49,27 +52,39 @@ namespace HackLinks_Server.Computers.Processes {
                             return null;
                         return new Account(data[1], data[2]);
                     }));
-                    accounts.RemoveAll(null);
                     foreach (Account account in accounts)
-                        if (account.accountName == cmdArgs[1]) {
-                            process.Print("This username already exists!");
+                        if (account != null)
+                            if (account.accountName == cmdArgs[2]) {
+                                process.Print("This username already exists!");
+                                return true;
+                            }
+                    daemon.AddAccount(new Account(cmdArgs[2], cmdArgs[3]));
+                    process.Print($"Created an account with the name {cmdArgs[2]}");
+                    return true;
+                } else if (cmdArgs[1] == "login") {
+                    if (cmdArgs.Length != 4) {
+                        process.Print("Usage : mail account login [username] [password]");
+                        return true;
+                    }
+                    Account accountToLogin = new Account(cmdArgs[2], cmdArgs[3]);
+                    if (daemon.accounts.Count == 0) {
+                        process.Print("This server has no accounts.");
+                        return true;
+                    }
+                    foreach (Account account in daemon.accounts) {
+                        if (account.accountName != accountToLogin.accountName || account.password != accountToLogin.password) {
+                            process.Print("Either this account does not exist or the password is incorrect!");
                             return true;
                         }
-                    daemon.AddAccount(new Account(cmdArgs[1], cmdArgs[2]));
-                    return true;
-                } else if (cmdArgs[0] == "login") {
-                    if (cmdArgs.Length != 3) {
-                        process.Print("Usage : account login [username] [password]");
-                        return true;
-                    }
-                    Account accountToLogin = new Account(cmdArgs[1], cmdArgs[2]);
-                    if (!daemon.accounts.Contains(accountToLogin)) {
-                        process.Print("This account either does not exist or the password is incorrect.");
-                        return true;
                     }
                     client.loggedInAccount = accountToLogin;
-                } else if (cmdArgs[0] == "resetpass") {
-                    if (cmdArgs.Length != 2) {
+                    process.Print($"Logged in as {accountToLogin.accountName}");
+                } else if (cmdArgs[1] == "resetpass") {
+                    if (cmdArgs.Length != 3) {
+                        process.Print("Usage : mail account resetpass [new password]");
+                        return true;
+                    }
+                    if (client.loggedInAccount == null) {
                         process.Print("You are not logged in!");
                         return true;
                     }
@@ -79,6 +94,38 @@ namespace HackLinks_Server.Computers.Processes {
                     process.Print($"Your new password is \"{cmdArgs[1]}\"!");
 					return true;
                 }
+            } else if (cmdArgs[0] == "config") {
+                if (cmdArgs[1] == "dns") {
+                    if (client.Credentials.Group != Permissions.Group.ROOT) {
+                        process.Print("You must be logged in as root to use this command!");
+                        return true;
+                    }
+                    if (cmdArgs.Length != 3) {
+                        process.Print("mail config dns [IP of DNS Server]");
+                        return true;
+                    }
+                    Node dnsServer = Server.Instance.GetComputerManager().GetNodeByIp(cmdArgs[1]);
+                    if (dnsServer == null) {
+                        process.Print($"{cmdArgs[2]} does not exist!");
+                        return true;
+                    }
+                    File configFile = client.computer.fileSystem.rootFile.GetFileAtPath("mail/config.json");
+                    JObject configObject = JObject.Parse(configFile.Content);
+                    configObject["DNS"] = cmdArgs[2];
+                    configFile.Content = configObject.ToString();
+                }
+            /*} else if (cmdArgs[0] == "send") {
+                var email = cmdArgs[1].Split('@');
+                int i = 0;
+                string message = "";
+                foreach (string word in cmdArgs) {
+                    if (i <= 1)
+                        message += word + " ";
+                    i++;
+                }
+                if (client.loggedInAccount == null) {
+                    process.Print("");
+                }*/
             }
             return true;
         }

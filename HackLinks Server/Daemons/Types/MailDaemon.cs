@@ -4,6 +4,7 @@ using HackLinks_Server.Daemons.Types.Mail;
 using HackLinks_Server.Files;
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace HackLinks_Server.Daemons.Types {
     class MailDaemon : Daemon {
@@ -28,6 +29,9 @@ namespace HackLinks_Server.Daemons.Types {
         #endregion
 
         public MailDaemon(int pid, Printer printer, Node computer, Credentials credentials) : base(pid, printer, computer, credentials) { }
+
+        public static readonly JObject defaultConfig = new JObject(
+            new JProperty("DNS", "8.8.8.8"));
 
         public List<Account> accounts = new List<Account>();
 
@@ -63,7 +67,7 @@ namespace HackLinks_Server.Daemons.Types {
             string newAccountFile = "";
 
             foreach (Mail.Account account in accounts) {
-                newAccountFile += "MAILACCOUNT" + account.accountName + "," + account.password + "\r\n";
+                newAccountFile += "MAILACCOUNT," + account.accountName + "," + account.password + "\r\n";
             }
 
             accountFile.Content = newAccountFile;
@@ -82,17 +86,23 @@ namespace HackLinks_Server.Daemons.Types {
 
         #region Check Folders
 
-        public bool CheckFolders(CommandProcess process) {
+        public bool CheckFolders() {
             File mailFolder = node.fileSystem.rootFile.GetFile("mail");
             if (mailFolder == null || !mailFolder.IsFolder()) {
-                process.Print("No mail daemon folder was found! (Contact the admin of this node to create one as the mail daemon is useless without one)");
-                return false;
+                if (mailFolder != null)
+                    mailFolder.RemoveFile();
+                mailFolder = File.CreateNewFolder(node.fileSystem.fileSystemManager, node, node.fileSystem.rootFile, "mail");
             }
 
             File accountFile = mailFolder.GetFile("accounts.db");
             if (accountFile == null) {
-                process.Print("No mail daemon file was found! (Contact the admin of this node to create one as the mail daemon is useless without one)");
-                return false;
+                accountFile = File.CreateNewFile(node.fileSystem.fileSystemManager, node, mailFolder, "accounts.db");
+            }
+
+            File configFile = mailFolder.GetFile("config.json");
+            if (configFile == null) {
+                configFile = File.CreateNewFile(node.fileSystem.fileSystemManager, node, mailFolder, "config.json");
+                configFile.Content = defaultConfig.ToString();
             }
 
             return true;
