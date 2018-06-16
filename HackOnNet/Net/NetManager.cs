@@ -280,6 +280,9 @@ namespace HackOnNet.Net
                             } else {
                                 userScreen.Write("Mods\\HNMPMusic does not exist.");
                             }
+                        } else if (messages[0] == "stop") {
+                            MusicManager.Stop();
+                            userScreen.Write("The music has been stopped!");
                         } else {
                             if (File.Exists(songLocation)) {
                                 MusicManager.Play(songLocation);
