@@ -5,13 +5,9 @@ using HackLinks_Server.Daemons.Types.Dns;
 using HackLinks_Server.Files;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static HackLinksCommon.NetUtil;
 
-namespace HackLinks_Server.Daemons.Types
-{
+namespace HackLinks_Server.Daemons.Types {
     class DNSDaemon : Daemon
     {
         public static string DEFAULT_CONFIG_PATH = "/dns/entries.db";
@@ -21,7 +17,7 @@ namespace HackLinks_Server.Daemons.Types
             this.accessLevel = Group.GUEST;
         }
 
-        protected override Type ClientType => typeof(DNSDaemon);
+        protected override Type ClientType => typeof(DNSClient);
 
         public List<DNSEntry> entries = new List<DNSEntry>();
 
@@ -32,11 +28,13 @@ namespace HackLinks_Server.Daemons.Types
             return DaemonType.DNS;
         }
 
-        public string LookUp(string url)
+        public string LookUp(string url, bool returnUrl = false)
         {
             foreach(DNSEntry entry in entries)
                 if (entry.Url == url)
                     return entry.Ip;
+            if (returnUrl)
+                return url;
             return null;
         }
 
