@@ -79,7 +79,56 @@ namespace HackLinks_Server.Daemons.Types {
 
         public void AddAccount(Account newAccount) {
             accounts.Add(newAccount);
+            File mailDir = node.fileSystem.rootFile.GetFile("mail");
+            File usersDir = mailDir.GetFile($"users");
+            if (usersDir == null || !usersDir.IsFolder()) {
+                if (usersDir != null)
+                    usersDir.RemoveFile();
+                usersDir = File.CreateNewFolder(node.fileSystem.fileSystemManager, node, mailDir, "users");
+                SetFileAsRoot(usersDir);
+            }
+            File userDir = usersDir.GetFile(newAccount.accountName);
+            if (userDir == null || !userDir.IsFolder()) {
+                if (userDir != null)
+                    userDir.RemoveFile();
+                userDir = File.CreateNewFolder(node.fileSystem.fileSystemManager, node, usersDir, newAccount.accountName);
+                SetFileAsRoot(userDir);
+            }
+            File inboxDir = userDir.GetFile("Inbox");
+            File sentDir = userDir.GetFile("Sent");
+            if (inboxDir == null || !inboxDir.IsFolder()) {
+                if (inboxDir != null)
+                    inboxDir.RemoveFile();
+                inboxDir = File.CreateNewFolder(node.fileSystem.fileSystemManager, node, userDir, "Inbox");
+                SetFileAsRoot(inboxDir);
+            }
+            if (sentDir == null || !sentDir.IsFolder()) {
+                if (sentDir != null)
+                    sentDir.RemoveFile();
+                sentDir = File.CreateNewFolder(node.fileSystem.fileSystemManager, node, userDir, "Sent");
+                SetFileAsRoot(sentDir);
+            }
             UpdateAccountDatabase();
+        }
+
+        #endregion
+
+        #region Receive Mail
+
+        public bool ReceiveMail(MailMessage message) {
+            bool DoesReceiveAccountExist = false;
+            foreach (Account account in accounts)
+                if (account.accountName == message.To)
+                    DoesReceiveAccountExist = true;
+            if (!DoesReceiveAccountExist)
+                return false;
+            File userInboxDir = node.fileSystem.rootFile.GetFileAtPath($"mail/users/{message.To}/Inbox");
+            if (userInboxDir == null)
+                return false;
+            File messageFile = File.CreateNewFile(node.fileSystem.fileSystemManager, node, userInboxDir, $"{userInboxDir.children.Count + 1}.json");
+            messageFile.Content = message.ToJObject().ToString();
+            SetFileAsRoot(messageFile);
+            return true;
         }
 
         #endregion
@@ -92,20 +141,35 @@ namespace HackLinks_Server.Daemons.Types {
                 if (mailFolder != null)
                     mailFolder.RemoveFile();
                 mailFolder = File.CreateNewFolder(node.fileSystem.fileSystemManager, node, node.fileSystem.rootFile, "mail");
+                SetFileAsRoot(mailFolder);
             }
 
             File accountFile = mailFolder.GetFile("accounts.db");
             if (accountFile == null) {
                 accountFile = File.CreateNewFile(node.fileSystem.fileSystemManager, node, mailFolder, "accounts.db");
+                SetFileAsRoot(accountFile);
             }
 
             File configFile = mailFolder.GetFile("config.json");
             if (configFile == null) {
                 configFile = File.CreateNewFile(node.fileSystem.fileSystemManager, node, mailFolder, "config.json");
                 configFile.Content = defaultConfig.ToString();
+                SetFileAsRoot(configFile);
             }
 
             return true;
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private void SetFileAsRoot(File file) {
+            if (file == null)
+                throw new ArgumentNullException(nameof(file));
+            file.Group = Computers.Permissions.Group.ROOT;
+            file.OwnerId = 0;
+            file.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
         }
 
         #endregion

@@ -1,18 +1,12 @@
-﻿using HackLinks_Server.Computers;
-using HackLinks_Server.Computers.Permissions;
-using HackLinks_Server.Computers.Processes;
+﻿using HackLinks_Server.Computers.Permissions;
 using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
 using HackLinks_Server.Daemons.Types.Dns;
 using HackLinks_Server.Files;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace HackLinks_Server.Computers.Processes
-{
+namespace HackLinks_Server.Computers.Processes {
     class DNSClient : DaemonClient
     {
 
@@ -46,7 +40,7 @@ namespace HackLinks_Server.Computers.Processes
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs[0] == "update")
                 {
-                    if (PermissionHelper.CheckCredentials(process.Credentials, Group.ADMIN))
+                    if (!PermissionHelper.CheckCredentials(process.Credentials, Group.ADMIN))
                     {
                         process.Print("Permission denied");
                         return true;
@@ -71,7 +65,7 @@ namespace HackLinks_Server.Computers.Processes
                 }
                 if (cmdArgs[0] == "assign")
                 {
-                    if (PermissionHelper.CheckCredentials(process.Credentials, Group.ADMIN))
+                    if (!PermissionHelper.CheckCredentials(process.Credentials, Group.ADMIN))
                     {
                         process.Print("Insufficient permission.");
                         return true;
