@@ -1,9 +1,9 @@
 ﻿namespace HackLinks_Server.Daemons.Types.Mail {
-    class Account {
+    class MailAccount {
         public string accountName;
         public string password;
 
-        public Account(string name, string pass) {
+        public MailAccount(string name, string pass) {
             this.accountName = name;
             this.password = pass;
         }

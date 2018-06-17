@@ -33,7 +33,7 @@ namespace HackLinks_Server.Daemons.Types {
         public static readonly JObject defaultConfig = new JObject(
             new JProperty("DNS", "8.8.8.8"));
 
-        public List<Account> accounts = new List<Account>();
+        public List<MailAccount> accounts = new List<MailAccount>();
 
         #region Load Acoounts
 
@@ -51,7 +51,7 @@ namespace HackLinks_Server.Daemons.Types {
                 if (data[0] != "MAILACCOUNT" || data.Length != 3)
                     return;
 
-                accounts.Add(new Mail.Account(data[1], data[2]));
+                accounts.Add(new Mail.MailAccount(data[1], data[2]));
             }
         }
 
@@ -66,7 +66,7 @@ namespace HackLinks_Server.Daemons.Types {
 
             string newAccountFile = "";
 
-            foreach (Mail.Account account in accounts) {
+            foreach (Mail.MailAccount account in accounts) {
                 newAccountFile += "MAILACCOUNT," + account.accountName + "," + account.password + "\r\n";
             }
 
@@ -77,7 +77,7 @@ namespace HackLinks_Server.Daemons.Types {
 
         #region Add Account
 
-        public void AddAccount(Account newAccount) {
+        public void AddAccount(MailAccount newAccount) {
             accounts.Add(newAccount);
             File mailDir = node.fileSystem.rootFile.GetFile("mail");
             File usersDir = mailDir.GetFile($"users");
@@ -117,7 +117,7 @@ namespace HackLinks_Server.Daemons.Types {
 
         public bool ReceiveMail(MailMessage message) {
             bool DoesReceiveAccountExist = false;
-            foreach (Account account in accounts)
+            foreach (MailAccount account in accounts)
                 if (account.accountName == message.To)
                     DoesReceiveAccountExist = true;
             if (!DoesReceiveAccountExist)

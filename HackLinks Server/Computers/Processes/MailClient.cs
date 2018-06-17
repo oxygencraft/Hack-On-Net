@@ -15,7 +15,7 @@ namespace HackLinks_Server.Computers.Processes {
         };
         public override SortedDictionary<string, Tuple<string, Command>> Commands => commands;
 
-        Account loggedInAccount = null;
+        MailAccount loggedInAccount = null;
 
         public MailClient(Session session, Daemon daemon, int pid, Printer printer, Node computer, Credentials credentials) : base(session, daemon, pid, printer, computer, credentials) {}
 
@@ -48,21 +48,21 @@ namespace HackLinks_Server.Computers.Processes {
                         process.Print("Usage : mail account create [username] [password]");
                         return true;
                     }
-                    List<Account> accounts = new List<Account>();
+                    List<MailAccount> accounts = new List<MailAccount>();
                     accounts.AddRange(accountFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries).Select(x => {
                         // The mail account format is MAILACCOUNT,(username),(password)
                         var data = x.Split(',');
                         if (data[0] != "MAILACCOUNT" || data.Length < 3)
                             return null;
-                        return new Account(data[1], data[2]);
+                        return new MailAccount(data[1], data[2]);
                     }));
-                    foreach (Account account in accounts)
+                    foreach (MailAccount account in accounts)
                         if (account != null)
                             if (account.accountName == cmdArgs[2]) {
                                 process.Print("This username already exists!");
                                 return true;
                             }
-                    daemon.AddAccount(new Account(cmdArgs[2], cmdArgs[3]));
+                    daemon.AddAccount(new MailAccount(cmdArgs[2], cmdArgs[3]));
                     process.Print($"Created an account with the name {cmdArgs[2]}");
                     return true;
                 } else if (cmdArgs[1] == "login") {
@@ -70,13 +70,13 @@ namespace HackLinks_Server.Computers.Processes {
                         process.Print("Usage : mail account login [username] [password]");
                         return true;
                     }
-                    Account accountToLogin = new Account(cmdArgs[2], cmdArgs[3]);
+                    MailAccount accountToLogin = new MailAccount(cmdArgs[2], cmdArgs[3]);
                     if (daemon.accounts.Count == 0) {
                         process.Print("This server has no accounts.");
                         return true;
                     }
                     bool accountExists = false;
-                    foreach (Account account in daemon.accounts)
+                    foreach (MailAccount account in daemon.accounts)
                         if (account.accountName == accountToLogin.accountName && account.password == accountToLogin.password)
                             accountExists = true;
                     if (!accountExists) {
