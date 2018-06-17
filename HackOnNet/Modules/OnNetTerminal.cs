@@ -27,6 +27,8 @@ namespace HackOnNet.Modules
 
         public string prompt;
 
+        public string prefixcommand;
+
         public bool usingTabExecution = false;
 
         public bool preventingExecution = false;
@@ -203,7 +205,26 @@ namespace HackOnNet.Modules
                     this.currentLine = Hacknet.Gui.TextBox.doTerminalTextField(7001, this.bounds.X + 3 + (int)Terminal.PROMPT_OFFSET + (int)tinyfont.MeasureString(this.prompt.RemoveFormatting()).X, num2, this.bounds.Width - i - 4, this.bounds.Height, 1, this.currentLine, tinyfont);
                     if (Hacknet.Gui.TextBox.BoxWasActivated)
                     {
-                        this.executeLine();
+                        //prefixcommand is used to make sure that commands which require a second level of input into the terminal not run the second level arguments as a seperate command.
+                        //prefixcommand should be stuff like "login" or "help".
+                        //prefixcommand is set in OnNetDisplayModule.cs.
+                        if (prefixcommand == null)
+                        {
+                            this.executeLine();
+                        }
+                        else
+                        {
+                            this.currentLine = prefixcommand + ' ' + this.currentLine;
+                            this.executeLine();
+                            //whenever the login buttin was pressed, it would auto execute line and reset prefix command so it would treat the second level as an arugment anyways, so
+                            //to combat this i checked if the previous executed command was a nothing command.
+                            if(this.lastRunCommand != "" && prefixcommand != null)
+                            {
+                                prefixcommand = null;
+                            }
+
+                        }
+
                     }
                     if (Hacknet.Gui.TextBox.UpWasPresed)
                     {
