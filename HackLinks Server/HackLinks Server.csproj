@@ -99,6 +99,9 @@
     <Compile Include="Daemons\Types\IrcDaemon.cs" />
     <Compile Include="Computers\Processes\IRCClient.cs" />
     <Compile Include="Daemons\Types\Irc\IrcMessage.cs" />
+    <Compile Include="Daemons\Types\Mission\Goals\GetNodePasswordGoal.cs" />
+    <Compile Include="Daemons\Types\Mission\Goals\MissionGoal.cs" />
+    <Compile Include="Daemons\Types\Mission\Goals\ReplyTextGoal.cs" />
     <Compile Include="Daemons\Types\Mission\MissionAccount.cs" />
     <Compile Include="Daemons\Types\Mission\MissionListing.cs" />
     <Compile Include="Database\DatabaseDump.cs" />

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HackLinks_Server.Daemons.Types.Mission.Goals;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,8 +17,11 @@ namespace HackLinks_Server.Daemons.Types.Mission
         public Status status;
         public string employer;
         public string claimedBy;
+        public string startDescription;
+        public List<MissionGoal> goals;
+        public List<int> completedGoals;
 
-        public MissionListing(int id, string missionName, string description, int requiredRanking, Difficulty difficulty, Status status, string employer, string claimedBy)
+        public MissionListing(int id, string missionName, string description, int requiredRanking, Difficulty difficulty, Status status, string employer, string claimedBy, string startDescription, List<MissionGoal> goals, List<int> completedGoals)
         {
             this.id = id;
             this.missionName = missionName;
@@ -27,6 +31,9 @@ namespace HackLinks_Server.Daemons.Types.Mission
             this.status = status;
             this.employer = employer;
             this.claimedBy = claimedBy;
+            this.startDescription = startDescription;
+            this.goals = goals;
+            this.completedGoals = completedGoals;
         }
 
         public enum Status

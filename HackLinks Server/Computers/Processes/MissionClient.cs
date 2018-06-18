@@ -144,7 +144,7 @@ namespace HackLinks_Server.Computers.Processes
                         return true;
                     }
                     MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
+                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, false))
                         return true;
                     if (string.IsNullOrWhiteSpace(mission.description))
                     {
@@ -152,6 +152,30 @@ namespace HackLinks_Server.Computers.Processes
                         return true;
                     }
                     process.Print("Description for mission ID " + mission.id + "\n\n" + mission.description);
+                }
+                if (cmdArgs[0] == "accept")
+                {
+                    if (cmdArgs.Length < 2)
+                    {
+                        process.Print("Usage : mission accept [missionid]");
+                        return true;
+
+                    }
+                    MissionListing mission = null;
+                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, false))
+                        return true;
+                    mission.status = MissionListing.Status.InProgress;
+                    mission.claimedBy = client.loggedInAccount.accountName;
+                    client.loggedInAccount.currentMission = mission.id;
+                }
+                if (cmdArgs[0] == "abandon")
+                {
+                    MissionListing mission = null;
+                    if (CheckMissionId(client.loggedInAccount.currentMission.ToString(), out mission, client, process, daemon, false))
+                        return true;
+                    mission.status = MissionListing.Status.Unclaimed;
+                    mission.claimedBy = null;
+                    client.loggedInAccount.currentMission = 0;
                 }
                 if (cmdArgs[0] == "setdescription")
                 {
@@ -214,6 +238,16 @@ namespace HackLinks_Server.Computers.Processes
                     MissionListing mission = null;
                     if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
                         return true;
+                    if (mission.goals == null || mission.goals.Count == 0)
+                    {
+                        process.Print("You must set goals for the mission before you can publish the mission");
+                        return true;
+                    }
+                    if (string.IsNullOrWhiteSpace(mission.startDescription))
+                    {
+                        process.Print("You must set a start description for the mission before you can publish the mission. A start description should contain everything the user needs to know (including the goals as the user does not get a list of goals, they have to get the goals from the start description)");
+                        return true;
+                    }
                     mission.status = MissionListing.Status.Unclaimed;
                 }
                 if (cmdArgs[0] == "unpublish")
@@ -275,7 +309,7 @@ namespace HackLinks_Server.Computers.Processes
                         return true;
                     }
                     MissionListing.Difficulty difficulty = (MissionListing.Difficulty)difficultyInt;
-                    daemon.missions.Add(daemon.missions.Count + 1, new MissionListing(daemon.missions.Count + 1, cmdArgs[1], null, requiredRanking, difficulty, MissionListing.Status.Unpublished, client.loggedInAccount.accountName, null));
+                    daemon.missions.Add(daemon.missions.Count + 1, new MissionListing(daemon.missions.Count + 1, cmdArgs[1], null, requiredRanking, difficulty, MissionListing.Status.Unpublished, client.loggedInAccount.accountName, null, null, null, null));
                     daemon.UpdateMissionDatabase();
                 }
             }
@@ -305,6 +339,17 @@ namespace HackLinks_Server.Computers.Processes
                     {
                         process.Print("Usage : account create [accountname] [password]");
                         return true;
+                    }
+                    if (daemon.accounts.Count != 0)
+                    {
+                        foreach (var account in daemon.accounts)
+                        {
+                            if (account.clientUsername == client.Session.owner.username)
+                            {
+                                process.Print("You already have an account on this mission board.\nTo reset your password, use account resetpass");
+                                return true;
+                            }
+                        }
                     }
                     List<string> accounts = new List<string>();
                     var accountsFile = accountFile.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);

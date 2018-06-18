@@ -3,6 +3,7 @@ using HackLinks_Server.Computers.Processes;
 using HackLinks_Server.Daemons.Types.Mission;
 using HackLinks_Server.Files;
 using HackLinksCommon;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -54,16 +55,8 @@ namespace HackLinks_Server.Daemons.Types
             File missionFile = node.fileSystem.rootFile.GetFileAtPath("/mission/missions.db");
             if (missionFile == null)
                 return;
-            foreach (string line in missionFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                var data = line.Split(',');
-                if (data.Length < 7)
-                    continue;
-                if (data.Length < 8)
-                    missions.Add(Convert.ToInt32(data[0]), new MissionListing(Convert.ToInt32(data[0]), data[1], data[2], Convert.ToInt32(data[3]), (MissionListing.Difficulty)Convert.ToInt32(data[4]), (MissionListing.Status)Convert.ToInt32(data[5]), data[6], ""));
-                else
-                    missions.Add(Convert.ToInt32(data[0]), new MissionListing(Convert.ToInt32(data[0]), data[1], data[2], Convert.ToInt32(data[3]), (MissionListing.Difficulty)Convert.ToInt32(data[4]), (MissionListing.Status)Convert.ToInt32(data[5]), data[6], data[7]));
-            }
+            JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+            missions = JsonConvert.DeserializeObject<Dictionary<int, MissionListing>>(missionFile.Content, settings);
         }
 
         public void UpdateAccountDatabase()
@@ -84,14 +77,8 @@ namespace HackLinks_Server.Daemons.Types
             File missionFile = node.fileSystem.rootFile.GetFileAtPath("/mission/missions.db");
             if (missionFile == null)
                 return;
-            string newMissionsFile = "";
-            foreach (var missionKeyPair in missions)
-            {
-                var mission = missionKeyPair.Value;
-                int missionId = missionKeyPair.Key;
-                newMissionsFile += missionId + "," + mission.missionName + "," + mission.requiredRanking + "," + (int)mission.difficulty + "," + (int)mission.status + "," + mission.employer + "," + mission.claimedBy + "\r\n";
-            }
-            missionFile.Content = newMissionsFile;
+            JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+            missionFile.Content = JsonConvert.SerializeObject(missions, settings);
         }
 
         public bool CheckFolders(CommandProcess process)
