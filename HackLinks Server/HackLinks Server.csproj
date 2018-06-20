@@ -104,6 +104,9 @@
     <Compile Include="Daemons\Types\Mission\Goals\ReplyTextGoal.cs" />
     <Compile Include="Daemons\Types\Mission\MissionAccount.cs" />
     <Compile Include="Daemons\Types\Mission\MissionListing.cs" />
+    <Compile Include="Daemons\Types\MailDaemon.cs" />
+    <Compile Include="Daemons\Types\Mail\MailAccount.cs" />
+    <Compile Include="Daemons\Types\Mail\MailMessage.cs" />
     <Compile Include="Database\DatabaseDump.cs" />
     <Compile Include="Database\DatabaseLink.cs" />
     <Compile Include="Extensions.cs" />
@@ -119,6 +122,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Compile Include="Computers\Processes\MailClient.cs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

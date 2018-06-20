@@ -118,6 +118,11 @@ namespace HackLinks_Server.Computers
                 var newDaemon = new MissionDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);
             }
+            else if (lines[0] == "MAIL")
+            {
+                var newDaemon = new MailDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
+                daemons.Add(newDaemon);
+            }
         }
 
         public Daemon GetDaemon(string type)

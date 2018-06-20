@@ -33,8 +33,8 @@ namespace HackOnNet.Net
             new ManualResetEvent(false);
 
         private static String response = String.Empty;
-        private static bool disconnectHandled = false;
 
+        private bool disconnectHandled = false;
         public UserScreen userScreen;
         public string nodesToSync = "";
         public bool gotNodes = false;
@@ -60,11 +60,16 @@ namespace HackOnNet.Net
             Disconnect(isInGame, "Connection Lost");
         }
 
-        public void Disconnect(bool isInGame, string reason)
+        public void Disconnect(bool isInGame, string reason, bool leftGame = false)
         {
             if (!disconnectHandled)
             {
                 reason = string.IsNullOrWhiteSpace(reason) ? "The server or client did not provide a reason for disconnection" : reason;
+                if (leftGame)
+                {
+                    disconnectHandled = true;
+                    reason = "";
+                }
                 clientSocket.Close();
                 if (isInGame)
                     userScreen.quitGame(this, reason);
@@ -275,6 +280,9 @@ namespace HackOnNet.Net
                             } else {
                                 userScreen.Write("Mods\\HNMPMusic does not exist.");
                             }
+                        } else if (messages[0] == "stop") {
+                            MusicManager.Stop();
+                            userScreen.Write("The music has been stopped!");
                         } else {
                             if (File.Exists(songLocation)) {
                                 MusicManager.Play(songLocation);

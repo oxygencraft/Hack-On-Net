@@ -33,7 +33,8 @@ namespace HackLinks_Server.Daemons
             IRC,
             DNS,
             BANK,
-            MISSION
+            MISSION,
+            MAIL
         }
 
         public virtual DaemonType GetDaemonType()
