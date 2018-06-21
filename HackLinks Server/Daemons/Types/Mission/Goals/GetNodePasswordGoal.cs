@@ -14,8 +14,9 @@ namespace HackLinks_Server.Daemons.Types.Mission.Goals
         public string accountName;
         public override bool AdditionalInformationRequired { get { return true; } }
 
-        public GetNodePasswordGoal(string ip, string accountName)
+        public GetNodePasswordGoal(int id, string ip, string accountName)
         {
+            Id = id;
             this.ip = ip;
             this.accountName = accountName;
         }

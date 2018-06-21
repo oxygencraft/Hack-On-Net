@@ -11,8 +11,9 @@ namespace HackLinks_Server.Daemons.Types.Mission.Goals
         public string requiredText;
         public override bool AdditionalInformationRequired { get { return true; } }
 
-        public ReplyTextGoal(string requiredText)
+        public ReplyTextGoal(int id, string requiredText)
         {
+            Id = id;
             this.requiredText = requiredText;
         }
 

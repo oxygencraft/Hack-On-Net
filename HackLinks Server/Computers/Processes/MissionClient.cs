@@ -1,6 +1,7 @@
 ﻿using HackLinks_Server.Daemons;
 using HackLinks_Server.Daemons.Types;
 using HackLinks_Server.Daemons.Types.Mission;
+using HackLinks_Server.Daemons.Types.Mission.Goals;
 using HackLinks_Server.Files;
 using System;
 using System.Collections.Generic;
@@ -159,7 +160,6 @@ namespace HackLinks_Server.Computers.Processes
                     {
                         process.Print("Usage : mission accept [missionid]");
                         return true;
-
                     }
                     MissionListing mission = null;
                     if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, false))
@@ -167,6 +167,69 @@ namespace HackLinks_Server.Computers.Processes
                     mission.status = MissionListing.Status.InProgress;
                     mission.claimedBy = client.loggedInAccount.accountName;
                     client.loggedInAccount.currentMission = mission.id;
+                    daemon.UpdateMissionDatabase();
+                }
+                if (cmdArgs[0] == "completegoal")
+                {
+                    if (cmdArgs.Length < 2)
+                    {
+                        process.Print("Usage : mission completegoal [additionalinfo]");
+                        return true;
+                    }
+                    MissionListing mission = null;
+                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, false))
+                        return true;
+
+                    int doneWords = 0;
+                    string additionalInfo = "";
+                    foreach (var word in cmdArgs)
+                    {
+                        if (doneWords < 2)
+                        {
+                            doneWords++;
+                            continue;
+                        }
+                        if (additionalInfo == "")
+                        {
+                            additionalInfo = word;
+                            continue;
+                        }
+                        additionalInfo += " " + word;
+                    }
+
+                    foreach (var goal in mission.goals)
+                    {
+                        if (goal.IsComplete(additionalInfo))
+                        {
+                            mission.completedGoals.Add(goal.Id);
+                        }
+                    }
+                    daemon.UpdateMissionDatabase();
+                }
+                if (cmdArgs[0] == "complete")
+                {
+                    MissionListing mission = null;
+                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, false))
+                        return true;
+
+                    if (mission.goals.Count != mission.completedGoals.Count)
+                    {
+                        foreach (var goal in mission.goals)
+                        {
+                            if (goal.IsComplete("") && !goal.AdditionalInformationRequired)
+                            {
+                                mission.completedGoals.Add(goal.Id);
+                            }
+                        }
+                    }
+                    if (mission.goals.Count != mission.completedGoals.Count)
+                    {
+                        process.Print("Mission Incomplete.\nUse completegoal to provide additional information.");
+                        return true;
+                    }
+                    mission.status = MissionListing.Status.Complete;
+                    client.loggedInAccount.currentMission = 0;
+                    daemon.UpdateMissionDatabase();
                 }
                 if (cmdArgs[0] == "abandon")
                 {
@@ -176,6 +239,31 @@ namespace HackLinks_Server.Computers.Processes
                     mission.status = MissionListing.Status.Unclaimed;
                     mission.claimedBy = null;
                     client.loggedInAccount.currentMission = 0;
+                    daemon.UpdateMissionDatabase();
+                }
+                if (cmdArgs[0] == "addgoal")
+                {
+                    // The 3 arguments thing isn't going to stay, it's because all the goals we have so far require arguments
+                    if (cmdArgs.Length < 4)
+                    {
+                        process.Print("Usage : mission addgoal [missionid] [getpass/replytext] [additionalinformation]");
+                        return true;
+                    }
+                    MissionListing mission = null;
+                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
+                        return true;
+                    if (cmdArgs[2] == "getpass")
+                    {
+                        if (cmdArgs.Length < 5)
+                        {
+                            process.Print("Usage : mission addgoal [missionid] [getpass] [ip] [accountname]");
+                            return true;
+                        }
+                        mission.goals.Add(new GetNodePasswordGoal(mission.goals.Count + 1, cmdArgs[3], cmdArgs[4]));
+                    }
+                    if (cmdArgs[2] == "replytext")
+                        mission.goals.Add(new ReplyTextGoal(mission.goals.Count + 1, cmdArgs[3]));
+                    daemon.UpdateMissionDatabase();
                 }
                 if (cmdArgs[0] == "setdescription")
                 {
@@ -204,6 +292,7 @@ namespace HackLinks_Server.Computers.Processes
                         description += " " + word;
                     }
                     mission.description = description;
+                    daemon.UpdateMissionDatabase();
                 }
                 if (cmdArgs[0] == "setdifficulty")
                 {
@@ -227,6 +316,7 @@ namespace HackLinks_Server.Computers.Processes
                         return true;
                     }
                     mission.difficulty = (MissionListing.Difficulty)difficultyInt;
+                    daemon.UpdateMissionDatabase();
                 }
                 if (cmdArgs[0] == "publish")
                 {
@@ -249,6 +339,7 @@ namespace HackLinks_Server.Computers.Processes
                         return true;
                     }
                     mission.status = MissionListing.Status.Unclaimed;
+                    daemon.UpdateMissionDatabase();
                 }
                 if (cmdArgs[0] == "unpublish")
                 {
@@ -278,6 +369,7 @@ namespace HackLinks_Server.Computers.Processes
                         }
                     }
                     mission.status = MissionListing.Status.Unpublished;
+                    daemon.UpdateMissionDatabase();
                 }
                 if (cmdArgs[0] == "create")
                 {
