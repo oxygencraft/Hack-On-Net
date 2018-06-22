@@ -57,6 +57,8 @@ namespace HackLinks_Server.Daemons.Types
                 return;
             JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
             missions = JsonConvert.DeserializeObject<Dictionary<int, MissionListing>>(missionFile.Content, settings);
+            if (missions == null)
+                missions = new Dictionary<int, MissionListing>();
         }
 
         public void UpdateAccountDatabase()

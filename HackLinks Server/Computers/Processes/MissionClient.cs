@@ -176,15 +176,22 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission completegoal [additionalinfo]");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, false))
+                    if (client.loggedInAccount.currentMission == 0)
+                    {
+                        process.Print("You don't have a mission in progress");
                         return true;
+                    }
+                    MissionListing mission = null;
+                    if (CheckMissionId(client.loggedInAccount.currentMission.ToString(), out mission, client, process, daemon, false))
+                        return true;
+                    if (mission.completedGoals == null)
+                        mission.completedGoals = new List<int>();
 
                     int doneWords = 0;
                     string additionalInfo = "";
                     foreach (var word in cmdArgs)
                     {
-                        if (doneWords < 2)
+                        if (doneWords < 1)
                         {
                             doneWords++;
                             continue;
@@ -208,9 +215,16 @@ namespace HackLinks_Server.Computers.Processes
                 }
                 if (cmdArgs[0] == "complete")
                 {
-                    MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, false))
+                    if (client.loggedInAccount.currentMission == 0)
+                    {
+                        process.Print("You don't have a mission in progress");
                         return true;
+                    }
+                    MissionListing mission = null;
+                    if (CheckMissionId(client.loggedInAccount.currentMission.ToString(), out mission, client, process, daemon, false))
+                        return true;
+                    if (mission.completedGoals == null)
+                        mission.completedGoals = new List<int>();
 
                     if (mission.goals.Count != mission.completedGoals.Count)
                     {
@@ -224,7 +238,7 @@ namespace HackLinks_Server.Computers.Processes
                     }
                     if (mission.goals.Count != mission.completedGoals.Count)
                     {
-                        process.Print("Mission Incomplete.\nUse completegoal to provide additional information.");
+                        process.Print("Mission Incomplete.\nUse mission completegoal to provide additional information.");
                         return true;
                     }
                     mission.status = MissionListing.Status.Complete;
@@ -243,15 +257,16 @@ namespace HackLinks_Server.Computers.Processes
                 }
                 if (cmdArgs[0] == "addgoal")
                 {
-                    // The 3 arguments thing isn't going to stay, it's because all the goals we have so far require arguments
-                    if (cmdArgs.Length < 4)
+                    if (cmdArgs.Length < 3)
                     {
-                        process.Print("Usage : mission addgoal [missionid] [getpass/replytext] [additionalinformation]");
+                        process.Print("Usage : mission addgoal [missionid] [getpass/replytext] [additionalinformationifrequired]");
                         return true;
                     }
                     MissionListing mission = null;
                     if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
                         return true;
+                    if (mission.goals == null)
+                        mission.goals = new List<MissionGoal>();
                     if (cmdArgs[2] == "getpass")
                     {
                         if (cmdArgs.Length < 5)
@@ -262,7 +277,30 @@ namespace HackLinks_Server.Computers.Processes
                         mission.goals.Add(new GetNodePasswordGoal(mission.goals.Count + 1, cmdArgs[3], cmdArgs[4]));
                     }
                     if (cmdArgs[2] == "replytext")
-                        mission.goals.Add(new ReplyTextGoal(mission.goals.Count + 1, cmdArgs[3]));
+                    {
+                        if (cmdArgs.Length < 4)
+                        {
+                            process.Print("Usage : mission addgoal [missionid] [replytext] [texttoreply]");
+                            return true;
+                        }
+                        int doneWords = 0;
+                        string text = "";
+                        foreach (var word in cmdArgs)
+                        {
+                            if (doneWords < 3)
+                            {
+                                doneWords++;
+                                continue;
+                            }
+                            if (text == "")
+                            {
+                                text = word;
+                                continue;
+                            }
+                            text += " " + word;
+                        }
+                        mission.goals.Add(new ReplyTextGoal(mission.goals.Count + 1, text));
+                    }
                     daemon.UpdateMissionDatabase();
                 }
                 if (cmdArgs[0] == "setdescription")
@@ -292,6 +330,35 @@ namespace HackLinks_Server.Computers.Processes
                         description += " " + word;
                     }
                     mission.description = description;
+                    daemon.UpdateMissionDatabase();
+                }
+                if (cmdArgs[0] == "setstartdescription")
+                {
+                    if (cmdArgs.Length < 3)
+                    {
+                        process.Print("Usage : mission setstartdescription [missionid] [description]");
+                        return true;
+                    }
+                    MissionListing mission = null;
+                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
+                        return true;
+                    int doneWords = 0;
+                    string description = "";
+                    foreach (var word in cmdArgs)
+                    {
+                        if (doneWords < 2)
+                        {
+                            doneWords++;
+                            continue;
+                        }
+                        if (description == "")
+                        {
+                            description = word;
+                            continue;
+                        }
+                        description += " " + word;
+                    }
+                    mission.startDescription = description;
                     daemon.UpdateMissionDatabase();
                 }
                 if (cmdArgs[0] == "setdifficulty")
