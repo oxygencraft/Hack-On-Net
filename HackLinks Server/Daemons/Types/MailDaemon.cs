@@ -2,9 +2,9 @@
 using HackLinks_Server.Computers.Processes;
 using HackLinks_Server.Daemons.Types.Mail;
 using HackLinks_Server.Files;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 
 namespace HackLinks_Server.Daemons.Types {
     class MailDaemon : Daemon {
@@ -34,6 +34,8 @@ namespace HackLinks_Server.Daemons.Types {
             new JProperty("DNS", "8.8.8.8"));
 
         public List<MailAccount> accounts = new List<MailAccount>();
+
+        private static Random random = new Random();
 
         #region Load Acoounts
 
@@ -129,6 +131,41 @@ namespace HackLinks_Server.Daemons.Types {
             messageFile.Content = message.ToJObject().ToString();
             SetFileAsRoot(messageFile);
             return true;
+        }
+
+        #endregion
+
+        #region Daemon Mail
+
+        /// <summary>
+        /// Sends a password reset email to the specified user at the specified server, and outputs the result as well as the auth code.
+        /// </summary>
+        /// <param name="from">What node the password email should come from</param>
+        /// <param name="to">What email address to send the email too, doesn't support domain names, just IPs. (example@8.8.8.8)</param>
+        /// <param name="authCode">Gives back the auth code used in the email.</param>
+        /// <returns></returns>
+        public static bool SendPasswordResetEmail(Node from, string to, out int authCode) {
+            authCode = random.Next(100000, 999999);
+            string[] emailArgs = to.Split('@');
+            Node mailServer = Server.Instance.GetComputerManager().GetNodeByIp(emailArgs[1]);
+            MailMessage message = new MailMessage(to, from.GetDisplayName() + "@" + from.ip, $"Attention {emailArgs[0]}! You or someone with access to your account at {from.ip} has requested a password reset!\nIf this was not you or someone you know has access to this account, please disregard this email.\nHowever, if you requested yur password to be reset, the authentication code is {authCode}.");
+
+            return new MailDaemon(mailServer.NextPID, null, mailServer, new Credentials(mailServer.GetUserId("guest"), Computers.Permissions.Group.GUEST)).ReceiveMail(message);
+        }
+
+        /// <summary>
+        /// Sends a customizable email to the address of your choosing.
+        /// </summary>
+        /// <param name="from">What node the email should come from</param>
+        /// <param name="to">What email address to send the email too, doesn't support domain names, just IPs. (example@8.8.8.8)</param>
+        /// <param name="body">The body of the email</param>
+        /// <returns></returns>
+        public static bool SendCustomEmail(Node from, string to, string body) {
+            string[] emailArgs = to.Split('@');
+            Node mailServer = Server.Instance.GetComputerManager().GetNodeByIp(emailArgs[1]);
+            MailMessage message = new MailMessage(to, from.GetDisplayName() + "@" + from.ip, body);
+
+            return new MailDaemon(mailServer.NextPID, null, mailServer, new Credentials(mailServer.GetUserId("guest"), Computers.Permissions.Group.GUEST)).ReceiveMail(message);
         }
 
         #endregion
