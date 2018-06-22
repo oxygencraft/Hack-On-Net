@@ -56,7 +56,7 @@ namespace HackLinks_Server.Daemons.Types
             string newAccountsFile = "";
             foreach (var account in accounts)
             {
-                newAccountsFile += account.accountName + "," + 0 + "," + account.password + "," + account.clientUsername + "\r\n";
+                newAccountsFile += account.accountName + "," + account.balance + "," + account.password + "," + account.clientUsername + "\r\n";
             }
             accountFile.Content = newAccountsFile;
         }

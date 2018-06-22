@@ -522,30 +522,37 @@ namespace HackLinks_Server.Computers.Processes
             if (command.Count < 4)
             {
                 //TODO kernel
-                //client.Send(NetUtil.PacketType.MESSG, "Usage: netmap [ip] [x] [y]");
+                process.Print("Usage: netmap [ip] [x] [y]");
                 return true;
             }
             //TODO kernel
-            //Server.Instance.DatabaseLink.AddUserNode(client.username, command[1], command[2] + ":" + command[3]);
+            process.computer.Kernel.AddNodeToNetMap(process, command[1], command[2], command[3]);
             return true;
         }
 
-        public static bool PlayMusic(CommandProcess process, string[] commandUnsplit) {
-            try {
+        public static bool PlayMusic(CommandProcess process, string[] commandUnsplit)
+        {
+            try
+            {
                 List<string> command = new List<string>();
                 command.Add("music");
                 command.AddRange(commandUnsplit[1].Split());
-                if (command.Count < 2) {
+                if (command.Count < 2)
+                {
                     process.Print("Usage: music [(nameofsong) (Note: Must be in a folder called \"HNMPMusic\" in the Mods folder as an .wav file.)]\nOR music shuffle\nOR music list");
                     return true;
                 }
                 process.computer.Kernel.PlayMusic(process, command[1]);
                 return true;
-            } catch(ObjectDisposedException e) {
-                Logger.Exception(e);
+            }
+            catch (ObjectDisposedException e)
+            {
+                Console.WriteLine(e);
                 return true;
-            } catch(Exception e) {
-                Logger.Exception(e);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
                 return true;
             }
         }
