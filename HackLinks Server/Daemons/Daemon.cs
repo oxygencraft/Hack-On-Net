@@ -33,6 +33,7 @@ namespace HackLinks_Server.Daemons
             IRC,
             DNS,
             BANK,
+            MISSION,
             MAIL
         }
 

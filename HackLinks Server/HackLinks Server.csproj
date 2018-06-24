@@ -64,6 +64,7 @@
     <Compile Include="Computers\Account.cs" />
     <Compile Include="Computers\CompiledFileManager.cs" />
     <Compile Include="Computers\Kernel.cs" />
+    <Compile Include="Computers\Processes\MissionClient.cs" />
     <Compile Include="Computers\Processes\BankClient.cs" />
     <Compile Include="Computers\Processes\CommandProcess.cs" />
     <Compile Include="Computers\Processes\ComputerAdmin.cs" />
@@ -85,6 +86,7 @@
     <Compile Include="Daemons\Daemon.cs" />
     <Compile Include="Daemons\DaemonClient.cs" />
     <Compile Include="Computers\Processes\DNSClient.cs" />
+    <Compile Include="Daemons\Types\MissionDaemon.cs" />
     <Compile Include="Daemons\Types\BankDaemon.cs" />
     <Compile Include="Daemons\Types\Bank\BankAccount.cs" />
     <Compile Include="Daemons\Types\HTTPDaemon.cs" />
@@ -97,6 +99,11 @@
     <Compile Include="Daemons\Types\IrcDaemon.cs" />
     <Compile Include="Computers\Processes\IRCClient.cs" />
     <Compile Include="Daemons\Types\Irc\IrcMessage.cs" />
+    <Compile Include="Daemons\Types\Mission\Goals\GetNodePasswordGoal.cs" />
+    <Compile Include="Daemons\Types\Mission\Goals\MissionGoal.cs" />
+    <Compile Include="Daemons\Types\Mission\Goals\ReplyTextGoal.cs" />
+    <Compile Include="Daemons\Types\Mission\MissionAccount.cs" />
+    <Compile Include="Daemons\Types\Mission\MissionListing.cs" />
     <Compile Include="Daemons\Types\MailDaemon.cs" />
     <Compile Include="Daemons\Types\Mail\MailAccount.cs" />
     <Compile Include="Daemons\Types\Mail\MailMessage.cs" />

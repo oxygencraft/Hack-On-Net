@@ -472,6 +472,10 @@ namespace HackOnNet.Screens
                 }
                 catch (Exception e) { Write("Error occured while parsing theme: " + e.ToString()); }
             }
+            else if (command[0] == "nmap")
+            {
+                netMap.nodeList.Add(new NodeCircle(command[1], new Vector2(float.Parse(command[2]), float.Parse(command[3]))));
+            }
         }
 
         public void Execute(string command)

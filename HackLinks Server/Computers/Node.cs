@@ -27,6 +27,7 @@ namespace HackLinks_Server.Computers
         public List<Session> sessions = new List<Session>();
         public List<Daemon> daemons = new List<Daemon>();
         public List<Log> logs = new List<Log>();
+        public string bankAccountRedirectionInfo = "";
 
         public Kernel Kernel { get; set; }
 
@@ -78,6 +79,17 @@ namespace HackLinks_Server.Computers
             return ip;
         }
 
+        public string GetBankAccountRedirectionInfo()
+        {
+            if (string.IsNullOrWhiteSpace(bankAccountRedirectionInfo))
+            {
+                var cfgFile = fileSystem.rootFile.GetFileAtPath("/cfg/BankAccountRedirectionInfo.cfg");
+                if (cfgFile != null)
+                    bankAccountRedirectionInfo = cfgFile.Content;
+            }
+            return bankAccountRedirectionInfo;
+        }
+
         public void LaunchDaemon(File daemonLauncher)
         {
             var lines = daemonLauncher.Content.Split(new string[]{ "\r\n" }, StringSplitOptions.None);
@@ -101,7 +113,12 @@ namespace HackLinks_Server.Computers
                 var newDaemon = new BankDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);
             }
-            else if(lines[0] == "MAIL") 
+            else if (lines[0] == "MISSION")
+            {
+                var newDaemon = new MissionDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
+                daemons.Add(newDaemon);
+            }
+            else if (lines[0] == "MAIL")
             {
                 var newDaemon = new MailDaemon(NextPID, null, this, new Credentials(GetUserId("guest"), Group.GUEST));
                 daemons.Add(newDaemon);

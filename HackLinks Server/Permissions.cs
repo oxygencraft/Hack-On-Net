@@ -14,6 +14,8 @@ namespace HackLinks_Server
         GivePerms,
         CreateFile,
         CreateFolder,
-        CreateComputer
+        CreateComputer,
+        CreateInstanceMission,
+        CreateEventMission
     }
 }

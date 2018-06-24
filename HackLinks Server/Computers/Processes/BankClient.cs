@@ -51,7 +51,6 @@ namespace HackLinks_Server.Computers.Processes
                     process.Print("Usage : account [create/login/resetpass/balance/transfer/transactions/close]");
                     return true;
                 }
-                // TODO: Implement Transaction Log
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs[0] == "create")
                 {
