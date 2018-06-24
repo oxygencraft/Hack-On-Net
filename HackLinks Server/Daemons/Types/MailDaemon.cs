@@ -35,6 +35,8 @@ namespace HackLinks_Server.Daemons.Types {
 
         public List<MailAccount> accounts = new List<MailAccount>();
 
+        private static List<PassResetRequest> _authRequests = new List<PassResetRequest>();
+
         private static Random random = new Random();
 
         #region Load Acoounts
@@ -142,15 +144,31 @@ namespace HackLinks_Server.Daemons.Types {
         /// </summary>
         /// <param name="from">What node the password email should come from</param>
         /// <param name="to">What email address to send the email too, doesn't support domain names, just IPs. (example@8.8.8.8)</param>
-        /// <param name="authCode">Gives back the auth code used in the email.</param>
+        /// <param name="username">The username of the account that needs it's password to be reset</param>
         /// <returns></returns>
-        public static bool SendPasswordResetEmail(Node from, string to, out int authCode) {
-            authCode = random.Next(100000, 999999);
+        public static bool SendPasswordResetEmail(Node from, string to, string username) {
+            _authRequests.Add(new PassResetRequest(from, username, out int authCode));
             string[] emailArgs = to.Split('@');
             Node mailServer = Server.Instance.GetComputerManager().GetNodeByIp(emailArgs[1]);
             MailMessage message = new MailMessage(to, from.GetDisplayName() + "@" + from.ip, $"Attention {emailArgs[0]}! You or someone with access to your account at {from.ip} has requested a password reset!\nIf this was not you or someone you know has access to this account, please disregard this email.\nHowever, if you requested yur password to be reset, the authentication code is {authCode}.");
-
+            
             return new MailDaemon(mailServer.NextPID, null, mailServer, new Credentials(mailServer.GetUserId("guest"), Computers.Permissions.Group.GUEST)).ReceiveMail(message);
+        }
+
+        /// <summary>
+        /// Checks to see if the authentification code is valid.
+        /// </summary>
+        /// <param name="accountServer">The node the account is on</param>
+        /// <param name="username">The username of the account</param>
+        /// <param name="authCode">The authentification code the user got in the email</param>
+        /// <returns></returns>
+        public static bool CheckIfAuthRequestIsValid(Node accountServer, string username, int authCode) {
+            foreach (PassResetRequest request in _authRequests)
+                if (request.CheckAuthRequest(accountServer, username, authCode)) {
+                    _authRequests.Remove(request);
+                    return true;
+                }
+            return false;
         }
 
         /// <summary>
