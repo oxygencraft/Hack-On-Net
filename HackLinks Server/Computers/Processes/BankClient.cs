@@ -55,10 +55,22 @@ namespace HackLinks_Server.Computers.Processes
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs[0] == "create")
                 {
-                    // TODO: When mail daemon is implemented, require an email address for password reset
-                    if (cmdArgs.Length < 3)
+                    if (cmdArgs.Length < 4)
                     {
-                        process.Print("Usage : account create [accountname] [password]");
+                        process.Print("Usage : account create [accountname] [email] [password]");
+                        return true;
+                    }
+                    string[] emailArgs = cmdArgs[2].Split('@');
+                    if (emailArgs.Length != 2) {
+                        process.Print("Not a valid email address");
+                        return true;
+                    }
+                    Node emailServer = Server.Instance.GetComputerManager().GetNodeByIp(emailArgs[1]);
+                    if (emailServer == null) {
+                        process.Print("The email server does not exist!\nMake sure you use the IP of the mail server, not the domain.");
+                    }
+                    if (!(new MailDaemon(emailServer.NextPID, null, emailServer, new Credentials(emailServer.GetUserId("guest"), Permissions.Group.GUEST)).accounts.Any(x => x.accountName == emailArgs[0]))) {
+                        process.Print("The email account on that email server does not exist!");
                         return true;
                     }
                     List<string> accounts = new List<string>();
@@ -68,7 +80,7 @@ namespace HackLinks_Server.Computers.Processes
                         foreach (string line in accountFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
                         {
                             var data = line.Split(',');
-                            if (data.Length < 4)
+                            if (data.Length < 5)
                                 continue;
                             accounts.Add(data[0]);
                         }
@@ -78,7 +90,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("This account name is not available");
                         return true;
                     }
-                    daemon.accounts.Add(new BankAccount(cmdArgs[1], 0, cmdArgs[2], client.Session.owner.username));
+                    daemon.accounts.Add(new BankAccount(cmdArgs[1], 0, cmdArgs[3], client.Session.owner.username, cmdArgs[2]));
                     daemon.UpdateAccountDatabase();
                     process.Print("Your account has been opened. Use account login [accountname] [password] to login.");
                 }
@@ -103,25 +115,37 @@ namespace HackLinks_Server.Computers.Processes
                 }
                 if (cmdArgs[0] == "resetpass")
                 {
-                    if (cmdArgs.Length < 3)
-                    {
-                        process.Print("Usage : account resetpass [accountname] [newpassword]");
+                    if (cmdArgs.Length == 2) {
+                        BankAccount account = daemon.accounts.Where(x => x.accountName == cmdArgs[1]).DefaultIfEmpty(null).First();
+                        if (account == null) {
+                            process.Print("That account does not exist!");
+                            return true;
+                        }
+                        if (!MailDaemon.SendPasswordResetEmail(process.computer, account.email, account.accountName)) {
+                            process.Print("The email failed to send! Either the account no longer exists, or some other error occured.");
+                            return true;
+                        }
+                        process.Print("Password reset email sent to the email associated with this account!");
                         return true;
                     }
-                    // TODO: When mail daemon is implemented, change it to verify using email so players can hack by password reset
-                    foreach (var account in daemon.accounts)
+                    if (cmdArgs.Length < 4)
                     {
-                        if (account.accountName == cmdArgs[1])
-                        {
-                            if (account.clientUsername == client.Session.owner.username)
-                            {
-                                account.password = cmdArgs[2];
-                                daemon.UpdateAccountDatabase();
-                                process.Print("Your password has been changed");
-                            }
-                            else
-                                process.Print("You are not the owner of the account");
-                            break;
+                        process.Print("Usage : account resetpass [accountname] [authentication code] [newpassword]");
+                        return true;
+                    }
+                    if (!int.TryParse(cmdArgs[2], out int authCode)) {
+                        process.Print("Please use a valid authentication code!");
+                        return true;
+                    }
+                    if (!MailDaemon.CheckIfAuthRequestIsValid(process.computer, cmdArgs[1], authCode) || !daemon.accounts.Any(x => x.accountName == cmdArgs[1])) {
+                        process.Print("Something went wrong when trying to authenticate!\nEither the username does not exist, or the authentication code is invalid!");
+                        return true;
+                    }
+                    
+                    foreach (BankAccount account in daemon.accounts) {
+                        if (account.accountName == cmdArgs[1]) {
+                            account.password = cmdArgs[3];
+                            daemon.UpdateAccountDatabase();
                         }
                     }
                     return true;

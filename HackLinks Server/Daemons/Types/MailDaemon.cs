@@ -150,7 +150,7 @@ namespace HackLinks_Server.Daemons.Types {
             _authRequests.Add(new PassResetRequest(from, username, out int authCode));
             string[] emailArgs = to.Split('@');
             Node mailServer = Server.Instance.GetComputerManager().GetNodeByIp(emailArgs[1]);
-            MailMessage message = new MailMessage(to, from.GetDisplayName() + "@" + from.ip, $"Attention {emailArgs[0]}! You or someone with access to your account at {from.ip} has requested a password reset!\nIf this was not you or someone you know has access to this account, please disregard this email.\nHowever, if you requested yur password to be reset, the authentication code is {authCode}.");
+            MailMessage message = new MailMessage(emailArgs[0], from.GetDisplayName() + "@" + from.ip, $"Attention {emailArgs[0]}! You or someone with access to your account at {from.ip} has requested a password reset!\nIf this was not you or someone you know has access to this account, please disregard this email.\nHowever, if you requested yur password to be reset, the authentication code is {authCode}.");
             
             return new MailDaemon(mailServer.NextPID, null, mailServer, new Credentials(mailServer.GetUserId("guest"), Computers.Permissions.Group.GUEST)).ReceiveMail(message);
         }
