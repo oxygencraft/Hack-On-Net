@@ -44,7 +44,7 @@ namespace HackLinks_Server.Daemons.Types
                 var data = line.Split(',');
                 if (data.Length < 4)
                     continue;
-                accounts.Add(new BankAccount(data[0], Convert.ToInt32(data[1]), data[2], data[3]));
+                accounts.Add(new BankAccount(data[0], Convert.ToInt32(data[1]), data[2], data[3], data[4]));
             }
         }
 
@@ -56,7 +56,8 @@ namespace HackLinks_Server.Daemons.Types
             string newAccountsFile = "";
             foreach (var account in accounts)
             {
-                newAccountsFile += account.accountName + "," + account.balance + "," + account.password + "," + account.clientUsername + "\r\n";
+                newAccountsFile += account.accountName + "," + 0 + "," + account.password + "," + account.clientUsername + "," + account.email + "\r\n";
+
             }
             accountFile.Content = newAccountsFile;
         }

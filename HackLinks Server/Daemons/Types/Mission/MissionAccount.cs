@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HackLinks_Server.Daemons.Types.Mission
-{
+﻿namespace HackLinks_Server.Daemons.Types.Mission {
     class MissionAccount
     {
         public string accountName;
@@ -13,14 +6,16 @@ namespace HackLinks_Server.Daemons.Types.Mission
         public int currentMission;
         public string password;
         public string clientUsername;
+        public string email;
 
-        public MissionAccount(string accountName, int ranking, int currentMission, string password, string clientUsername)
+        public MissionAccount(string accountName, int ranking, int currentMission, string password, string clientUsername, string email)
         {
             this.accountName = accountName;
             this.ranking = ranking;
             this.currentMission = currentMission;
             this.password = password;
             this.clientUsername = clientUsername;
+            this.email = email;
         }
     }
 }

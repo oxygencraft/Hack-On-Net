@@ -2,19 +2,11 @@
 using HackLinks_Server.Computers.Processes;
 using HackLinks_Server.Daemons.Types.Mission;
 using HackLinks_Server.Files;
-using HackLinksCommon;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static HackLinksCommon.NetUtil;
 
-namespace HackLinks_Server.Daemons.Types
-{
+namespace HackLinks_Server.Daemons.Types {
     class MissionDaemon : Daemon
     {
         public override string StrType => "mission";
@@ -43,9 +35,9 @@ namespace HackLinks_Server.Daemons.Types
             foreach (string line in accountFile.Content.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var data = line.Split(',');
-                if (data.Length < 5)
+                if (data.Length < 6)
                     continue;
-                accounts.Add(new MissionAccount(data[0], Convert.ToInt32(data[1]), Convert.ToInt32(data[2]), data[3], data[4]));
+                accounts.Add(new MissionAccount(data[0], Convert.ToInt32(data[1]), Convert.ToInt32(data[2]), data[3], data[4], data[5]));
             }
         }
 

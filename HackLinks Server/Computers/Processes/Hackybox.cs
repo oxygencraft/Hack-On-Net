@@ -506,7 +506,7 @@ namespace HackLinks_Server.Computers.Processes
                 return true;
             }
 
-            File file = process.computer.fileSystem.CreateFile(process.computer, activeDirectory, command[1]);
+            File file = process.computer.fileSystem.CreateFolder(process.computer, activeDirectory, command[1]);
             file.OwnerId = process.Credentials.UserId;
             file.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
             file.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
