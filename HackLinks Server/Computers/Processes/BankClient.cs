@@ -147,6 +147,7 @@ namespace HackLinks_Server.Computers.Processes
                             daemon.UpdateAccountDatabase();
                         }
                     }
+                    process.Print("Password reset successful!");
                     return true;
                 }
                 if (cmdArgs[0] == "balance")

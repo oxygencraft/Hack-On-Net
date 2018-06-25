@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 
 namespace HackLinks_Server.Computers.Processes {
     class MailClient : DaemonClient {
-        private const string help = "mail account\nShows account infomation.";
+        private const string help = "mail account\nOperations on your account\nmail list (page number)\nLists your received mail\nmail send [email address] [message]\nSends an email";
         public SortedDictionary<string, Tuple<string, Command>> commands = new SortedDictionary<string, Tuple<string, Command>>() {
             { "mail", new Tuple<string, Command>(help, MailServerCommands)}
         };

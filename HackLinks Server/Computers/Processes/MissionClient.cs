@@ -144,8 +144,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission description [missionid]");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, false))
+                    if (CheckMissionId(cmdArgs[1], out MissionListing mission, client, process, daemon, false))
                         return true;
                     if (string.IsNullOrWhiteSpace(mission.description))
                     {
@@ -161,8 +160,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission accept [missionid]");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, false))
+                    if (CheckMissionId(cmdArgs[1], out MissionListing mission, client, process, daemon, false))
                         return true;
                     mission.status = MissionListing.Status.InProgress;
                     mission.claimedBy = client.loggedInAccount.accountName;
@@ -445,19 +443,14 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission create [missionname] [requiredranking] [difficulty]\nValid Options for Difficulty: 0 = Beginner\n1 = Basic\n2 = Intermediate\n3 = Advanced\n4 = Expert\n5 = Extreme\n6 = Impossible");
                         return true;
                     }
-                    int requiredRanking;
-                    int difficultyInt;
-                    if (!int.TryParse(cmdArgs[2], out requiredRanking))
-                    {
+                    if (!int.TryParse(cmdArgs[2], out int requiredRanking)) {
                         process.Print("Required ranking must be a number");
                         return true;
-                    }
-                    else if (requiredRanking < 0)
-                    {
+                    } else if (requiredRanking < 0) {
                         process.Print("Required ranking cannot be a negative number");
                         return true;
                     }
-                    if (!int.TryParse(cmdArgs[3], out difficultyInt))
+                    if (!int.TryParse(cmdArgs[3], out int difficultyInt))
                     {
                         process.Print("Difficulty must be a number and be one of the options\nValid Options: 0 = Beginner\n1 = Basic\n2 = Intermediate\n3 = Advanced\n4 = Expert\n5 = Extreme\n6 = Impossible");
                         return true;
@@ -496,7 +489,20 @@ namespace HackLinks_Server.Computers.Processes
                     // TODO: When mail daemon is implemented, require an email address for password reset
                     if (cmdArgs.Length < 3)
                     {
-                        process.Print("Usage : account create [accountname] [password]");
+                        process.Print("Usage : account create [accountname] [email] [password]");
+                        return true;
+                    }
+                    string[] emailArgs = cmdArgs[2].Split('@');
+                    if (emailArgs.Length != 2) {
+                        process.Print("Not a valid email address");
+                        return true;
+                    }
+                    Node emailServer = Server.Instance.GetComputerManager().GetNodeByIp(emailArgs[1]);
+                    if (emailServer == null) {
+                        process.Print("The email server does not exist!\nMake sure you use the IP of the mail server, not the domain.");
+                    }
+                    if (!(new MailDaemon(emailServer.NextPID, null, emailServer, new Credentials(emailServer.GetUserId("guest"), Permissions.Group.GUEST)).accounts.Any(x => x.accountName == emailArgs[0]))) {
+                        process.Print("The email account on that email server does not exist!");
                         return true;
                     }
                     if (daemon.accounts.Count != 0)
@@ -527,7 +533,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("This account name is not available");
                         return true;
                     }
-                    daemon.accounts.Add(new MissionAccount(cmdArgs[1], 0, 0, cmdArgs[2], client.Session.owner.username));
+                    daemon.accounts.Add(new MissionAccount(cmdArgs[1], 0, 0, cmdArgs[3], client.Session.owner.username, cmdArgs[2]));
                     daemon.UpdateAccountDatabase();
                     process.Print("Your account has been opened. Use account login [accountname] [password] to login.");
                 }
@@ -550,64 +556,64 @@ namespace HackLinks_Server.Computers.Processes
                     }
                     process.Print("Invalid account name or password");
                 }
-                if (cmdArgs[0] == "resetpass")
-                {
-                    if (cmdArgs.Length < 3)
-                    {
-                        process.Print("Usage : account resetpass [accountname] [newpassword]");
+                if (cmdArgs[0] == "resetpass") {
+                    if (cmdArgs.Length == 2) {
+                        MissionAccount account = daemon.accounts.Where(x => x.accountName == cmdArgs[1]).DefaultIfEmpty(null).First();
+                        if (account == null) {
+                            process.Print("That account does not exist!");
+                            return true;
+                        }
+                        if (!MailDaemon.SendPasswordResetEmail(process.computer, account.email, account.accountName)) {
+                            process.Print("The email failed to send! Either the account no longer exists, or some other error occured.");
+                            return true;
+                        }
+                        process.Print("Password reset email sent to the email associated with this account!");
                         return true;
                     }
-                    // TODO: When mail daemon is implemented, change it to verify using email so players can hack by password reset
-                    bool accountFound = false;
-                    foreach (var account in daemon.accounts)
-                    {
-                        if (account.accountName == cmdArgs[1])
-                        {
-                            accountFound = true;
-                            if (account.clientUsername == client.Session.owner.username)
-                            {
-                                account.password = cmdArgs[2];
-                                daemon.UpdateAccountDatabase();
-                                process.Print("Your password has been changed");
-                            }
-                            else
-                                process.Print("You are not the owner of the account");
-                            break;
+                    if (cmdArgs.Length < 4) {
+                        process.Print("Usage : account resetpass [accountname] [authentication code] [newpassword]");
+                        return true;
+                    }
+                    if (!int.TryParse(cmdArgs[2], out int authCode)) {
+                        process.Print("Please use a valid authentication code!");
+                        return true;
+                    }
+                    if (!MailDaemon.CheckIfAuthRequestIsValid(process.computer, cmdArgs[1], authCode) || !daemon.accounts.Any(x => x.accountName == cmdArgs[1])) {
+                        process.Print("Something went wrong when trying to authenticate!\nEither the username does not exist, or the authentication code is invalid!");
+                        return true;
+                    }
+
+                    foreach (MissionAccount account in daemon.accounts) {
+                        if (account.accountName == cmdArgs[1]) {
+                            account.password = cmdArgs[3];
+                            daemon.UpdateAccountDatabase();
                         }
                     }
-                    if (!accountFound)
-                        process.Print("The account does not exist");
-                    if (cmdArgs[0] == "delete")
-                    {
-                        if (client.loggedInAccount == null)
-                        {
-                            process.Print("You are not logged in");
-                            return true;
-                        }
-                        if (client.loggedInAccount.currentMission != 0)
-                        {
-                            process.Print("You cannot delete your account while you have a mission in progress\nYou must complete or abandon the mission before you can delete your account");
-                            return true;
-                        }
-                        if (cmdArgs.Length >= 2)
-                        {
-                            if (cmdArgs[1] != "y")
-                            {
-                                process.Print("Are you sure you want to delete your account?\nRun account delete y if you are sure you want to delete your account");
-                                return true;
-                            }
-                        }
-                        else
-                        {
+                    process.Print("Password reset successful!");
+                    return true;
+                }
+                if (cmdArgs[0] == "delete") {
+                    if (client.loggedInAccount == null) {
+                        process.Print("You are not logged in");
+                        return true;
+                    }
+                    if (client.loggedInAccount.currentMission != 0) {
+                        process.Print("You cannot delete your account while you have a mission in progress\nYou must complete or abandon the mission before you can delete your account");
+                        return true;
+                    }
+                    if (cmdArgs.Length >= 2) {
+                        if (cmdArgs[1] != "y") {
                             process.Print("Are you sure you want to delete your account?\nRun account delete y if you are sure you want to delete your account");
                             return true;
                         }
-                        daemon.accounts.Remove(client.loggedInAccount);
-                        daemon.UpdateAccountDatabase();
-                        client.loggedInAccount = null;
-                        process.Print("Your account has been deleted");
+                    } else {
+                        process.Print("Are you sure you want to delete your account?\nRun account delete y if you are sure you want to delete your account");
+                        return true;
                     }
-                    return true;
+                    daemon.accounts.Remove(client.loggedInAccount);
+                    daemon.UpdateAccountDatabase();
+                    client.loggedInAccount = null;
+                    process.Print("Your account has been deleted");
                 }
                 return true;
             }
