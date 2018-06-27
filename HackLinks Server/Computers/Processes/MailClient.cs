@@ -176,6 +176,9 @@ namespace HackLinks_Server.Computers.Processes {
                     process.Print("The receiving account does not exist!");
                     return true;
                 }
+                File userSentDir = process.computer.fileSystem.rootFile.GetFileAtPath($"mail/users/{client.loggedInAccount.accountName}/Sent");
+                File messageFile = File.CreateNewFile(process.computer.fileSystem.fileSystemManager, process.computer, userSentDir, $"{userSentDir.children.Count + 1}.json");
+                messageFile.Content = messageObject.ToJObject().ToString();
                 process.Print("The email has been sent!");
                 return true;
             } else if (cmdArgs[0] == "list") {
