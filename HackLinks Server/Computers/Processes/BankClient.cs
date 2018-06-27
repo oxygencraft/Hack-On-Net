@@ -121,7 +121,7 @@ namespace HackLinks_Server.Computers.Processes
                             return true;
                         }
                         if (!MailDaemon.SendPasswordResetEmail(process.computer, account.email, account.accountName)) {
-                            process.Print("The email failed to send! Either the account no longer exists, or some other error occured.");
+                            process.Print("The email failed to send! Either the account no longer exists, or an authentication code has already been sent to this email less than an hour ago!");
                             return true;
                         }
                         process.Print("Password reset email sent to the email associated with this account!");

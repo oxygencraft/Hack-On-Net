@@ -7,6 +7,10 @@ namespace HackLinks_Server.Daemons.Types.Mail {
 
         private int _authCode = _random.Next(100000, 999999);
 
+        private DateTime _timeRequested;
+
+        private TimeSpan _timeExpire;
+
         private string _username;
 
         private Node _accountServer;
@@ -22,6 +26,8 @@ namespace HackLinks_Server.Daemons.Types.Mail {
             authCode = _authCode;
             _accountServer = node;
             _username = username;
+            _timeRequested = DateTime.UtcNow;
+            _timeExpire = TimeSpan.FromMinutes(60);
         }
 
         /// <summary>
@@ -36,5 +42,15 @@ namespace HackLinks_Server.Daemons.Types.Mail {
                 return true;
             return false;
         }
+
+        public bool CheckTime() {
+            if (DateTime.UtcNow - _timeRequested < _timeExpire)
+                return true;
+            return false;
+        }
+
+        public Node GetNode() { return _accountServer; }
+
+        public string GetUsername() { return _username; }
     }
 }

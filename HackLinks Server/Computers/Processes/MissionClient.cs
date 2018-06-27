@@ -179,8 +179,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("You don't have a mission in progress");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(client.loggedInAccount.currentMission.ToString(), out mission, client, process, daemon, false))
+                    if (CheckMissionId(client.loggedInAccount.currentMission.ToString(), out MissionListing mission, client, process, daemon, false))
                         return true;
                     if (mission.completedGoals == null)
                         mission.completedGoals = new List<int>();
@@ -218,8 +217,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("You don't have a mission in progress");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(client.loggedInAccount.currentMission.ToString(), out mission, client, process, daemon, false))
+                    if (CheckMissionId(client.loggedInAccount.currentMission.ToString(), out MissionListing mission, client, process, daemon, false))
                         return true;
                     if (mission.completedGoals == null)
                         mission.completedGoals = new List<int>();
@@ -245,8 +243,7 @@ namespace HackLinks_Server.Computers.Processes
                 }
                 if (cmdArgs[0] == "abandon")
                 {
-                    MissionListing mission = null;
-                    if (CheckMissionId(client.loggedInAccount.currentMission.ToString(), out mission, client, process, daemon, false))
+                    if (CheckMissionId(client.loggedInAccount.currentMission.ToString(), out MissionListing mission, client, process, daemon, false))
                         return true;
                     mission.status = MissionListing.Status.Unclaimed;
                     mission.claimedBy = null;
@@ -260,8 +257,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission addgoal [missionid] [getpass/replytext] [additionalinformationifrequired]");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
+                    if (CheckMissionId(cmdArgs[1], out MissionListing mission, client, process, daemon, true))
                         return true;
                     if (mission.goals == null)
                         mission.goals = new List<MissionGoal>();
@@ -308,8 +304,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission setdescription [missionid] [description]");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
+                    if (CheckMissionId(cmdArgs[1], out MissionListing mission, client, process, daemon, true))
                         return true;
                     int doneWords = 0;
                     string description = "";
@@ -337,8 +332,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission setstartdescription [missionid] [description]");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
+                    if (CheckMissionId(cmdArgs[1], out MissionListing mission, client, process, daemon, true))
                         return true;
                     int doneWords = 0;
                     string description = "";
@@ -366,17 +360,12 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission setdifficulty [missionid] [difficulty]");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
+                    if (CheckMissionId(cmdArgs[1], out MissionListing mission, client, process, daemon, true))
                         return true;
-                    int difficultyInt;
-                    if (!int.TryParse(cmdArgs[3], out difficultyInt))
-                    {
+                    if (!int.TryParse(cmdArgs[3], out int difficultyInt)) {
                         process.Print("Difficulty must be a number and be one of the options\nValid Options: 0 = Beginner\n1 = Basic\n2 = Intermediate\n3 = Advanced\n4 = Expert\n5 = Extreme\n6 = Impossible");
                         return true;
-                    }
-                    else if (difficultyInt > 6 || difficultyInt < 0)
-                    {
+                    } else if (difficultyInt > 6 || difficultyInt < 0) {
                         process.Print("Not a valid difficulty option\nValid Options: 0 = Beginner\n1 = Basic\n2 = Intermediate\n3 = Advanced\n4 = Expert\n5 = Extreme\n6 = Impossible");
                         return true;
                     }
@@ -390,8 +379,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission publish [missionid]");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
+                    if (CheckMissionId(cmdArgs[1], out MissionListing mission, client, process, daemon, true))
                         return true;
                     if (mission.goals == null || mission.goals.Count == 0)
                     {
@@ -413,8 +401,7 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission publish [missionid]");
                         return true;
                     }
-                    MissionListing mission = null;
-                    if (CheckMissionId(cmdArgs[1], out mission, client, process, daemon, true))
+                    if (CheckMissionId(cmdArgs[1], out MissionListing mission, client, process, daemon, true))
                         return true;
                     if (mission.status == MissionListing.Status.Complete)
                     {
@@ -564,7 +551,7 @@ namespace HackLinks_Server.Computers.Processes
                             return true;
                         }
                         if (!MailDaemon.SendPasswordResetEmail(process.computer, account.email, account.accountName)) {
-                            process.Print("The email failed to send! Either the account no longer exists, or some other error occured.");
+                            process.Print("The email failed to send! Either the account no longer exists, or an authentication code has already been sent to this email less than an hour ago!");
                             return true;
                         }
                         process.Print("Password reset email sent to the email associated with this account!");
@@ -628,9 +615,7 @@ namespace HackLinks_Server.Computers.Processes
                 process.Print("There are currently no missions available on this board");
                 return true;
             }
-            int missionId;
-            if (!int.TryParse(missionIdString, out missionId))
-            {
+            if (!int.TryParse(missionIdString, out int missionId)) {
                 process.Print("The mission ID must be a number");
                 return true;
             }
