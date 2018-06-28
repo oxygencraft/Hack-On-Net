@@ -166,6 +166,7 @@ namespace HackLinks_Server.Computers.Processes
                     mission.claimedBy = client.loggedInAccount.accountName;
                     client.loggedInAccount.currentMission = mission.id;
                     daemon.UpdateMissionDatabase();
+                    MailDaemon.SendCustomEmail(process.computer, client.loggedInAccount.email, $"{mission.missionName}:\n\n{mission.startDescription}");
                 }
                 if (cmdArgs[0] == "completegoal")
                 {
@@ -242,6 +243,18 @@ namespace HackLinks_Server.Computers.Processes
                     mission.status = MissionListing.Status.Complete;
                     client.loggedInAccount.currentMission = 0;
                     daemon.UpdateMissionDatabase();
+
+                    MissionAccount employerAccount = null;
+                    foreach (var account in daemon.accounts)
+                    {
+                        if (account.accountName == mission.employer)
+                        {
+                            employerAccount = account;
+                            break;
+                        }
+                    }
+                    MailDaemon.SendCustomEmail(process.computer, client.loggedInAccount.email, $"You have completed mission {mission.missionName}\n\nREPLACE THIS WITH REWARDS INFO AND ANYTHING ELSE THE USER NEEDS TO KNOW\n\nYour current ranking is {client.loggedInAccount.ranking}");
+                    MailDaemon.SendCustomEmail(process.computer, employerAccount.email, $"{client.loggedInAccount.accountName} has completed your mission.\n\nREPLACE THIS WITH REWARDS INFO AND ANYTHING ELSE THE EMPLOYER NEEDS TO KNOW");
                 }
                 if (cmdArgs[0] == "abandon")
                 {
@@ -252,6 +265,7 @@ namespace HackLinks_Server.Computers.Processes
                     mission.claimedBy = null;
                     client.loggedInAccount.currentMission = 0;
                     daemon.UpdateMissionDatabase();
+                    MailDaemon.SendCustomEmail(process.computer, client.loggedInAccount.email, $"You have abandoned mission {mission.missionName}\n\n REPLACE THIS WITH PENALTY INFO AND ANYTHING ELSE THE USER NEEDS TO KNOW\n\nYour current ranking is {client.loggedInAccount.ranking}");
                 }
                 if (cmdArgs[0] == "addgoal")
                 {
@@ -427,7 +441,6 @@ namespace HackLinks_Server.Computers.Processes
                         {
                             if (daemon.accounts[i].accountName == mission.claimedBy)
                             {
-                                // TODO: Tell the user that the employer has unpublished the mission
                                 daemon.accounts[i].currentMission = 0;
                                 break;
                             }
@@ -435,6 +448,7 @@ namespace HackLinks_Server.Computers.Processes
                     }
                     mission.status = MissionListing.Status.Unpublished;
                     daemon.UpdateMissionDatabase();
+                    MailDaemon.SendCustomEmail(process.computer, client.loggedInAccount.email, $"The employer has dislisted the mission: {mission.missionName}\n\nYou are free to accept a new mission")
                 }
                 if (cmdArgs[0] == "create")
                 {
@@ -443,10 +457,13 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("Usage : mission create [missionname] [requiredranking] [difficulty]\nValid Options for Difficulty: 0 = Beginner\n1 = Basic\n2 = Intermediate\n3 = Advanced\n4 = Expert\n5 = Extreme\n6 = Impossible");
                         return true;
                     }
-                    if (!int.TryParse(cmdArgs[2], out int requiredRanking)) {
+                    if (!int.TryParse(cmdArgs[2], out int requiredRanking))
+                    {
                         process.Print("Required ranking must be a number");
                         return true;
-                    } else if (requiredRanking < 0) {
+                    }
+                    else if (requiredRanking < 0)
+                    {
                         process.Print("Required ranking cannot be a negative number");
                         return true;
                     }
@@ -486,22 +503,25 @@ namespace HackLinks_Server.Computers.Processes
                 var cmdArgs = command[1].Split(' ');
                 if (cmdArgs[0] == "create")
                 {
-                    // TODO: When mail daemon is implemented, require an email address for password reset
                     if (cmdArgs.Length < 3)
                     {
                         process.Print("Usage : account create [accountname] [email] [password]");
                         return true;
                     }
                     string[] emailArgs = cmdArgs[2].Split('@');
-                    if (emailArgs.Length != 2) {
+                    if (emailArgs.Length != 2)
+                    {
                         process.Print("Not a valid email address");
                         return true;
                     }
                     Node emailServer = Server.Instance.GetComputerManager().GetNodeByIp(emailArgs[1]);
-                    if (emailServer == null) {
+                    if (emailServer == null)
+                    {
                         process.Print("The email server does not exist!\nMake sure you use the IP of the mail server, not the domain.");
+                        return true;
                     }
-                    if (!(new MailDaemon(emailServer.NextPID, null, emailServer, new Credentials(emailServer.GetUserId("guest"), Permissions.Group.GUEST)).accounts.Any(x => x.accountName == emailArgs[0]))) {
+                    if (!(new MailDaemon(emailServer.NextPID, null, emailServer, new Credentials(emailServer.GetUserId("guest"), Permissions.Group.GUEST)).accounts.Any(x => x.accountName == emailArgs[0])))
+                    {
                         process.Print("The email account on that email server does not exist!");
                         return true;
                     }
@@ -556,35 +576,44 @@ namespace HackLinks_Server.Computers.Processes
                     }
                     process.Print("Invalid account name or password");
                 }
-                if (cmdArgs[0] == "resetpass") {
-                    if (cmdArgs.Length == 2) {
+                if (cmdArgs[0] == "resetpass")
+                {
+                    if (cmdArgs.Length == 2)
+                    {
                         MissionAccount account = daemon.accounts.Where(x => x.accountName == cmdArgs[1]).DefaultIfEmpty(null).First();
-                        if (account == null) {
+                        if (account == null)
+                        {
                             process.Print("That account does not exist!");
                             return true;
                         }
-                        if (!MailDaemon.SendPasswordResetEmail(process.computer, account.email, account.accountName)) {
+                        if (!MailDaemon.SendPasswordResetEmail(process.computer, account.email, account.accountName))
+                        {
                             process.Print("The email failed to send! Either the account no longer exists, or some other error occured.");
                             return true;
                         }
                         process.Print("Password reset email sent to the email associated with this account!");
                         return true;
                     }
-                    if (cmdArgs.Length < 4) {
+                    if (cmdArgs.Length < 4)
+                    {
                         process.Print("Usage : account resetpass [accountname] [authentication code] [newpassword]");
                         return true;
                     }
-                    if (!int.TryParse(cmdArgs[2], out int authCode)) {
+                    if (!int.TryParse(cmdArgs[2], out int authCode))
+                    {
                         process.Print("Please use a valid authentication code!");
                         return true;
                     }
-                    if (!MailDaemon.CheckIfAuthRequestIsValid(process.computer, cmdArgs[1], authCode) || !daemon.accounts.Any(x => x.accountName == cmdArgs[1])) {
+                    if (!MailDaemon.CheckIfAuthRequestIsValid(process.computer, cmdArgs[1], authCode) || !daemon.accounts.Any(x => x.accountName == cmdArgs[1]))
+                    {
                         process.Print("Something went wrong when trying to authenticate!\nEither the username does not exist, or the authentication code is invalid!");
                         return true;
                     }
 
-                    foreach (MissionAccount account in daemon.accounts) {
-                        if (account.accountName == cmdArgs[1]) {
+                    foreach (MissionAccount account in daemon.accounts)
+                    {
+                        if (account.accountName == cmdArgs[1])
+                        {
                             account.password = cmdArgs[3];
                             daemon.UpdateAccountDatabase();
                         }
@@ -592,21 +621,28 @@ namespace HackLinks_Server.Computers.Processes
                     process.Print("Password reset successful!");
                     return true;
                 }
-                if (cmdArgs[0] == "delete") {
-                    if (client.loggedInAccount == null) {
+                if (cmdArgs[0] == "delete")
+                {
+                    if (client.loggedInAccount == null)
+                    {
                         process.Print("You are not logged in");
                         return true;
                     }
-                    if (client.loggedInAccount.currentMission != 0) {
+                    if (client.loggedInAccount.currentMission != 0)
+                    {
                         process.Print("You cannot delete your account while you have a mission in progress\nYou must complete or abandon the mission before you can delete your account");
                         return true;
                     }
-                    if (cmdArgs.Length >= 2) {
-                        if (cmdArgs[1] != "y") {
+                    if (cmdArgs.Length >= 2)
+                    {
+                        if (cmdArgs[1] != "y")
+                        {
                             process.Print("Are you sure you want to delete your account?\nRun account delete y if you are sure you want to delete your account");
                             return true;
                         }
-                    } else {
+                    }
+                    else
+                    {
                         process.Print("Are you sure you want to delete your account?\nRun account delete y if you are sure you want to delete your account");
                         return true;
                     }
@@ -640,13 +676,10 @@ namespace HackLinks_Server.Computers.Processes
                 process.Print("Mission ID not found");
                 return true;
             }
-            if (employerCheck)
+            if (employerCheck && mission.employer != client.loggedInAccount.accountName)
             {
-                if (mission.employer != client.loggedInAccount.accountName)
-                {
-                    process.Print("Only the employer can edit the mission");
-                    return true;
-                }
+                process.Print("Only the employer can edit the mission");
+                return true;
             }
             return false;
         }
