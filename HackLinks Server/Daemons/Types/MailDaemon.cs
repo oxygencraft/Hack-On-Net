@@ -5,6 +5,7 @@ using HackLinks_Server.Files;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HackLinks_Server.Daemons.Types {
     class MailDaemon : Daemon {
@@ -166,7 +167,7 @@ namespace HackLinks_Server.Daemons.Types {
         /// <returns></returns>
         public static bool CheckIfAuthRequestIsValid(Node accountServer, string username, int authCode) {
             CheckPassResetExpire(accountServer, username);
-            foreach (PassResetRequest request in _authRequests)
+            foreach (PassResetRequest request in _authRequests.ToList())
                 if (request.CheckAuthRequest(accountServer, username, authCode)) {
                     _authRequests.Remove(request);
                     return true;
@@ -232,7 +233,7 @@ namespace HackLinks_Server.Daemons.Types {
 
         private static bool CheckPassResetExpire(Node from, string username) {
             bool result = false;
-            foreach (PassResetRequest request in _authRequests) {
+            foreach (PassResetRequest request in _authRequests.ToList()) {
                 if (!request.CheckTime())
                     _authRequests.Remove(request);
                 else if (request.GetNode() == from && request.GetUsername() == username)

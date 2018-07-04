@@ -68,6 +68,11 @@ namespace HackLinks_Server.Computers.Processes
                     if (emailServer == null) {
                         process.Print("The email server does not exist!\nMake sure you use the IP of the mail server, not the domain.");
                     }
+                    File mailDaemonFile = emailServer.fileSystem.rootFile.GetFileAtPath("daemons/mail");
+                    if (mailDaemonFile != null && mailDaemonFile.Content == "MAIL") {
+                        process.Print("IP of the email address does not have an email server installed!");
+                        return true;
+                    }
                     if (!(new MailDaemon(emailServer.NextPID, null, emailServer, new Credentials(emailServer.GetUserId("guest"), Permissions.Group.GUEST)).accounts.Any(x => x.accountName == emailArgs[0]))) {
                         process.Print("The email account on that email server does not exist!");
                         return true;
