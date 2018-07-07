@@ -177,29 +177,29 @@ namespace HackLinks_Server.Computers.Processes {
             Node dnsServer = Server.Instance.GetComputerManager().GetNodeByIp(config.Properties()
                 .Where(x => x.Name == "DNS")
                 .Select(y => { return (string)y.Value; })
-                .Single());
+                .DefaultIfEmpty(null)
+                .First());
             if (dnsServer == null) {
                 process.Print($"Error! The specified DNS server ({dnsServer.ip}) does not exist! Please notify the network admin!");
                 return true;
             }
-            File dnsFile = dnsServer.fileSystem.rootFile.GetFileAtPath("daemons/dns");
-            if (dnsFile == null) {
+            DNSDaemon dnsDaemon = (DNSDaemon)dnsServer.GetDaemon("dns");
+            if (dnsDaemon == null) {
                 process.Print($"Error! {dnsServer.ip} does not have a DNS server installed! Please notify the network admin!");
                 return true;
             }
-            string ipOfMailServer = new DNSDaemon(dnsServer.NextPID, null, dnsServer, new Credentials(dnsServer.GetUserId("guest"), Permissions.Group.GUEST)).LookUp(email[1], true);
-            Node mailServer = Server.Instance.GetComputerManager().GetNodeByIp(ipOfMailServer);
+            Node mailServer = Server.Instance.GetComputerManager().GetNodeByIp(dnsDaemon.LookUp(email[1], true));
             if (mailServer == null) {
                 process.Print("The receiving server does not exist!");
                 return true;
             }
-            File mailDaemonFile = mailServer.fileSystem.rootFile.GetFileAtPath("mail/config.json");
-            if (mailDaemonFile == null) {
+            MailDaemon mailDaemon = (MailDaemon)mailServer.GetDaemon("mail");
+            if (mailDaemon == null) {
                 process.Print("The receiving end does not have a mail server set up!");
                 return true;
             }
             MailMessage messageObject = new MailMessage(email[0], client.loggedInAccount.accountName + "@" + process.computer.ip, message);
-            if (!(new MailDaemon(mailServer.NextPID, null, mailServer, new Credentials(mailServer.GetUserId("guest"), Permissions.Group.GUEST)).ReceiveMail(messageObject))) {
+            if (!mailDaemon.ReceiveMail(messageObject)) {
                 process.Print("The receiving account does not exist!");
                 return true;
             }
