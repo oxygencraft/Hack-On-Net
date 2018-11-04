@@ -226,35 +226,52 @@ namespace HackLinks_Server.Computers.Processes
                         process.Print("This bank does not keep transaction logs");
                         return true;
                     }
-                    string[] transactions = transactionLog.Content.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                    if (transactions.Length == 0)
+                    List<string> transactions = transactionLog.Content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                    if (transactions.Count == 0)
                     {
                         process.Print("The transaction log database is empty");
                         return true;
                     }
-                    string transactionLogForClient = "";
-                    foreach (var transactionUnsplit in transactions)
+                    int pageNumber = 1;
+                    int totalPages = transactions.Count / 10 == 0 ? 1 : transactions.Count / 10 + transactions.Count % 10 >= 1 ? 1 : 0;
+                    if (cmdArgs.Length > 1)
                     {
-                        string[] transaction = transactionUnsplit.Split(',');
-                        if (transaction[0] == client.loggedInAccount.accountName)
-                            transactionLogForClient += transaction[1] + "\n";
+                        if (int.TryParse(cmdArgs[1], out pageNumber))
+                        {
+                            if (pageNumber != 1)
+                            {
+                                if (pageNumber <= 0 || pageNumber > totalPages)
+                                {
+                                    process.Print("Invalid page number");
+                                    return true;
+                                }
+                            }
+                        }
                     }
-                    if (transactionLogForClient == "")
-                        transactionLogForClient += "Your transaction log is empty";
-                    File transactionFileForClient = client.Session.owner.homeComputer.fileSystem.rootFile.GetFile("Bank_Transaction_Log_For_" + client.loggedInAccount.accountName);
-                    if (transactionFileForClient == null)
+                    string transactionLogForClient = "------ Transaction Log for " + client.loggedInAccount.accountName + " ------\n";
+                    if (pageNumber == 1)
+                        transactions = (List<string>)transactions.Where(transaction => transaction.Split(',')[0] == client.loggedInAccount.accountName).Take(10);
+                    else
+                        transactions = (List<string>)transactions.Where(transaction => transaction.Split(',')[0] == client.loggedInAccount.accountName).Skip(pageNumber * 10).Take(10);
+                    //for (int i = transactions.Length - pageModifier; transactions.Length - pageModifier < i; i--)
+                    //{
+                    //    string[] transaction = transactions[currentTransaction].Split(',');
+                    //    if (transaction[0] == client.loggedInAccount.accountName)
+                    //    {
+                    //        transactionLogForClient += transaction[1] + "\n";
+                    //    }
+                    //    else
+                    //        i++;
+                    //    currentTransaction--;
+                    //}
+                    foreach (var transaction in transactions)
                     {
-                        transactionFileForClient = client.Session.owner.homeComputer.fileSystem.CreateFile(client.Session.owner.homeComputer, client.Session.owner.homeComputer.fileSystem.rootFile, "Bank_Transaction_Log_For_" + client.loggedInAccount.accountName);
-                        transactionFileForClient.Content = transactionLogForClient;
-                        transactionFileForClient.OwnerId = 0;
-                        transactionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.User, true, true, true);
-                        transactionFileForClient.Permissions.SetPermission(FilePermissions.PermissionType.Group, true, true, true);
-                        transactionFileForClient.Group = transactionFileForClient.Parent.Group;
-                        process.Print("A file containing your transaction log has been uploaded to your computer");
-                        return true;
+                        transactionLogForClient += transaction[1] + "\n";
                     }
-                    transactionFileForClient.Content = transactionLogForClient;
-                    process.Print("A file containing your transaction log has been uploaded to your computer");
+                    if (transactionLogForClient == "------ Transaction Log for " + client.loggedInAccount.accountName + " ------\n")
+                        transactionLogForClient += "\nThis account's transaction log is empty\n";
+                    transactionLogForClient += "------ Page " + pageNumber + "/" + totalPages + " ------";
+                    process.Print(transactionLogForClient);
                 }
                 if (cmdArgs[0] == "close")
                 {
