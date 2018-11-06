@@ -1,19 +1,29 @@
-# Hack-On-Net
-This is a fan-made MP mod for Hacknet. 
+# Hacklinks
+Hacklinks is an open source online game about hacking. 
+(The name is still subject to change)
 
 ### **Note**:
 
-This mod is currently under development and a WIP. This mod is currently not in a playable state yet so this should not be used until it reaches a playable state. The beta will begin in about a month (no guarantee if this is the case) and should be playable but with a few bugs at the time.
+This game is currently under development and a WIP. The game is currently not in a playable state yet so this should not be played until it reaches a playable state. A beta will be happening when it's playable enough.
+
+# Why did this project become a game?
+This project used to be a mod but after a bit of discussion, we decided to ditch the Hacknet mod idea entirely and call it a game instead. The reason for this is the mod doesn't even interact with Hacknet at all. All we're using Hacknet for is just for GUI. So it'd make sense to just call it a separate game from Hacknet and not a mod.
 
 # Installation
 This is just preparation for the beta. Please do not use this yet, the releases tab is empty at this time.
 
 Prerequisites:
+- A client (either GUI or CLI, which can be downloaded from the releases tab)
 - Hacknet
 - Hacknet Pathfinder (https://github.com/Arkhist/Hacknet-Pathfinder/releases/latest)
+- (Hacknet related things only required if you're using Hacknet mod)
+- A server (which can be downloaded from the releases tab)
 - SQL Server Software (Only if you are hosting a server and you may use anything you want like MySQL)
 
-## Client:
+### **The game is being separated from Hacknet so these instructions will be out of date when the changes occur.**
+### **Please do not use these instructions**
+
+## Client: 
 - Download the latest version of Hacknet Pathfinder
 - Download the latest version of Hack on Net (https://github.com/Arkhist/Hack-On-Net/releases/latest)
 - Extract all of the Pathfinder binary files into the directory containing Hacknet.exe (goto game properties in Steam, goto the local tab, and click browse local files)
