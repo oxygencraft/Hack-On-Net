@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HackLinks Server", "HackLin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HackLinksCommon", "HackLinksCommon\HackLinksCommon.csproj", "{15BA833D-405C-4997-88A5-286736E300BE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerminalLinks", "TerminalLinks\TerminalLinks.csproj", "{67655FAF-5A2D-4756-B04E-73C30308F728}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{15BA833D-405C-4997-88A5-286736E300BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15BA833D-405C-4997-88A5-286736E300BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15BA833D-405C-4997-88A5-286736E300BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67655FAF-5A2D-4756-B04E-73C30308F728}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67655FAF-5A2D-4756-B04E-73C30308F728}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67655FAF-5A2D-4756-B04E-73C30308F728}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67655FAF-5A2D-4756-B04E-73C30308F728}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
